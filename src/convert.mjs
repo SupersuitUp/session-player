@@ -125,12 +125,14 @@ export function convert(lines, opts = {}) {
 
   const results = new Map();
   const resultText = new Map();
+  const resultData = new Map();
   for (const o of lines) {
     if (o.type !== 'user') continue;
     for (const b of blocks(o.message)) {
       if (b.type !== 'tool_result') continue;
       results.set(b.tool_use_id, Date.parse(o.timestamp));
       resultText.set(b.tool_use_id, typeof b.content === 'string' ? b.content : (b.content ?? []).map((c) => c.text ?? '').join('\n'));
+      resultData.set(b.tool_use_id, o.toolUseResult);
     }
   }
 
@@ -217,11 +219,10 @@ export function convert(lines, opts = {}) {
         const { kind, label } = stepFor(b.name, b.input);
         const step = { kind, label: clean(label, turn.id, 'step'), tool: b.name, ms, at: end - start };
         if (b.name === 'AskUserQuestion') {
-          // The agent stopped and the person decided: the clearest human-in-the-loop moment
-          // a session has, so both the question and the answer are kept.
-          const question = clean(b.input?.questions?.[0]?.question ?? '', turn.id, 'step');
-          const answer = clean(resultText.get(b.id)?.match(/"[^"]*"="([^"]*)"/)?.[1] ?? '', turn.id, 'step');
-          Object.assign(step, { kind: `ask:${b.id}`, label: question ? `asked: ${question}` : 'asked a question', ask: { question, answer } });
+          // The agent stopped and the person decided: the clearest human-in-the-loop moment a
+          // session has. The whole board is kept, as the person saw it, so a replay can draw it.
+          const ask = askBoard(b.input, resultData.get(b.id), resultText.get(b.id) ?? '', (t) => clean(t, turn.id, 'step'));
+          Object.assign(step, { kind: `ask:${b.id}`, label: ask.questions[0]?.question ? `asked: ${ask.questions[0].question}` : 'asked a question', ask });
         }
         raw.push(step);
         if (b.name === 'Write' && DELIVERABLE.test(b.input?.file_path ?? '')) addArtifact(turn, { kind: 'file', title: base(b.input.file_path), path: clean(b.input.file_path, turn.id, 'artifact') }, ts - start);
@@ -243,4 +244,29 @@ export function convert(lines, opts = {}) {
     artifacts,
     cuts,
   };
+}
+
+// One AskUserQuestion call as the board the person saw: every question, every option, the
+// answer (the option's label, or what they typed in Other), and whether they closed it.
+function askBoard(input, data, text, clean) {
+  const dismissed = typeof data === 'string' ? /rejected/i.test(data) : /doesn't want to proceed|rejected/i.test(text) && !data?.answers;
+  const answers = data && typeof data === 'object' && data.answers ? data.answers : {};
+  const questions = (input?.questions ?? []).map((q) => {
+    let answer = dismissed ? null : answers[q.question] ?? null;
+    if (answer == null && !dismissed) {
+      const esc = q.question.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      answer = text.match(new RegExp(`"${esc}"="([^"]*)"`))?.[1] ?? null;
+    }
+    const options = (q.options ?? []).map((o) => ({ label: clean(o.label ?? ''), description: clean(o.description ?? '') }));
+    const chosen = answer == null ? null : (q.options ?? []).findIndex((o) => o.label === answer);
+    return {
+      header: clean(q.header ?? ''),
+      question: clean(q.question ?? ''),
+      multiSelect: Boolean(q.multiSelect),
+      options,
+      answer: answer == null ? null : clean(answer),
+      chosen: chosen == null || chosen < 0 ? null : chosen,
+    };
+  });
+  return { questions, dismissed };
 }

@@ -9,7 +9,7 @@ const sc = () => ({
   chapters: [{ title: 'Kingdom Free', turn: 't1' }],
   turns: [
     { id: 't1', at: 0, human: { text: 'Upload Kingdom Free to my website', raw: 'Upload kingdom free to my webiste', via: 'typed', choices: [] }, intervention: null,
-      steps: [{ label: 'Render the Kingdom Free cover', tool: 'Bash', ms: 5, count: 1, at: 5 }, { label: 'asked: Is Kingdom Free the title?', tool: 'AskUserQuestion', ms: 9, count: 1, at: 14, ask: { question: 'Is Kingdom Free the title?', answer: 'Yes, Gary' } }],
+      steps: [{ label: 'Render the Kingdom Free cover', tool: 'Bash', ms: 5, count: 1, at: 5 }, { label: 'asked: Is Kingdom Free the title?', tool: 'AskUserQuestion', ms: 9, count: 1, at: 14, ask: { dismissed: false, questions: [{ header: 'Title', question: 'Is Kingdom Free the title?', options: [{ label: 'Yes, Gary', description: 'Kingdom Free it is' }], answer: 'Yes, Gary', chosen: 0 }] } }],
       replies: [{ text: 'Kingdom Free is live on garysheng.com, Gary.', at: 20 }], artifacts: ['a1'] },
     { id: 't2', at: 30, human: { text: 'Now fix the save log for Wilson', via: 'typed', choices: [] }, intervention: null, steps: [], replies: [{ text: 'Done, Wilson has it.', at: 40 }], artifacts: ['a2'] },
   ],
@@ -32,7 +32,7 @@ test('a recast tells a different story from the same run, and says so', () => {
   assert.deepEqual(out.source, { kind: 'persona', sessionId: 'abc', date: '2026-09-14', illustrative: true, recastFrom: 'album-release' });
   assert.equal(out.turns[0].human.text, 'Upload Slow Tide to my website');
   assert.equal(out.turns[0].steps[0].label, 'Render the Slow Tide cover');
-  assert.deepEqual(out.turns[0].steps[1].ask, { question: 'Is Slow Tide the title?', answer: 'Yes, Maya' });
+  assert.deepEqual(out.turns[0].steps[1].ask.questions[0], { header: 'Title', question: 'Is Slow Tide the title?', options: [{ label: 'Yes, Maya', description: 'Slow Tide it is' }], answer: 'Yes, Maya', chosen: 0 });
   assert.equal(out.turns[0].replies[0].text, 'Slow Tide is live on mayaito.com, Maya.');
   assert.equal(out.artifacts[0].url, 'https://mayaito.com/art/slow-tide');
   assert.equal(out.chapters[0].title, 'Slow Tide');
@@ -65,4 +65,11 @@ test('the source scenario is untouched', () => {
   const s = sc();
   recast(s, spec);
   assert.equal(s.title, 'Releasing Kingdom Free');
+});
+
+test('a forbidden word matches where a word starts, not inside another word', () => {
+  const s = sc();
+  s.turns[0].steps[0].label = 'Record the credentials step for the Christofuturist cover';
+  assert.doesNotThrow(() => recast(s, { ...spec, forbid: [...spec.forbid, 'Eden'] }));
+  assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, 'Christ'] }), /forbidden "Christ"/);
 });

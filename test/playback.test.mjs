@@ -14,7 +14,7 @@ test('condense keeps the longest steps in order and folds the rest into counted 
 });
 
 test('condense counts merged steps inside a group, and never hides a decision', () => {
-  const steps = [step('read 12 files', 100, { count: 12 }), step('asked: Which cover?', 50, { ask: { question: 'Which cover?', answer: 'Dancer' } }), step('big', 9000), step('small', 10)];
+  const steps = [step('read 12 files', 100, { count: 12 }), step('asked: Which cover?', 50, { ask: { questions: [{ question: 'Which cover?', options: [], answer: 'Dancer', chosen: null }], dismissed: false } }), step('big', 9000), step('small', 10)];
   const out = condense(steps, 1);
   assert.deepEqual(out.map((s) => s.label), ['12 quick steps', 'asked: Which cover?', 'big', '1 quick step']);
 });
@@ -40,7 +40,7 @@ test('duration reads like a person would say it', () => {
 const scenario = () => ({
   persona: { name: 'Gary' },
   turns: [
-    { id: 't1', at: 0, human: { text: 'go' }, intervention: null, steps: [step('download', 431000, { at: 431000 }), step('asked: Which cover?', 262000, { at: 700000, ask: { question: 'Which cover?', answer: 'Dancer' } })], replies: [{ text: 'Six of eight', at: 300000 }], artifacts: ['a1'] },
+    { id: 't1', at: 0, human: { text: 'go' }, intervention: null, steps: [step('download', 431000, { at: 431000 }), step('asked: Which cover?', 262000, { at: 700000, ask: { questions: [{ question: 'Which cover?', options: [], answer: 'Dancer', chosen: null }], dismissed: false } })], replies: [{ text: 'Six of eight', at: 300000 }], artifacts: ['a1'] },
     { id: 't2', at: 900000, human: { text: 'stop that' }, intervention: 'redirect', steps: [step('fix', 30000, { at: 930000 })], replies: [], artifacts: [] },
   ],
   artifacts: [{ id: 'a1', kind: 'link', title: 'garysheng.com/art', turn: 't1', at: 800000 }],

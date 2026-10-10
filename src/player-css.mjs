@@ -31,6 +31,19 @@ export const PLAYER_CSS = `
 .ss-group .ss-label{color:#8a7d68}
 .ss-label{flex:1;min-width:0;overflow-wrap:anywhere}
 .ss-dur{flex:none;font-size:12px;color:#8a7d68;font-variant-numeric:tabular-nums}
+.ss-board{background:#fff;border:1px solid #e3cf9f;border-radius:14px;padding:10px 12px;font-size:13px;box-shadow:0 2px 10px rgba(30,27,25,.06);animation:ss-in .25s ease-out}
+.ss-board .ss-bq+.ss-bq{margin-top:10px;padding-top:10px;border-top:1px dashed #eadcbc}
+.ss-bhead{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--ss-sand);border-radius:999px;padding:1px 8px}
+.ss-board .ss-q{margin:6px 0 8px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.ss-opts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.ss-opt{display:flex;gap:8px;align-items:flex-start;border:1px solid #eadcbc;border-radius:10px;padding:6px 8px;color:#6b6052}
+.ss-opt b{display:block;font-weight:600;color:var(--ss-ink);overflow-wrap:anywhere}
+.ss-opt small{display:block;color:#8a7d68;overflow-wrap:anywhere}
+.ss-onum{flex:none;width:20px;height:20px;border-radius:50%;background:#f1e6cc;display:grid;place-items:center;font-size:11px;font-weight:700}
+.ss-opt.ss-chosen{border-color:var(--ss-petrol);background:#e8f1f3}
+.ss-opt.ss-chosen .ss-onum{background:var(--ss-petrol);color:#fff}
+.ss-dismissed .ss-opt{opacity:.55}
+.ss-bfoot{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px}
 .ss-decision{border-left:3px solid var(--ss-mustard);background:#fff4dc;padding:8px 10px;border-radius:6px;font-size:13px;animation:ss-in .25s ease-out}
 .ss-decision p{margin:2px 0}
 .ss-tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#a86a00}

@@ -22,14 +22,27 @@ function Reply({ text }) {
     long && h('button', { className: 'ss-more', onClick: () => setOpen(!open) }, open ? 'less' : 'more'));
 }
 
+// A decision, drawn as the question board the person actually saw: header, question, the
+// numbered options with their descriptions, and the one they picked (or their own words).
+export function Board({ ask, person, ms }) {
+  return h('div', { className: `ss-board${ask.dismissed ? ' ss-dismissed' : ''}` },
+    ask.questions.map((q, qi) => h('div', { key: qi, className: 'ss-bq' },
+      q.header && h('span', { className: 'ss-bhead' }, q.header),
+      h('p', { className: 'ss-q' }, plain(q.question)),
+      h('ol', { className: 'ss-opts' },
+        q.options.map((o, oi) => h('li', { key: oi, className: `ss-opt${q.chosen === oi ? ' ss-chosen' : ''}` },
+          h('span', { className: 'ss-onum' }, q.chosen === oi ? '\u2713' : oi + 1),
+          h('span', null, h('b', null, o.label), o.description && h('small', null, o.description)))),
+        q.answer != null && q.chosen == null && h('li', { className: 'ss-opt ss-chosen ss-other' },
+          h('span', { className: 'ss-onum' }, '\u2713'),
+          h('span', null, h('b', null, plain(q.answer)), h('small', null, `typed by ${person}`)))))),
+    h('div', { className: 'ss-bfoot' },
+      h('span', { className: 'ss-tag' }, ask.dismissed ? `${person} closed this and typed instead` : `${person} chose`),
+      h('span', { className: 'ss-dur' }, duration(ms))));
+}
+
 function Step({ step, person }) {
-  if (step.ask) {
-    return h('div', { className: 'ss-decision' },
-      h('span', { className: 'ss-tag' }, `${person} decided`),
-      h('p', { className: 'ss-q' }, step.ask.question),
-      step.ask.answer && h('p', { className: 'ss-a' }, step.ask.answer),
-      h('span', { className: 'ss-dur' }, `took ${duration(step.ms)}`));
-  }
+  if (step.ask) return h(Board, { ask: step.ask, person, ms: step.ms });
   return h('div', { className: `ss-step${step.group ? ' ss-group' : ''}` },
     h('span', { className: 'ss-dot' }),
     h('span', { className: 'ss-label' }, step.label),

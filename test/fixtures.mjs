@@ -40,10 +40,10 @@ export function session(start = '2026-09-14T05:00:00.000Z') {
       lines.push(base('assistant', { timestamp: at(after), message: { role: 'assistant', content: [{ type: 'thinking', thinking: 'hm' }] } }));
       return api;
     },
-    tool(name, input, { took = 2, after = 1, result = 'ok' } = {}) {
+    tool(name, input, { took = 2, after = 1, result = 'ok', toolUseResult = {} } = {}) {
       const id = `toolu_${++n}`;
       lines.push(base('assistant', { timestamp: at(after), message: { role: 'assistant', content: [{ type: 'tool_use', id, name, input }] } }));
-      lines.push(base('user', { timestamp: at(took), toolUseResult: {}, message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: id, content: result }] } }));
+      lines.push(base('user', { timestamp: at(took), toolUseResult, message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: id, content: result }] } }));
       return api;
     },
     sidechain(text) {

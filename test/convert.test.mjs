@@ -144,14 +144,45 @@ test('unparseable lines are skipped, not fatal', () => {
   assert.equal(convert(parseSession(text)).turns.length, 1);
 });
 
-test('a question the agent asked is a decision the person made, with both sides kept', () => {
+test('a question board is kept whole: every question, its options, and what the person chose', () => {
+  const questions = [
+    { header: 'Cover', question: 'Which cover?', multiSelect: false, options: [{ label: 'Dancer (Recommended)', description: 'oil, warm' }, { label: 'Cage', description: 'blue' }] },
+    { header: 'Date', question: 'Release when?', multiSelect: false, options: [{ label: 'Today', description: '' }, { label: 'Next week', description: '' }] },
+  ];
   const s = session()
     .human('ship it')
-    .tool('AskUserQuestion', { questions: [{ question: 'Which cover?', options: [{ label: 'Dancer' }, { label: 'Cage' }] }] }, { took: 40, result: 'User has answered your questions: "Which cover?"="Dancer". You can now continue.' });
+    .tool('AskUserQuestion', { questions }, { took: 40, result: 'Your questions have been answered: ...', toolUseResult: { questions, answers: { 'Which cover?': 'Dancer (Recommended)', 'Release when?': 'Friday, after the video' } } });
   const step = run(s).turns[0].steps[0];
   assert.equal(step.label, 'asked: Which cover?');
-  assert.deepEqual(step.ask, { question: 'Which cover?', answer: 'Dancer' });
   assert.equal(step.ms, 41000);
+  assert.equal(step.ask.dismissed, false);
+  assert.deepEqual(step.ask.questions.map((q) => [q.header, q.question, q.options.length, q.answer, q.chosen]), [
+    ['Cover', 'Which cover?', 2, 'Dancer (Recommended)', 0],
+    ['Date', 'Release when?', 2, 'Friday, after the video', null],
+  ]);
+  assert.equal(step.ask.questions[0].options[0].description, 'oil, warm');
+});
+
+test('older sessions without a structured result still recover the answer from the text', () => {
+  const questions = [{ question: 'Which cover?', options: [{ label: 'Dancer' }, { label: 'Cage' }] }];
+  const s = session().human('go').tool('AskUserQuestion', { questions }, { result: 'User has answered your questions: "Which cover?"="Dancer". You can now continue.' });
+  assert.deepEqual(run(s).turns[0].steps[0].ask.questions[0].chosen, 0);
+});
+
+test('a board the person dismissed to type something else is marked dismissed', () => {
+  const questions = [{ header: 'Cover', question: 'Which cover?', options: [{ label: 'Dancer' }, { label: 'Cage' }] }];
+  const s = session().human('go').tool('AskUserQuestion', { questions }, { result: "The user doesn't want to proceed with this tool use.", toolUseResult: 'User rejected tool use' }).interrupt().human('i dont love these');
+  const step = run(s).turns[0].steps[0];
+  assert.equal(step.ask.dismissed, true);
+  assert.equal(step.ask.questions[0].answer, null);
+});
+
+test('contact details inside a board are removed too', () => {
+  const questions = [{ question: 'To Gary, iMessage (+1 630 555 0142): live now. Send that?', options: [{ label: 'Send', description: 'to 630-555-0142' }] }];
+  const s = session().human('go').tool('AskUserQuestion', { questions }, { toolUseResult: { questions, answers: { [questions[0].question]: 'Send' } } });
+  const all = JSON.stringify(run(s).turns[0].steps[0]);
+  assert.ok(!all.includes('555'), all);
+  assert.equal(run(s).turns[0].steps[0].ask.questions[0].chosen, 0);
 });
 
 test('steps and artifacts carry when they happened, so a replay can interleave them with replies', () => {

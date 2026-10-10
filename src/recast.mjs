@@ -13,13 +13,14 @@ const TEXT_FIELDS = (sc) => [
   ...sc.chapters.map((c) => [c, 'title']),
   ...sc.turns.flatMap((t) => [
     [t.human, 'text'],
-    ...t.steps.flatMap((s) => [[s, 'label'], ...(s.ask ? [[s.ask, 'question'], [s.ask, 'answer']] : [])]),
+    ...t.steps.flatMap((s) => [[s, 'label'], ...(s.ask?.questions ?? []).flatMap((q) => [[q, 'header'], [q, 'question'], [q, 'answer'], ...q.options.flatMap((o) => [[o, 'label'], [o, 'description']])])]),
     ...t.replies.map((r) => [r, 'text']),
   ]),
   ...sc.artifacts.flatMap((a) => [[a, 'title'], [a, 'url'], [a, 'path']]),
 ];
 
-const where = (sc, obj) => sc.turns.find((t) => t.human === obj || t.steps.some((s) => s === obj || s.ask === obj) || t.replies.includes(obj))?.id
+const inAsk = (s, obj) => (s.ask?.questions ?? []).some((q) => q === obj || q.options.includes(obj));
+const where = (sc, obj) => sc.turns.find((t) => t.human === obj || t.steps.some((s) => s === obj || inAsk(s, obj)) || t.replies.includes(obj))?.id
   ?? sc.artifacts.find((a) => a === obj)?.id ?? 'the title';
 
 export function recast(source, { id, title, persona, keep, replace = [], forbid = [] }) {
@@ -42,7 +43,9 @@ export function recast(source, { id, title, persona, keep, replace = [], forbid 
     obj[key] = s;
   }
   for (const word of forbid) {
-    const re = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    // Anchored at a word start: "Eden" must not fire on "credentials", while "Christ" still
+    // catches "Christofuturist".
+    const re = new RegExp(`(^|[^\\p{L}\\p{N}])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'iu');
     for (const [obj, key] of TEXT_FIELDS(sc)) {
       if (typeof obj[key] === 'string' && re.test(obj[key])) throw new Error(`forbidden "${word}" survives in ${where(sc, obj)}: "${obj[key].slice(0, 120)}"`);
     }
