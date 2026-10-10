@@ -81,3 +81,18 @@ export function script(sc, { maxSteps = 5 } = {}) {
     return { id: turn.id, command: { text: turn.human.text, intervention: turn.intervention }, events, length: t };
   });
 }
+
+// What the person really did on one question of a board.
+export function realPick(q, dismissed) {
+  if (dismissed) return { kind: 'dismissed', index: null, label: 'closed it and typed instead' };
+  if (q.chosen != null) return { kind: 'option', index: q.chosen, label: q.options[q.chosen]?.label ?? q.answer };
+  return { kind: 'other', index: null, label: q.answer ?? '' };
+}
+
+// The viewer's pick against the real one. A recording has one path, so a different pick is
+// answered with what really happened, never with an invented branch.
+export function compare(q, dismissed, pick) {
+  const real = realPick(q, dismissed);
+  const same = pick.kind === real.kind && (real.kind !== 'option' || pick.index === real.index);
+  return { same, real: real.label };
+}

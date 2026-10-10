@@ -40,6 +40,12 @@ export const PLAYER_CSS = `
 .ss-opt b{display:block;font-weight:600;color:var(--ss-ink);overflow-wrap:anywhere}
 .ss-opt small{display:block;color:#8a7d68;overflow-wrap:anywhere}
 .ss-onum{flex:none;width:20px;height:20px;border-radius:50%;background:#f1e6cc;display:grid;place-items:center;font-size:11px;font-weight:700}
+.ss-sim button.ss-opt{width:100%;text-align:left;background:#fff;cursor:pointer;transition:border-color .15s,background .15s}
+.ss-sim button.ss-opt:hover,.ss-sim button.ss-opt:focus-visible{border-color:var(--ss-petrol);background:#f3f8f9;outline:none}
+.ss-live-board{border-color:var(--ss-petrol);box-shadow:0 0 0 3px rgba(38,94,114,.15)}
+.ss-opt.ss-yours{border-color:var(--ss-mustard);background:#fff4dc}
+.ss-verdict{margin:6px 0 0;font-size:13px;color:#a86a00}
+.ss-verdict.ss-same{color:var(--ss-petrol);font-weight:600}
 .ss-opt.ss-chosen{border-color:var(--ss-petrol);background:#e8f1f3}
 .ss-opt.ss-chosen .ss-onum{background:var(--ss-petrol);color:#fff}
 .ss-dismissed .ss-opt{opacity:.55}

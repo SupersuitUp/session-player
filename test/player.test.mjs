@@ -62,3 +62,23 @@ test('an answer typed outside the options shows as the person\'s own words, and 
   const gone = renderToString(h(Board, { ask: { dismissed: true, questions: [{ question: 'Which?', options: [{ label: 'A' }], answer: null, chosen: null }] }, person: 'Gary', ms: 1000 }));
   assert.match(gone, /Gary closed this and typed instead/);
 });
+
+test('a board waiting on the viewer offers every option as a button and hides the real pick', () => {
+  const ask = { dismissed: false, questions: [{ header: 'Cover', question: 'Which cover?', options: [{ label: 'Dancer' }, { label: 'Cage' }], answer: 'Dancer', chosen: 0 }] };
+  const html = renderToString(h(Board, { ask, person: 'Gary', ms: 1000, live: true, onPick: () => {} }));
+  assert.equal((html.match(/<button[^>]*class="ss-opt/g) ?? []).length, 2);
+  assert.doesNotMatch(html, /ss-chosen|Gary chose/);
+  assert.match(html, /Your call/);
+});
+
+test('a dismissed board, live, also offers typing something else, which is what really happened', () => {
+  const ask = { dismissed: true, questions: [{ question: 'Which?', options: [{ label: 'A' }], answer: null, chosen: null }] };
+  const html = renderToString(h(Board, { ask, person: 'Gary', ms: 1000, live: true, onPick: () => {} }));
+  assert.match(html, /Type something else/);
+});
+
+test('a typed answer is offered live as its own option', () => {
+  const ask = { dismissed: false, questions: [{ question: 'When?', options: [{ label: 'Today' }], answer: 'Friday', chosen: null }] };
+  const html = renderToString(h(Board, { ask, person: 'Gary', ms: 1000, live: true, onPick: () => {} }));
+  assert.match(html, /Other/);
+});

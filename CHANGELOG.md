@@ -11,4 +11,5 @@
 - Phone numbers and email addresses are removed from everything a scenario keeps, recorded as cuts.
 - Artifacts are deliverables only (pages, media, documents), never code, config or folders; `tidy` takes `artifacts: { drop, add }` so a reviewer can add what the transcript cannot show (kind `other`, e.g. a release submitted to a store).
 - `recast`: tells a different story from the same real run (new persona and subject, same commands, steps, timing and decisions), marked illustrative on screen, with a `forbid` list that refuses to finish while any word from the original survives.
+- Boards are playable: playback pauses on each board, the viewer taps an option (or Other, or Type something else where the person closed it), each pick is answered with the real choice, and the recording resumes on the real path. Autoplay picks the real answers.
 - The `simulator` CLI: `convert`, `validate`, `tidy`, `recast`, `serve`.

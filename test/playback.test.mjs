@@ -66,3 +66,20 @@ test('script plays each turn: the command, then steps, replies and artifacts in 
   assert.equal(sc[1].command.intervention, 'redirect');
   assert.ok(sc[0].length > 0);
 });
+
+import { realPick, compare } from '../src/playback.mjs';
+
+const q = (chosen, answer, options = ['Dancer', 'Cage']) => ({ question: 'Which?', options: options.map((label) => ({ label })), chosen, answer });
+
+test('realPick names what the person really did on each kind of board', () => {
+  assert.deepEqual(realPick(q(0, 'Dancer'), false), { kind: 'option', index: 0, label: 'Dancer' });
+  assert.deepEqual(realPick(q(null, 'Friday'), false), { kind: 'other', index: null, label: 'Friday' });
+  assert.deepEqual(realPick(q(null, null), true), { kind: 'dismissed', index: null, label: 'closed it and typed instead' });
+});
+
+test('compare tells the viewer whether they matched the real choice', () => {
+  assert.deepEqual(compare(q(0, 'Dancer'), false, { kind: 'option', index: 0 }), { same: true, real: 'Dancer' });
+  assert.deepEqual(compare(q(0, 'Dancer'), false, { kind: 'option', index: 1 }), { same: false, real: 'Dancer' });
+  assert.deepEqual(compare(q(null, 'Friday'), false, { kind: 'other' }), { same: true, real: 'Friday' });
+  assert.deepEqual(compare(q(null, null), true, { kind: 'option', index: 0 }), { same: false, real: 'closed it and typed instead' });
+});
