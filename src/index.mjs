@@ -2,3 +2,5 @@ export { FORMAT, validate, INTERVENTIONS, VIA, ARTIFACT_KINDS, SOURCE_KINDS } fr
 export { convert, parseSession } from './convert.mjs';
 export { tidy } from './tidy.mjs';
 export { recast } from './recast.mjs';
+export { bundle } from './bundle.mjs';
+export { allImages } from './scenario.mjs';

@@ -28,11 +28,12 @@ function distance(a, b) {
 
 export function tidy(scenario, fixes = {}) {
   const sc = structuredClone(scenario);
-  const { artifacts: curation, ...textFixes } = fixes;
+  const { artifacts: curation, images, ...textFixes } = fixes;
   fixes = textFixes;
   const ids = new Set(sc.turns.map((t) => t.id));
   for (const id of Object.keys(fixes)) if (!ids.has(id)) throw new Error(`fix for unknown turn ${id}`);
   if (curation) curate(sc, curation, ids);
+  if (images) attach(sc, images);
   for (const t of sc.turns) {
     const original = t.human.raw ?? t.human.text;
     let text = t.human.text.replace(IMAGE_PATH, () => {
@@ -70,5 +71,32 @@ function curate(sc, { drop = [], add = [] }, turnIds) {
     sc.artifacts.push({ id, ...a, at: a.at ?? turn.at });
     turn.artifacts.push(id);
     sc.cuts.push({ turn: a.turn, what: id, reason: 'artifact added by reviewer' });
+  }
+}
+
+// What the person saw is often an image the transcript only names through a loop variable
+// (covers opened in Preview, a comparison sheet in a temp folder), so the reviewer points at
+// it: on a step ("step": part of its label), on a board option ("question" + "option"), or on
+// the command itself ("human": true). Matching is by substring, and a miss is refused.
+function attach(sc, images) {
+  for (const img of images) {
+    const turn = sc.turns.find((t) => t.id === img.turn);
+    if (!turn) throw new Error(`image ${img.id} names unknown turn ${img.turn}`);
+    const entry = { id: img.id, src: img.src, ...(img.caption ? { caption: img.caption } : {}) };
+    if (img.human) { (turn.human.images ??= []).push(entry); continue; }
+    if (img.question) {
+      const step = turn.steps.find((s) => s.ask?.questions.some((q) => q.question.includes(img.question)));
+      const q = step?.ask.questions.find((qq) => qq.question.includes(img.question));
+      if (!q) throw new Error(`no question matching "${img.question}" in ${img.turn}`);
+      if (img.option) {
+        const o = q.options.find((oo) => oo.label.includes(img.option));
+        if (!o) throw new Error(`no option matching "${img.option}" in "${q.question.slice(0, 40)}"`);
+        o.image = entry;
+      } else (step.images ??= []).push(entry);
+      continue;
+    }
+    const step = turn.steps.find((s) => s.label.includes(img.step ?? '\u0000'));
+    if (!step) throw new Error(`no step matching "${img.step}" in ${img.turn}`);
+    (step.images ??= []).push(entry);
   }
 }

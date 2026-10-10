@@ -12,6 +12,19 @@ import { PLAYER_CSS } from './player-css.mjs';
 const plain = (s) => String(s).replace(/\*\*([^*]+)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^#+\s*/gm, '');
 const initial = (name = '?') => name.trim().charAt(0).toUpperCase();
 
+// Images the person saw. Tap one to see it full screen; tap again to close.
+function Gallery({ images, strip = false }) {
+  const [open, setOpen] = useState(null);
+  if (!images?.length) return null;
+  return h('div', { className: strip ? 'ss-strip' : 'ss-gallery' },
+    images.map((im, i) => h('button', { key: im.id ?? i, className: 'ss-thumb', onClick: () => setOpen(i), 'aria-label': im.caption ?? 'image' },
+      h('img', { src: im.src, alt: im.caption ?? '', loading: 'lazy' }),
+      im.caption && !strip && h('span', null, im.caption))),
+    open != null && h('button', { className: 'ss-lightbox', onClick: () => setOpen(null), 'aria-label': 'Close' },
+      h('img', { src: images[open].src, alt: images[open].caption ?? '' }),
+      images[open].caption && h('span', null, images[open].caption)));
+}
+
 function Reply({ text }) {
   const [open, setOpen] = useState(false);
   const t = plain(text);
@@ -26,7 +39,7 @@ function Reply({ text }) {
 // the composer, one question at a time, a tab per question. The viewer picks; the pick is
 // answered with what the person really chose, then the next question, then the replay goes
 // on along the real path (a recording has one path, so no branch is ever invented).
-export function Board({ ask, person, auto = false, onPick }) {
+export function Board({ ask, person, auto = false, onPick, images }) {
   const [idx, setIdx] = useState(0);
   const [picks, setPicks] = useState({});
   const q = ask.questions[idx];
@@ -49,12 +62,13 @@ export function Board({ ask, person, auto = false, onPick }) {
 
   const choose = (pick) => setPicks((p) => (p[idx] ? p : { ...p, [idx]: pick }));
   const same = (a, b) => a.kind === b.kind && (a.kind !== 'option' || a.index === b.index);
-  const row = (key, pick, label, description) => {
+  const row = (key, pick, label, description, image) => {
     const isReal = mine && same(pick, real);
     const isMine = mine && same(pick, mine);
     const cls = `ss-opt${isReal ? ' ss-chosen' : ''}${isMine && !isReal ? ' ss-yours' : ''}`;
     return h('button', { key, className: cls, disabled: Boolean(mine), onClick: () => choose(pick) },
       h('span', { className: 'ss-onum' }, isReal ? '\u2713' : typeof key === 'number' ? key + 1 : '\u2026'),
+      image && h('img', { className: 'ss-oimg', src: image.src, alt: '' }),
       h('span', null, h('b', null, label), description && h('small', null, description)));
   };
   return h('div', { className: 'ss-sheet', role: 'dialog', 'aria-label': 'Freeda is asking' },
@@ -63,8 +77,9 @@ export function Board({ ask, person, auto = false, onPick }) {
     }, qq.header || `Question ${qi + 1}`))),
     ask.questions.length === 1 && q.header && h('span', { className: 'ss-bhead' }, q.header),
     h('p', { className: 'ss-q' }, plain(q.question)),
+    idx === 0 && h(Gallery, { images, strip: true }),
     h('div', { className: 'ss-opts' },
-      q.options.map((o, oi) => row(oi, { kind: 'option', index: oi }, o.label, o.description)),
+      q.options.map((o, oi) => row(oi, { kind: 'option', index: oi }, o.label, o.description, o.image)),
       real.kind === 'other' && row('other', { kind: 'other' }, mine ? plain(q.answer) : 'Other', mine ? `typed by ${person}` : 'type your own answer'),
       real.kind === 'dismissed' && row('dismiss', { kind: 'dismissed' }, 'Type something else', 'close this and say what you want')),
     h('p', { className: `ss-verdict${verdict?.same ? ' ss-same' : ''}` },
@@ -82,7 +97,7 @@ export function Asked({ ask, person, ms, picks = {} }) {
       const mineLabel = mine && (mine.kind === 'option' ? q.options[mine.index]?.label : mine.kind === 'other' ? 'Other' : 'to type something else');
       return h('div', { key: qi, className: 'ss-aq' },
         h('p', { className: 'ss-q' }, q.header && h('span', { className: 'ss-bhead' }, q.header), ' ', plain(q.question)),
-        h('p', { className: 'ss-a' }, real.kind === 'dismissed' ? '\u21b3 closed it' : `\u21b3 ${plain(real.label)}`),
+        h('p', { className: 'ss-a' }, real.index != null && q.options[real.index]?.image && h('img', { className: 'ss-aimg', src: q.options[real.index].image.src, alt: '' }), real.kind === 'dismissed' ? '\u21b3 closed it' : `\u21b3 ${plain(real.label)}`),
         v && !v.same && h('p', { className: 'ss-mine' }, `You picked ${mineLabel}`));
     }),
     h('div', { className: 'ss-bfoot' },
@@ -91,7 +106,12 @@ export function Asked({ ask, person, ms, picks = {} }) {
 }
 
 function Step({ step, person, picks, live }) {
-  if (step.ask) return live ? h('div', { className: 'ss-asking' }, 'Freeda is asking you\u2026') : h(Asked, { ask: step.ask, person, ms: step.ms, picks });
+  if (step.ask) return live ? h('div', { className: 'ss-asking' }, 'Freeda is asking you\u2026') : h(Fragment, null, h(Gallery, { images: step.images }), h(Asked, { ask: step.ask, person, ms: step.ms, picks }));
+  if (step.images?.length) return h(Fragment, null, h(StepLine, { step }), h(Gallery, { images: step.images }));
+  return h(StepLine, { step });
+}
+
+function StepLine({ step }) {
   return h('div', { className: `ss-step${step.group ? ' ss-group' : ''}` },
     h('span', { className: 'ss-dot' }),
     h('span', { className: 'ss-label' }, step.label),
@@ -244,6 +264,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
           if (item.kind === 'command') {
             return h('div', { key: item.key, className: 'ss-cmd-wrap' },
               item.command.intervention && h('span', { className: 'ss-redirect' }, `${person} stepped in`),
+              item.command.images && h(Gallery, { images: item.command.images, strip: true }),
               h('div', { className: 'ss-cmd' }, plain(item.command.text)));
           }
           if (item.kind === 'step') return h(Step, { key: item.key, step: item.step, person, live: waiting === item.key, picks: answers[item.key] });
@@ -251,7 +272,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
           return h('div', { key: item.key, className: 'ss-made' }, h('span', null, 'made'), ' ', item.artifact.title);
         }),
         phase === 'working' && !waiting && h('div', { className: 'ss-typing' }, h('i'), h('i'), h('i'))),
-      waiting ? h(Board, { key: waiting, ask: log.find((l) => l.key === waiting).step.ask, person, auto, onPick: (picks) => resumeRef.current?.(picks) }) :
+      waiting ? h(Board, { key: waiting, ask: log.find((l) => l.key === waiting).step.ask, images: log.find((l) => l.key === waiting).step.images, person, auto, onPick: (picks) => resumeRef.current?.(picks) }) :
       h('footer', { className: 'ss-composer' },
         phase === 'done'
           ? h('div', { className: 'ss-end' },

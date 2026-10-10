@@ -23,7 +23,9 @@ const inAsk = (s, obj) => (s.ask?.questions ?? []).some((q) => q === obj || q.op
 const where = (sc, obj) => sc.turns.find((t) => t.human === obj || t.steps.some((s) => s === obj || inAsk(s, obj)) || t.replies.includes(obj))?.id
   ?? sc.artifacts.find((a) => a === obj)?.id ?? 'the title';
 
-export function recast(source, { id, title, persona, keep, replace = [], forbid = [] }) {
+import { allImages } from './scenario.mjs';
+
+export function recast(source, { id, title, persona, keep, replace = [], forbid = [], images = {} }) {
   const sc = structuredClone(source);
   const cuts = [];
   if (keep) {
@@ -41,6 +43,14 @@ export function recast(source, { id, title, persona, keep, replace = [], forbid 
     let s = obj[key];
     for (const [from, to] of replace) s = from instanceof RegExp ? s.replace(from, to) : s.split(from).join(to);
     obj[key] = s;
+  }
+  // An image is the subject at its most literal, so none of the original's may travel: each
+  // one is swapped for a replacement by id, or the recast refuses.
+  for (const img of allImages(sc)) {
+    if (!(img.id in images)) throw new Error(`image ${img.id} from the original has no replacement`);
+    const to = images[img.id];
+    img.src = typeof to === 'string' ? to : to.src;
+    if (to.caption) img.caption = to.caption; else delete img.caption;
   }
   for (const word of forbid) {
     // Anchored at a word start: "Eden" must not fire on "credentials", while "Christ" still

@@ -23,3 +23,22 @@ test('the server gives the page, the scenarios and the player modules, and nothi
     server.close();
   }
 });
+
+test('the server serves a scenario\'s bundled images, and nothing outside assets', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const root = mkdtempSync(join(tmpdir(), 'sim-serve-'));
+  mkdirSync(join(root, 'assets', 'album'), { recursive: true });
+  writeFileSync(join(root, 'assets', 'album', 'g1.jpg'), 'jpg');
+  writeFileSync(join(root, 'secret.jpg'), 'no');
+  const server = createServer({ scenarios: [], assetsRoot: root });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const ok = await fetch(base + '/assets/album/g1.jpg');
+    assert.equal(ok.status, 200);
+    assert.equal(ok.headers.get('content-type'), 'image/jpeg');
+    for (const bad of ['/assets/../secret.jpg', '/assets/album/../../secret.jpg', '/secret.jpg', '/assets/album/nope.jpg']) assert.equal((await fetch(base + bad)).status, 404, bad);
+  } finally { server.close(); }
+});

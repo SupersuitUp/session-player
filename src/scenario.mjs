@@ -48,5 +48,20 @@ export function validate(s) {
     for (const a of t.artifacts ?? []) if (!artifactIds.has(a)) p.push(`turn ${id}: unknown artifact ${a}`);
   }
   for (const c of s.chapters ?? []) if (!turnIds.has(c.turn)) p.push(`chapter "${c.title}" points at unknown turn ${c.turn}`);
+  for (const img of allImages(s)) if (!isStr(img.src) || !isStr(img.id)) p.push(`an image is missing its id or src (${JSON.stringify(img).slice(0, 80)})`);
   return p;
+}
+
+// Every image a scenario carries, wherever it sits: pasted with a command, shown on a step,
+// or on one option of a board. One walker so tidy, recast, bundle and validate agree.
+export function allImages(s) {
+  const out = [];
+  for (const t of s.turns ?? []) {
+    out.push(...(t.human?.images ?? []));
+    for (const st of t.steps ?? []) {
+      out.push(...(st.images ?? []));
+      for (const q of st.ask?.questions ?? []) for (const o of q.options ?? []) if (o.image) out.push(o.image);
+    }
+  }
+  return out;
 }

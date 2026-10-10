@@ -205,7 +205,9 @@ export function convert(lines, opts = {}) {
         cuts.push({ turn: id, what: 'human', reason: 'long paste collapsed' });
         text = `${text.slice(0, PASTE_KEEP).trimEnd()} [pasted ${text.length} characters]`;
       }
-      turns.push({ id, at: ts - start, human: { text, via: o.promptSource === 'voice' ? 'spoken' : 'typed', choices: [] }, intervention: interrupted ? 'redirect' : null, steps: [], replies: [], artifacts: [] });
+      const pasted = blocks(o.message).filter((b) => b.type === 'image' && b.source?.type === 'base64' && b.source.data)
+        .map((b, n) => ({ id: `pasted-${id}-${n + 1}`, src: `data:${b.source.media_type ?? 'image/png'};base64,${b.source.data}`, caption: 'pasted by the operator' }));
+      turns.push({ id, at: ts - start, human: { text, via: o.promptSource === 'voice' ? 'spoken' : 'typed', choices: [], ...(pasted.length ? { images: pasted } : {}) }, intervention: interrupted ? 'redirect' : null, steps: [], replies: [], artifacts: [] });
       if (pendingTitle) { chapters.push({ title: pendingTitle, turn: id }); pendingTitle = null; }
       interrupted = false;
       continue;

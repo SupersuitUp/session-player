@@ -86,3 +86,12 @@ test('before any work the counter says so, rather than "under a second"', () => 
   assert.match(html, /No work yet/);
   assert.doesNotMatch(html, /under a second/);
 });
+
+test('images show: a gallery on a step, a thumbnail on a board option, and on a pasted command', () => {
+  const s = sc('a', 'Gary');
+  s.turns[0].human.images = [{ id: 'p', src: 'assets/a/p.png', caption: 'pasted' }];
+  const html = renderToString(h(SimulatorPlayer, { scenario: s }));
+  assert.match(html, /tap to send/);
+  const live = renderToString(h(Board, { ask: { dismissed: false, questions: [{ question: 'Which?', options: [{ label: 'Rain', image: { src: 'assets/a/rain.png' } }], answer: 'Rain', chosen: 0 }] }, person: 'Gary', onPick: () => {} }));
+  assert.match(live, /<img[^>]*src="assets\/a\/rain.png"/);
+});

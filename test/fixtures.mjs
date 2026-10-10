@@ -46,6 +46,10 @@ export function session(start = '2026-09-14T05:00:00.000Z') {
       lines.push(base('user', { timestamp: at(took), toolUseResult, message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: id, content: result }] } }));
       return api;
     },
+    humanWithImage(text, data = 'iVBORw0KGgo=', after = 1) {
+      lines.push(base('user', { timestamp: at(after), origin: { kind: 'human' }, message: { role: 'user', content: [{ type: 'text', text }, { type: 'image', source: { type: 'base64', media_type: 'image/png', data } }] } }));
+      return api;
+    },
     sidechain(text) {
       lines.push(base('user', { timestamp: at(1), isSidechain: true, origin: { kind: 'human' }, message: { role: 'user', content: text } }));
       return api;

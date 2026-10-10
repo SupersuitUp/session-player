@@ -33,13 +33,19 @@ createRoot(document.getElementById('root')).render(h(SimulatorPlayer, {
 </script></body></html>`;
 }
 
-export function createServer({ scenarios }) {
+export function createServer({ scenarios, assetsRoot }) {
   const modules = new Set(readdirSync(SRC).filter((f) => f.endsWith('.mjs')));
   return httpServer((req, res) => {
     const path = new URL(req.url, 'http://x').pathname;
     const send = (code, type, body) => { res.writeHead(code, { 'content-type': type, 'cache-control': 'no-store' }); res.end(body); };
     if (path === '/' || path === '/index.html') return send(200, 'text/html; charset=utf-8', page({ title: scenarios.length === 1 ? scenarios[0].title : undefined }));
     if (path === '/scenarios.json') return send(200, 'application/json', JSON.stringify(scenarios));
+    const a = assetsRoot && path.match(/^\/assets\/([\w-]+)\/([\w.-]+\.(?:png|jpe?g|webp|gif))$/i);
+    if (a) {
+      const file = join(assetsRoot, 'assets', a[1], a[2]);
+      const type = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' }[a[2].split('.').pop().toLowerCase()];
+      try { return send(200, type, readFileSync(file)); } catch { return send(404, 'text/plain', 'not found'); }
+    }
     const m = path.match(/^\/src\/([\w-]+\.mjs)$/);
     if (m && modules.has(m[1])) return send(200, 'text/javascript; charset=utf-8', readFileSync(join(SRC, m[1])));
     return send(404, 'text/plain', 'not found');

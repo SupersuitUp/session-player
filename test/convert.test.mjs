@@ -235,3 +235,9 @@ test('a decision that sat unanswered counts at most 5 minutes of the person deci
   const step = run(s).turns[0].steps[0];
   assert.equal(Math.round(step.ms / 1000), 300);
 });
+
+test('an image the person pasted is kept with their command', () => {
+  const sc = run(session().humanWithImage('[Image #1] this one is good'));
+  assert.equal(sc.turns[0].human.text, '[Image #1] this one is good');
+  assert.deepEqual(sc.turns[0].human.images, [{ id: 'pasted-t1-1', src: 'data:image/png;base64,iVBORw0KGgo=', caption: 'pasted by the operator' }]);
+});

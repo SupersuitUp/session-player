@@ -3,16 +3,18 @@
 // their total time and count, and every decision the person made stays visible.
 
 const isAsk = (s) => Boolean(s.ask);
+// Decisions and anything the person was shown always stay visible.
+const isKept = (s) => isAsk(s) || Boolean(s.images?.length);
 
 export function condense(steps, max = 5) {
   if (steps.length <= max + 1) return steps;
   const keep = new Set(
-    steps.map((s, i) => [s, i]).filter(([s]) => !isAsk(s)).sort((a, b) => b[0].ms - a[0].ms).slice(0, max).map(([, i]) => i),
+    steps.map((s, i) => [s, i]).filter(([s]) => !isKept(s)).sort((a, b) => b[0].ms - a[0].ms).slice(0, max).map(([, i]) => i),
   );
   const out = [];
   let group = null;
   steps.forEach((s, i) => {
-    if (keep.has(i) || isAsk(s)) {
+    if (keep.has(i) || isKept(s)) {
       if (group) out.push(group);
       group = null;
       out.push(s);
@@ -79,7 +81,7 @@ export function script(sc, { maxSteps = 5 } = {}) {
       t += e.kind === 'step' ? pace(e.step.ms) : e.kind === 'reply' ? 900 : 500;
       return { ...e, t: at };
     });
-    return { id: turn.id, command: { text: turn.human.text, intervention: turn.intervention }, events, length: t };
+    return { id: turn.id, command: { text: turn.human.text, intervention: turn.intervention, images: turn.human.images }, events, length: t };
   });
 }
 

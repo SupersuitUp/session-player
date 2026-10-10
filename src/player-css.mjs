@@ -114,6 +114,18 @@ export const PLAYER_CSS = `
   .ss-panel h3{display:flex;justify-content:space-between;margin:0;font-family:Fraunces,Georgia,serif}
   .ss-panel h3 span{font-family:inherit;color:var(--ss-tomato)}
 }
+.ss-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;animation:ss-in .3s ease-out}
+.ss-strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin:0 0 8px}
+.ss-cmd-wrap .ss-strip{justify-content:flex-end;margin:0}
+.ss-sim .ss-thumb{position:relative;border:0;padding:0;background:#e9dcc0;border-radius:8px;overflow:hidden;aspect-ratio:1;display:block}
+.ss-strip .ss-thumb{flex:none;width:72px}
+.ss-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ss-thumb span{position:absolute;left:0;right:0;bottom:0;font-size:10px;line-height:1.2;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.65));padding:10px 5px 4px;text-align:left}
+.ss-sim .ss-lightbox{position:fixed;inset:0;z-index:50;border:0;padding:16px;background:rgba(20,18,16,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.ss-lightbox img{max-width:100%;max-height:80vh;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.ss-lightbox span{color:#f6e7c5;font-size:14px}
+.ss-oimg{flex:none;width:52px;height:52px;border-radius:8px;object-fit:cover}
+.ss-aimg{width:28px;height:28px;border-radius:5px;object-fit:cover;vertical-align:middle;margin-right:6px}
 @keyframes ss-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes ss-blink{0%,100%{opacity:.3}50%{opacity:1}}
 @keyframes ss-pulse{0%,100%{box-shadow:0 0 0 0 rgba(219,55,31,.5)}50%{box-shadow:0 0 0 10px rgba(219,55,31,0)}}

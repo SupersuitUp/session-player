@@ -99,3 +99,8 @@ test('summarize reports how much idle time was taken out', () => {
   const sc = { turns: [{ steps: [{ label: 'a', ms: 600000, idleMs: 20000000 }, { label: 'b', ms: 0, idleMs: 600000, stalled: true }] }], artifacts: [] };
   assert.equal(summarize(sc).idleMs, 20600000);
 });
+
+test('condense never hides a step that showed the person images', () => {
+  const steps = [step('a', 1), step('Open the nine covers in Preview', 2, { images: [{ id: 'x', src: 's' }] }), step('big', 9000), step('c', 3)];
+  assert.ok(condense(steps, 1).some((s) => s.label === 'Open the nine covers in Preview'));
+});
