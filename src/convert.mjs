@@ -84,7 +84,7 @@ function merge(steps) {
   const out = [];
   for (const s of steps) {
     const last = out[out.length - 1];
-    if (last && last.kind === s.kind) { last.count += 1; last.ms += s.ms; continue; }
+    if (last && last.kind === s.kind) { last.count += 1; last.ms += s.ms; last.at = s.at; continue; }
     out.push({ ...s, count: 1 });
   }
   return out.map(({ kind, ...s }) => (s.count > 1 && PLURAL[kind] ? { ...s, label: PLURAL[kind](s.count) } : s));
@@ -104,9 +104,14 @@ export function convert(lines, opts = {}) {
   const clean = cleaner(home, cuts);
 
   const results = new Map();
+  const resultText = new Map();
   for (const o of lines) {
     if (o.type !== 'user') continue;
-    for (const b of blocks(o.message)) if (b.type === 'tool_result') results.set(b.tool_use_id, Date.parse(o.timestamp));
+    for (const b of blocks(o.message)) {
+      if (b.type !== 'tool_result') continue;
+      results.set(b.tool_use_id, Date.parse(o.timestamp));
+      resultText.set(b.tool_use_id, typeof b.content === 'string' ? b.content : (b.content ?? []).map((c) => c.text ?? '').join('\n'));
+    }
   }
 
   const turns = [];
@@ -126,12 +131,12 @@ export function convert(lines, opts = {}) {
   let raw = [];
   let sessionId = null;
 
-  const addArtifact = (turn, a) => {
+  const addArtifact = (turn, a, at) => {
     const key = a.path ?? a.url;
     if (seenArtifact.has(key)) return;
     const id = `a${artifacts.length + 1}`;
     seenArtifact.set(key, id);
-    artifacts.push({ id, ...a, turn: turn.id });
+    artifacts.push({ id, ...a, turn: turn.id, at });
     turn.artifacts.push(id);
   };
   const flush = () => {
@@ -179,8 +184,8 @@ export function convert(lines, opts = {}) {
         const text = clean(b.text.trim(), turn.id, 'reply');
         turn.replies.push({ text, at: ts - start });
         cursor = Math.max(cursor, ts);
-        for (const url of text.match(URL_RE) ?? []) addArtifact(turn, { kind: 'link', title: url.replace(/^https:\/\//, '').replace(/[.,;:]+$/, ''), url: url.replace(/[.,;:]+$/, '') });
-        for (const [, path] of text.matchAll(PATH_RE)) addArtifact(turn, { kind: 'file', title: base(path), path });
+        for (const url of text.match(URL_RE) ?? []) addArtifact(turn, { kind: 'link', title: url.replace(/^https:\/\//, '').replace(/[.,;:]+$/, ''), url: url.replace(/[.,;:]+$/, '') }, ts - start);
+        for (const [, path] of text.matchAll(PATH_RE)) addArtifact(turn, { kind: 'file', title: base(path), path }, ts - start);
       } else if (b.type === 'tool_use') {
         // Real tools return in well under a second; the time goes to the agent thinking
         // before it calls them. So a step owns the whole gap since the previous step ended.
@@ -190,8 +195,16 @@ export function convert(lines, opts = {}) {
         carry = 0;
         if (PLUMBING.has(b.name)) { carry = ms; continue; }
         const { kind, label } = stepFor(b.name, b.input);
-        raw.push({ kind, label: clean(label, turn.id, 'step'), tool: b.name, ms });
-        if (b.name === 'Write' && b.input?.file_path) addArtifact(turn, { kind: 'file', title: base(b.input.file_path), path: clean(b.input.file_path, turn.id, 'artifact') });
+        const step = { kind, label: clean(label, turn.id, 'step'), tool: b.name, ms, at: end - start };
+        if (b.name === 'AskUserQuestion') {
+          // The agent stopped and the person decided: the clearest human-in-the-loop moment
+          // a session has, so both the question and the answer are kept.
+          const question = clean(b.input?.questions?.[0]?.question ?? '', turn.id, 'step');
+          const answer = clean(resultText.get(b.id)?.match(/"[^"]*"="([^"]*)"/)?.[1] ?? '', turn.id, 'step');
+          Object.assign(step, { kind: `ask:${b.id}`, label: question ? `asked: ${question}` : 'asked a question', ask: { question, answer } });
+        }
+        raw.push(step);
+        if (b.name === 'Write' && b.input?.file_path) addArtifact(turn, { kind: 'file', title: base(b.input.file_path), path: clean(b.input.file_path, turn.id, 'artifact') }, ts - start);
       }
     }
   }

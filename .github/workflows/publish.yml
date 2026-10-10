@@ -112,8 +112,8 @@ jobs:
           fi
           echo "OIDC identity present"
 
-      # No runtime dependencies, but a committed lockfile, so `npm ci` installs exactly what
-      # the lockfile pins (none today). The package is the product, so it is tested
+      # No runtime dependencies; React is a dev dependency the player's render tests need, and
+      # the committed lockfile pins it. The package is the product, so it is tested
       # before it is published, never after.
       - run: npm ci
       - run: npm test

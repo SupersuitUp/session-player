@@ -149,3 +149,25 @@ test('unparseable lines are skipped, not fatal', () => {
   const text = session().human('one').jsonl() + '{not json\n\n';
   assert.equal(convert(parseSession(text)).turns.length, 1);
 });
+
+test('a question the agent asked is a decision the person made, with both sides kept', () => {
+  const s = session()
+    .human('ship it')
+    .tool('AskUserQuestion', { questions: [{ question: 'Which cover?', options: [{ label: 'Dancer' }, { label: 'Cage' }] }] }, { took: 40, result: 'User has answered your questions: "Which cover?"="Dancer". You can now continue.' });
+  const step = run(s).turns[0].steps[0];
+  assert.equal(step.label, 'asked: Which cover?');
+  assert.deepEqual(step.ask, { question: 'Which cover?', answer: 'Dancer' });
+  assert.equal(step.ms, 41000);
+});
+
+test('steps and artifacts carry when they happened, so a replay can interleave them with replies', () => {
+  const s = session()
+    .human('go')
+    .tool('Bash', { command: 'x', description: 'Download the masters' }, { took: 10 })
+    .say('Six of eight down.', 2)
+    .tool('Write', { file_path: '/tmp/cover.md' }, { took: 1 });
+  const t = run(s).turns[0];
+  assert.deepEqual(t.steps.map((x) => x.at), [11000, 15000]);
+  assert.equal(t.replies[0].at, 13000);
+  assert.equal(run(s).artifacts[0].at, 14000);
+});

@@ -19,6 +19,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
+      - run: npm ci
       - run: npm test
       # The package must run the way the README says, from outside the repo.
       - run: |

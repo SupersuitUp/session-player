@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { convert, parseSession } from '../src/convert.mjs';
 import { validate } from '../src/scenario.mjs';
+import { createServer } from '../src/serve.mjs';
 
 const HELP = `simulator - draft and check Supersuit Simulator scenarios
 
@@ -12,6 +13,9 @@ Usage:
       (or stdout) and a one-line summary to stderr; --json puts the summary on stdout instead.
   simulator validate <scenario.json> [--json]
       Check a scenario against the format. Exits 1 if anything is wrong.
+  simulator serve <scenario.json>... [--port 4460] [--host 127.0.0.1]
+      Watch scenarios in the player in a browser. Add ?autoplay, ?artifacts=off or
+      ?timeline=off to the URL to see the limited views an embed uses.
 
 A draft is not a publishable scenario: people in it are not anonymized yet.
 Exit codes: 0 ok, 1 invalid or refused, 2 usage error.`;
@@ -51,6 +55,18 @@ try {
     if (flags.json) console.log(JSON.stringify({ ok: problems.length === 0, problems }));
     else console.log(problems.length ? problems.map((p) => `- ${p}`).join('\n') : 'valid');
     process.exit(problems.length ? 1 : 0);
+  } else if (cmd === 'serve') {
+    const files = pos.slice(1);
+    if (!files.length) throw Object.assign(new Error('serve needs at least one scenario file'), { code: 2 });
+    const scenarios = files.map((f) => {
+      const sc = JSON.parse(readFileSync(f, 'utf8'));
+      const problems = validate(sc);
+      if (problems.length) throw new Error(`${f} is not a valid scenario: ${problems[0]}`);
+      return sc;
+    });
+    const port = Number(flags.port ?? 4460);
+    const host = flags.host ?? '127.0.0.1';
+    createServer({ scenarios }).listen(port, host, () => console.log(`simulator serving ${scenarios.length} scenario(s) at http://${host}:${port}/`));
   } else {
     throw Object.assign(new Error(`unknown command: ${cmd}`), { code: 2 });
   }

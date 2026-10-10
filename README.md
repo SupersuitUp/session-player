@@ -2,7 +2,7 @@
 
 The Supersuit Simulator: step into the shoes of someone who needs a great deal of work done, give their commands on a simulated phone, and watch the work and the things it makes appear. Every scenario is built from a real agent session, with the person's corrections left in.
 
-This package holds the **scenario format** and the **converter** that drafts a scenario from a Claude Code session transcript. The player (a React component) comes next.
+This package holds the **scenario format**, the **converter** that drafts a scenario from a Claude Code session transcript, and the **player**, a React component that plays scenarios on a simulated phone.
 
 ## Install
 
@@ -15,6 +15,7 @@ npm install -g @supersuit/simulator
 ```
 simulator convert ~/.claude/projects/<dir>/<session-id>.jsonl --title "Releasing an album" --persona Gary --out album.json
 simulator validate album.json
+simulator serve album.json            # watch it at http://127.0.0.1:4460/
 ```
 
 `convert` keeps only what the person actually typed as turns (tool results, skill bodies, task notifications, messages from other sessions and interrupt markers are not turns), marks a turn that followed an interrupt as the person redirecting, condenses the agent's tool work into named steps timed by the wall clock, and collects the files and links it made or pointed at.
@@ -35,6 +36,17 @@ simulator validate album.json
 | `cuts[]` | `{ turn, what, reason }`: every edit, so nothing is changed silently |
 
 `intervention` is one of `null`, `redirect`, `correct`, `approve`, `decide`. The converter sets only `redirect`; the rest are set by the person reviewing the draft.
+
+## The player
+
+```js
+import { SimulatorPlayer } from '@supersuit/simulator/player';
+<SimulatorPlayer scenario={album} />                       // one scenario
+<SimulatorPlayer scenarios={[dana, marcus]} />             // persona picker first
+<SimulatorPlayer scenario={album} artifacts={false} timeline={false} />  // a limited embed
+```
+
+The viewer taps each command (or holds the mic to say it) and watches the steps play, sped up from their real durations, with a running count of the work done for the persona. Decisions the person made show as their own cards; things made collect in a side panel on wide screens and a slide-up tray on phones. Needs React 18 or newer; no build step and no stylesheet to import.
 
 ## Library
 
