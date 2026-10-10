@@ -54,6 +54,7 @@ export function summarize(sc) {
     decisions: all.filter(isAsk).length,
     redirects: sc.turns.filter((t) => t.intervention).length,
     artifacts: (sc.artifacts ?? []).length,
+    idleMs: all.reduce((n, s) => n + (s.idleMs ?? 0), 0),
   };
 }
 

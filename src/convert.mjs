@@ -11,6 +11,16 @@
 import { FORMAT } from './scenario.mjs';
 
 const LONG_PASTE = 600;
+// Idle time is not work. A session's clock keeps running while a command hangs, the laptop
+// sleeps, or the person walks away, and an album release once read as six hours because one
+// folder check hung overnight (Gary, 2026-10-10: "There's no way that releasing the album
+// took 6 hours"). So: the agent's thinking before a step counts at most THINK_CAP, any one
+// step counts at most STEP_CAP, a command that timed out counts as no work, and a question
+// counts at most ASK_CAP of the person deciding. Everything removed is kept as `idleMs`.
+const THINK_CAP = 3 * 60_000;
+const STEP_CAP = 10 * 60_000;
+const ASK_CAP = 5 * 60_000;
+const timedOut = (data, text) => Boolean(data?.timedOutAfterMs) || /did not complete within its \d+s timeout/.test(text ?? '');
 const PASTE_KEEP = 280;
 
 export function parseSession(text) {
@@ -99,7 +109,11 @@ function merge(steps) {
   const out = [];
   for (const s of steps) {
     const last = out[out.length - 1];
-    if (last && last.kind === s.kind) { last.count += 1; last.ms += s.ms; last.at = s.at; continue; }
+    if (last && last.kind === s.kind) {
+      last.count += 1; last.ms += s.ms; last.at = s.at;
+      if (s.idleMs) last.idleMs = (last.idleMs ?? 0) + s.idleMs;
+      continue;
+    }
     out.push({ ...s, count: 1 });
   }
   return out.map(({ kind, ...s }) => (s.count > 1 && PLURAL[kind] ? { ...s, label: PLURAL[kind](s.count) } : s));
@@ -147,7 +161,7 @@ export function convert(lines, opts = {}) {
   let title = null;
   let pendingTitle = null;
   let cursor = null;
-  let carry = 0;
+  let carry = { ms: 0, idle: 0 };
   let interrupted = false;
   let start = null;
   let raw = [];
@@ -163,10 +177,10 @@ export function convert(lines, opts = {}) {
   };
   const flush = () => {
     const t = turns[turns.length - 1];
-    if (carry && raw.length) raw[raw.length - 1].ms += carry;
+    if (carry.ms && raw.length) raw[raw.length - 1].ms += carry.ms;
     if (t) t.steps = merge(raw);
     raw = [];
-    carry = 0;
+    carry = { ms: 0, idle: 0 };
   };
 
   for (const o of lines) {
@@ -212,12 +226,20 @@ export function convert(lines, opts = {}) {
         // Real tools return in well under a second; the time goes to the agent thinking
         // before it calls them. So a step owns the whole gap since the previous step ended.
         const end = Math.max(results.get(b.id) ?? ts, ts);
-        const ms = Math.max(0, end - cursor) + carry;
+        const think = Math.max(0, ts - cursor);
+        const runFor = end - ts;
+        const stalled = timedOut(resultData.get(b.id), resultText.get(b.id));
+        const cap = b.name === 'AskUserQuestion' ? ASK_CAP : STEP_CAP;
+        const counted = stalled ? 0 : Math.min(Math.min(think, THINK_CAP) + runFor + carry.ms, cap);
+        const idleMs = think + runFor + carry.ms + carry.idle - counted;
+        const ms = counted;
         cursor = end;
-        carry = 0;
-        if (PLUMBING.has(b.name)) { carry = ms; continue; }
+        carry = { ms: 0, idle: 0 };
+        if (PLUMBING.has(b.name)) { carry = { ms, idle: idleMs }; continue; }
         const { kind, label } = stepFor(b.name, b.input);
         const step = { kind, label: clean(label, turn.id, 'step'), tool: b.name, ms, at: end - start };
+        if (idleMs > 1000) { step.idleMs = idleMs; cuts.push({ turn: turn.id, what: 'step', reason: 'idle time removed', ms: idleMs }); }
+        if (stalled) step.stalled = true;
         if (b.name === 'AskUserQuestion') {
           // The agent stopped and the person decided: the clearest human-in-the-loop moment a
           // session has. The whole board is kept, as the person saw it, so a replay can draw it.

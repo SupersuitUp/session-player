@@ -95,7 +95,7 @@ function Step({ step, person, picks, live }) {
   return h('div', { className: `ss-step${step.group ? ' ss-group' : ''}` },
     h('span', { className: 'ss-dot' }),
     h('span', { className: 'ss-label' }, step.label),
-    h('span', { className: 'ss-dur' }, duration(step.ms)));
+    h('span', { className: 'ss-dur' }, step.stalled ? 'timed out' : duration(step.ms)));
 }
 
 function ArtifactCard({ a }) {
@@ -255,7 +255,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
       h('footer', { className: 'ss-composer' },
         phase === 'done'
           ? h('div', { className: 'ss-end' },
-            h('p', null, h('b', null, duration(totals.agentMs)), ` of work, ${totals.steps} steps, ${totals.artifacts} things made. ${person} sent ${totals.commands} commands and made ${totals.decisions} decisions.`),
+            h('p', null, h('b', null, duration(totals.agentMs)), ` of work, ${totals.steps} steps, ${totals.artifacts} things made. ${person} sent ${totals.commands} commands and made ${totals.decisions} decisions.${totals.idleMs > 60000 ? ` ${duration(totals.idleMs)} of idle time (hangs, timeouts, nobody at the keyboard) is left out.` : ''}`),
             h('button', { className: 'ss-chip', onClick: restart }, 'Play again'))
           : h(Fragment, null,
             h('button', { className: 'ss-chip', disabled: phase !== 'ready', onClick: send },

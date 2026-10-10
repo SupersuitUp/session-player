@@ -94,3 +94,8 @@ test('dictate streams a command in word by word, ending on the whole command', (
   assert.ok(dictate('word '.repeat(300)).length <= 40);
   assert.equal(dictate('word '.repeat(300)).at(-1), 'word '.repeat(300).trim());
 });
+
+test('summarize reports how much idle time was taken out', () => {
+  const sc = { turns: [{ steps: [{ label: 'a', ms: 600000, idleMs: 20000000 }, { label: 'b', ms: 0, idleMs: 600000, stalled: true }] }], artifacts: [] };
+  assert.equal(summarize(sc).idleMs, 20600000);
+});

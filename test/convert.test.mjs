@@ -212,3 +212,26 @@ test('phone numbers and email addresses never survive into a scenario', () => {
   assert.match(all, /1,000 steps/);
   assert.ok(sc.cuts.filter((c) => c.reason === 'contact detail removed').length >= 5);
 });
+
+test('idle time is removed: a hang counts at most 10 minutes, a timed-out command counts as no work', () => {
+  const s = session()
+    .human('go')
+    .tool('Bash', { command: 'x', description: 'Download every take' }, { took: 7 * 60 })
+    .tool('Bash', { command: 'x', description: 'Download again' }, { took: 600, result: 'Command did not complete within its 600s timeout and was moved to the background', toolUseResult: { timedOutAfterMs: 600000 } })
+    .tool('Bash', { command: 'x', description: 'Check the Downloads folder' }, { took: 6 * 3600 })
+    .tool('Bash', { command: 'x', description: 'Stage the masters' }, { after: 20 * 60, took: 5 });
+  const sc = run(s);
+  const ms = sc.turns[0].steps.map((x) => Math.round(x.ms / 1000));
+  assert.deepEqual(ms, [7 * 60 + 1, 0, 600, 3 * 60 + 5]);
+  assert.equal(sc.turns[0].steps[1].stalled, true);
+  const idle = sc.turns[0].steps.reduce((n, x) => n + (x.idleMs ?? 0), 0);
+  assert.equal(Math.round(idle / 1000), 601 + (6 * 3600 + 1 - 600) + (20 * 60 - 180));
+  assert.ok(sc.cuts.some((c) => c.reason === 'idle time removed'));
+});
+
+test('a decision that sat unanswered counts at most 5 minutes of the person deciding', () => {
+  const questions = [{ question: 'Which cover?', options: [{ label: 'A' }] }];
+  const s = session().human('go').tool('AskUserQuestion', { questions }, { took: 13 * 60, toolUseResult: { questions, answers: { 'Which cover?': 'A' } } });
+  const step = run(s).turns[0].steps[0];
+  assert.equal(Math.round(step.ms / 1000), 300);
+});
