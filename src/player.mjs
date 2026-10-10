@@ -310,7 +310,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
         }),
         phase === 'working' && !waiting && h('div', { className: 'ss-typing' }, h('i'), h('i'), h('i'))),
       showArtifacts && !waiting && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
-      showArtifacts && tray && !waiting && h('div', { className: 'ss-tray' }, artifactList))),
+      showArtifacts && tray && !waiting && h('div', { className: 'ss-tray' }, artifactList)),
       waiting ? h(Board, { key: waiting, ask: log.find((l) => l.key === waiting).step.ask, images: log.find((l) => l.key === waiting).step.images, person, auto, onPick: (picks) => resumeRef.current?.(picks) }) :
       h('footer', { className: 'ss-composer' },
         phase === 'done'
@@ -323,7 +323,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
               phase === 'saying' ? spoken : next && plain(next.text).slice(0, 140)),
             h('button', {
               className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
-            }, '\u{1F3A4}'))),
+            }, '\u{1F3A4}')))),
     showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList),
     timeline && h(Timeline, { sc, turnIndex: turn, person }),
     phase === 'done' && !closed && h(CloseCard, { sc, person, onReplay: restart, onBack }));

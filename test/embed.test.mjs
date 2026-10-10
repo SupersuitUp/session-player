@@ -49,3 +49,23 @@ test('the "made" button floats inside the conversation area, never over the comp
   assert.ok(wrap > -1 && handle > wrap && handle < composer, 'handle sits inside the log wrapper, before the composer');
   assert.doesNotMatch(PLAYER_CSS, /ss-tray-handle\{[^}]*bottom:84px/);
 });
+
+// Walks the rendered tags and returns the class chain of the first element whose class matches.
+function ancestry(html, cls) {
+  const stack = [];
+  for (const t of html.replace(/<style>[\s\S]*?<\/style>/, '').matchAll(/<(\/?)(div|footer|header|aside|section|button|figure)([^>]*)>/g)) {
+    if (t[1]) { stack.pop(); continue; }
+    const c = (t[3].match(/class="([^"]*)"/) || [])[1] || '';
+    if (c.split(' ').includes(cls)) return [...stack, c];
+    stack.push(c);
+  }
+  return null;
+}
+
+test('the composer and the conversation both live inside the phone', () => {
+  const html = renderToString(h(SimulatorPlayer, { scenario: sc('a', 'Dana') }));
+  for (const cls of ['ss-composer', 'ss-log', 'ss-tray-handle']) {
+    const chain = ancestry(html, cls);
+    assert.ok(chain && chain.includes('ss-phone'), `${cls} is not inside ss-phone: ${JSON.stringify(chain)}`);
+  }
+});
