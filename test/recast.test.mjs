@@ -90,3 +90,13 @@ test('a recast can restate the close facts for the turns it keeps', () => {
   assert.equal(out.close.edge.total, 5);
   assert.equal(out.close.outcome, 'Slow Tide released.');
 });
+
+test('the close card source note is recast and checked like every other field', () => {
+  const s = sc();
+  s.close = { outcome: 'Done.', edge: { total: 3, layers: { fueled: 0, encoded: 3, built: 0, retired: 0 }, source: 'edge-earned for Gary on Kingdom Free' } };
+  const out = recast(s, spec);
+  assert.equal(out.close.edge.source, 'edge-earned for Maya on Slow Tide');
+  const leaky = sc();
+  leaky.close = { edge: { total: 0, layers: { fueled: 0, encoded: 0, built: 0, retired: 0 }, source: 'commits in garys-freedom' } };
+  assert.throws(() => recast(leaky, { ...spec, forbid: [...spec.forbid, 'garys-freedom'] }), /forbidden "[^"]+" survives in the close card: "commits in garys-freedom"/);
+});

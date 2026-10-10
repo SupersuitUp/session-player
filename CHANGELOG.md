@@ -19,4 +19,5 @@
 - Embeddable in any page or book: an `/embed` page for an `<iframe>` (query switches `scenario`, `artifacts`, `timeline`, `autoplay`, `height`), a `<supersuit-simulator>` custom element (`@supersuit/simulator/embed`), `scenarioId` and `height` props, and every overlay contained inside the player, never fixed to the host page's viewport.
 - `bundle` writes a provenance recipe beside every image (mode derive: what it came from, what resized it, and the source's own recipe nested), so a bundled scenario passes a wiki's image-provenance gate.
 - `recast` gives every image a neutral id (`<recast id>-image-<n>`, one per picture), since ids became file names and carried the original's subject.
+- A session opening with a slash command shows the command as typed, not its tags; usage-limit and API-error notices are dropped (they are the harness, and carry the operator's plan and time zone); recast checks and recasts the close card's source notes.
 - The `simulator` CLI: `convert`, `validate`, `tidy`, `recast`, `bundle`, `serve`.

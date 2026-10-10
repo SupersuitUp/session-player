@@ -241,3 +241,19 @@ test('an image the person pasted is kept with their command', () => {
   assert.equal(sc.turns[0].human.text, '[Image #1] this one is good');
   assert.deepEqual(sc.turns[0].human.images, [{ id: 'pasted-t1-1', src: 'data:image/png;base64,iVBORw0KGgo=', caption: 'pasted by the operator' }]);
 });
+
+test('a session that opens with a slash command shows the command the person typed, not its tags', () => {
+  const s = session().human('<command-message>cw:triage</command-message>\n<command-name>/cw:triage</command-name>\n<command-args>the open queue</command-args>');
+  assert.equal(run(s).turns[0].human.text, '/cw:triage the open queue');
+  const bare = session().human('<command-message>freedom:initialize-session</command-message>\n<command-name>/freedom:initialize-session</command-name>');
+  assert.equal(run(bare).turns[0].human.text, '/freedom:initialize-session');
+});
+
+test('usage-limit and API error notices are the harness talking, so they are not kept as replies', () => {
+  const s = session().human('go').say("You've hit your weekly limit · resets Sep 27 at 5pm (America/New_York)").say('Done, all four fixed.');
+  const lines = s.lines;
+  lines.push({ type: 'assistant', sessionId: 'sess-1', isApiErrorMessage: true, timestamp: new Date(Date.parse(lines.at(-1).timestamp) + 1000).toISOString(), message: { role: 'assistant', content: [{ type: 'text', text: 'API Error: 529 overloaded' }] } });
+  const sc = run(s);
+  assert.deepEqual(sc.turns[0].replies.map((r) => r.text), ['Done, all four fixed.']);
+  assert.ok(sc.cuts.some((c) => c.reason === 'harness notice dropped'));
+});

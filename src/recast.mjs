@@ -17,12 +17,13 @@ const TEXT_FIELDS = (sc) => [
     ...t.replies.map((r) => [r, 'text']),
   ]),
   ...sc.artifacts.flatMap((a) => [[a, 'title'], [a, 'url'], [a, 'path']]),
-  ...(sc.close ? [[sc.close, 'outcome'], ...(sc.close.freed ?? []).flatMap((f) => [[f, 'task'], [f, 'cadence']])] : []),
+  ...(sc.close ? [[sc.close, 'outcome'], ...(sc.close.edge ? [[sc.close.edge, 'source']] : []), ...(sc.close.freed ?? []).flatMap((f) => [[f, 'task'], [f, 'cadence'], [f, 'source']])] : []),
 ];
 
 const inAsk = (s, obj) => (s.ask?.questions ?? []).some((q) => q === obj || q.options.includes(obj));
 const where = (sc, obj) => sc.turns.find((t) => t.human === obj || t.steps.some((s) => s === obj || inAsk(s, obj)) || t.replies.includes(obj))?.id
-  ?? sc.artifacts.find((a) => a === obj)?.id ?? 'the title';
+  ?? sc.artifacts.find((a) => a === obj)?.id
+  ?? (sc.close && (obj === sc.close || obj === sc.close.edge || (sc.close.freed ?? []).includes(obj)) ? 'the close card' : 'the title');
 
 import { allImages } from './scenario.mjs';
 

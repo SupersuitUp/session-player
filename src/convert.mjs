@@ -119,6 +119,7 @@ function merge(steps) {
   return out.map(({ kind, ...s }) => (s.count > 1 && PLURAL[kind] ? { ...s, label: PLURAL[kind](s.count) } : s));
 }
 
+const HARNESS_NOTICE = /^\s*(You've hit your (weekly |session |daily )?limit|API Error:|Claude AI usage limit reached|Request timed out)/i;
 const URL_RE = /https:\/\/[^\s)>\]"'`]+/g;
 // A path the agent names in backticks is something it is pointing the person at.
 const PATH_RE = /`((?:~|\/)[^`\s]*\/[^`\s]+)`/g;
@@ -200,7 +201,11 @@ export function convert(lines, opts = {}) {
       start ??= ts;
       cursor = ts;
       const id = `t${turns.length + 1}`;
-      let text = clean(textOf(o.message), id, 'human');
+      // A slash command arrives wrapped in tags; show it as the person typed it.
+      let raw = textOf(o.message);
+      const cmd = raw.match(/<command-name>([^<]+)<\/command-name>/);
+      if (cmd) raw = [cmd[1].trim(), raw.match(/<command-args>([^<]*)<\/command-args>/)?.[1].trim()].filter(Boolean).join(' ');
+      let text = clean(raw, id, 'human');
       if (text.length > LONG_PASTE) {
         cuts.push({ turn: id, what: 'human', reason: 'long paste collapsed' });
         text = `${text.slice(0, PASTE_KEEP).trimEnd()} [pasted ${text.length} characters]`;
@@ -215,6 +220,12 @@ export function convert(lines, opts = {}) {
 
     const turn = turns[turns.length - 1];
     if (!turn || o.type !== 'assistant') continue;
+    // Usage limits and API errors are the harness talking, not the agent; they also carry the
+    // operator's plan and time zone.
+    if (o.isApiErrorMessage || blocks(o.message).some((b) => b.type === 'text' && HARNESS_NOTICE.test(b.text))) {
+      cuts.push({ turn: turn.id, what: 'reply', reason: 'harness notice dropped' });
+      continue;
+    }
     interrupted = false;
     const ts = Date.parse(o.timestamp);
     for (const b of blocks(o.message)) {
