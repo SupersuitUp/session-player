@@ -83,3 +83,14 @@ test('compare tells the viewer whether they matched the real choice', () => {
   assert.deepEqual(compare(q(null, 'Friday'), false, { kind: 'other' }), { same: true, real: 'Friday' });
   assert.deepEqual(compare(q(null, null), true, { kind: 'option', index: 0 }), { same: false, real: 'closed it and typed instead' });
 });
+
+import { dictate } from '../src/playback.mjs';
+
+test('dictate streams a command in word by word, ending on the whole command', () => {
+  const frames = dictate('Add a jazzhop one too.');
+  assert.deepEqual(frames, ['Add', 'Add a', 'Add a jazzhop', 'Add a jazzhop one', 'Add a jazzhop one too.']);
+  assert.deepEqual(dictate('  '), ['']);
+  // A long paste is not read out word by word forever.
+  assert.ok(dictate('word '.repeat(300)).length <= 40);
+  assert.equal(dictate('word '.repeat(300)).at(-1), 'word '.repeat(300).trim());
+});

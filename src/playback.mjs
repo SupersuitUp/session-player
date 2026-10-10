@@ -96,3 +96,15 @@ export function compare(q, dismissed, pick) {
   const same = pick.kind === real.kind && (real.kind !== 'option' || pick.index === real.index);
   return { same, real: real.label };
 }
+
+// Frames for "saying" a command: words appear the way dictation lands, ending on the whole
+// command. Long pastes advance in larger jumps so no command takes more than ~40 frames.
+export function dictate(text) {
+  const words = String(text).trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return [''];
+  const step = Math.max(1, Math.ceil(words.length / 40));
+  const frames = [];
+  for (let n = step; n < words.length; n += step) frames.push(words.slice(0, n).join(' '));
+  frames.push(String(text).trim());
+  return frames;
+}

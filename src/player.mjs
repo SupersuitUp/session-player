@@ -6,7 +6,7 @@
 // persona picker). Mobile first; the side panel appears when the container is wide enough.
 
 import { createElement as h, useEffect, useMemo, useRef, useState, Fragment } from 'react';
-import { script, summarize, duration, realPick, compare } from './playback.mjs';
+import { script, summarize, duration, realPick, compare, dictate } from './playback.mjs';
 import { PLAYER_CSS } from './player-css.mjs';
 
 const plain = (s) => String(s).replace(/\*\*([^*]+)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^#+\s*/gm, '');
@@ -195,8 +195,18 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
     }, delay));
   };
 
-  const send = () => {
-    if (phase !== 'ready' && phase !== 'saying') return;
+  const [spoken, setSpoken] = useState('');
+  // The mic "says" the command: words stream into the composer like dictation, then it sends.
+  const say = () => {
+    if (phase !== 'ready') return;
+    setPhase('saying');
+    const frames = dictate(plain(plan[turn].command.text));
+    frames.forEach((f, i) => timers.current.push(setTimeout(() => setSpoken(f), 120 * i)));
+    timers.current.push(setTimeout(() => sendNow(), 120 * frames.length + 450));
+  };
+
+  const send = () => { if (phase === 'ready') sendNow(); };
+  const sendNow = () => {
     setLog((l) => [...l, { kind: 'command', key: `c${turn}`, command: plan[turn].command }]);
     setPhase('working');
     playFrom(turn, 0, 450);
@@ -226,7 +236,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
         h('div', { className: 'ss-titles' }, h('b', null, sc.title), h('small', null, sc.source?.illustrative ? 'Illustrative: recast from a real session' : chapter ?? `as ${person}`)),
         h('label', { className: 'ss-auto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => setAuto(e.target.checked) }), 'auto')),
       h('div', { className: 'ss-counter', 'aria-live': 'polite' },
-        h('span', null, h('b', null, duration(work.ms)), ` of work done for ${person}`),
+        h('span', null, work.ms ? [h('b', { key: 'd' }, duration(work.ms)), ` of work done for ${person}`] : 'No work yet'),
         h('span', null, `${work.steps} of ${totals.steps} steps`)),
       h('div', { className: 'ss-log', ref: logRef },
         log.length === 0 && h('p', { className: 'ss-intro' }, `You are ${person}. Send the first command and watch what gets done.`),
@@ -249,11 +259,10 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
             h('button', { className: 'ss-chip', onClick: restart }, 'Play again'))
           : h(Fragment, null,
             h('button', { className: 'ss-chip', disabled: phase !== 'ready', onClick: send },
-              h('small', null, phase === 'working' ? 'Freeda is working…' : phase === 'saying' ? 'listening…' : 'tap to send'),
-              next && plain(next.text).slice(0, 140)),
+              h('small', null, phase === 'working' ? 'Freeda is working…' : phase === 'saying' ? 'listening…' : 'tap to send, or tap the mic to say it'),
+              phase === 'saying' ? spoken : next && plain(next.text).slice(0, 140)),
             h('button', {
-              className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready' && phase !== 'saying', 'aria-label': 'Hold to say it',
-              onPointerDown: () => phase === 'ready' && setPhase('saying'), onPointerUp: send, onPointerLeave: () => phase === 'saying' && setPhase('ready'),
+              className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
             }, '\u{1F3A4}'))),
       showArtifacts && !waiting && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
       showArtifacts && tray && !waiting && h('div', { className: 'ss-tray' }, artifactList)),

@@ -78,7 +78,7 @@ export const PLAYER_CSS = `
 .ss-chip{flex:1;min-width:0;text-align:left;border:1px solid var(--ss-petrol);background:#fff;border-radius:16px;padding:8px 12px;display:flex;flex-direction:column;gap:1px;overflow-wrap:anywhere}
 .ss-chip small{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ss-petrol)}
 .ss-chip:disabled{opacity:.55;cursor:default}
-.ss-sim .ss-mic{flex:none;width:48px;border:0;border-radius:50%;background:var(--ss-tomato);color:#fff;font-size:20px;touch-action:none;-webkit-user-select:none;user-select:none}
+.ss-sim .ss-mic{flex:none;align-self:center;width:48px;height:48px;padding:0;border:0;border-radius:50%;background:var(--ss-tomato);color:#fff;font-size:20px;touch-action:none;-webkit-user-select:none;user-select:none}
 .ss-mic:disabled{opacity:.4}
 .ss-mic.ss-live{animation:ss-pulse 1s infinite}
 .ss-end{flex:1;display:flex;flex-direction:column;gap:8px}

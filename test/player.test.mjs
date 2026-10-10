@@ -15,7 +15,7 @@ test('one scenario opens straight on the phone with the first command ready to s
   const html = renderToString(h(SimulatorPlayer, { scenario: sc('a', 'Gary') }));
   assert.match(html, /tap to send/);
   assert.match(html, /Ship the album/);
-  assert.match(html, /of work done for/);
+  assert.match(html, /No work yet/);
   assert.match(html, /Made for/);
   assert.match(html, /ss-timeline/);
 });
@@ -79,4 +79,10 @@ test('once answered, the conversation keeps a compact record: each question and 
 test('the record notes where the viewer chose differently', () => {
   const html = renderToString(h(Asked, { ask: two(), person: 'Gary', ms: 1000, picks: { 0: { kind: 'option', index: 1 }, 1: { kind: 'option', index: 0 } } }));
   assert.match(html, /You picked Cage/);
+});
+
+test('before any work the counter says so, rather than "under a second"', () => {
+  const html = renderToString(h(SimulatorPlayer, { scenario: sc('a', 'Gary') }));
+  assert.match(html, /No work yet/);
+  assert.doesNotMatch(html, /under a second/);
 });
