@@ -22,62 +22,76 @@ function Reply({ text }) {
     long && h('button', { className: 'ss-more', onClick: () => setOpen(!open) }, open ? 'less' : 'more'));
 }
 
-// A decision, drawn as the question board the person actually saw. Live, it waits for the
-// viewer: every option is a button, plus "Other" when the person typed their own answer, or
-// "Type something else" when they closed the board. Each pick is then answered with what the
-// person really chose; the recording continues on the real path either way.
-export function Board({ ask, person, ms, live = false, auto = false, onPick }) {
+// A decision, as the native question board: pinned to the bottom of the phone in place of
+// the composer, one question at a time, a tab per question. The viewer picks; the pick is
+// answered with what the person really chose, then the next question, then the replay goes
+// on along the real path (a recording has one path, so no branch is ever invented).
+export function Board({ ask, person, auto = false, onPick }) {
+  const [idx, setIdx] = useState(0);
   const [picks, setPicks] = useState({});
-  const pending = live && ask.questions.some((_, i) => !picks[i]);
-  const finished = useRef(false);
-  useEffect(() => {
-    if (!live || pending || finished.current) return undefined;
-    finished.current = true;
-    const id = setTimeout(() => onPick?.(), 1300);
-    return () => clearTimeout(id);
-  }, [live, pending]);
-  useEffect(() => {
-    if (!live || !auto) return undefined;
-    const id = setTimeout(() => setPicks(Object.fromEntries(ask.questions.map((q, i) => [i, realPick(q, ask.dismissed)]))), 1500);
-    return () => clearTimeout(id);
-  }, [live, auto]);
-  const choose = (qi, pick) => setPicks((p) => (p[qi] ? p : { ...p, [qi]: pick }));
+  const q = ask.questions[idx];
+  const mine = picks[idx];
+  const real = realPick(q, ask.dismissed);
+  const verdict = mine && compare(q, ask.dismissed, mine);
 
-  return h('div', { className: `ss-board${ask.dismissed && !live ? ' ss-dismissed' : ''}${pending ? ' ss-live-board' : ''}` },
-    ask.questions.map((q, qi) => {
-      const mine = picks[qi];
-      const open = live && !mine;
-      const real = realPick(q, ask.dismissed);
-      const verdict = mine && compare(q, ask.dismissed, mine);
-      const row = (key, pick, label, description, extra = '') => {
-        const isReal = !open && (pick.kind === real.kind && (pick.kind !== 'option' || pick.index === real.index));
-        const isMine = mine && mine.kind === pick.kind && (pick.kind !== 'option' || mine.index === pick.index);
-        const cls = `ss-opt${isReal ? ' ss-chosen' : ''}${isMine && !isReal ? ' ss-yours' : ''}${extra}`;
-        const body = [h('span', { key: 'n', className: 'ss-onum' }, isReal ? '\u2713' : typeof key === 'number' ? key + 1 : '\u2026'),
-          h('span', { key: 'b' }, h('b', null, label), description && h('small', null, description))];
-        return open
-          ? h('button', { key, className: cls, onClick: () => choose(qi, pick) }, body)
-          : h('li', { key, className: cls }, body);
-      };
-      const rows = [
-        ...q.options.map((o, oi) => row(oi, { kind: 'option', index: oi }, o.label, o.description)),
-        ...(real.kind === 'other' ? [row('other', { kind: 'other' }, open ? 'Other' : plain(q.answer), open ? 'type your own answer' : `typed by ${person}`, ' ss-other')] : []),
-        ...(real.kind === 'dismissed' && (open || !live) ? [row('dismiss', { kind: 'dismissed' }, 'Type something else', 'close this and say what you want')] : []),
-      ];
-      return h('div', { key: qi, className: 'ss-bq' },
-        q.header && h('span', { className: 'ss-bhead' }, q.header),
-        h('p', { className: 'ss-q' }, plain(q.question)),
-        h(open ? 'div' : 'ol', { className: 'ss-opts' }, rows),
-        verdict && h('p', { className: `ss-verdict${verdict.same ? ' ss-same' : ''}` },
-          verdict.same ? `Same call as ${person}.` : `${person} ${real.kind === 'dismissed' ? '' : 'chose '}${verdict.real} in the real session, so that is where this goes.`));
-    }),
-    h('div', { className: 'ss-bfoot' },
-      h('span', { className: 'ss-tag' }, pending ? 'Your call' : ask.dismissed ? `${person} closed this and typed instead` : `${person} chose`),
-      h('span', { className: 'ss-dur' }, pending ? '' : duration(ms))));
+  useEffect(() => {
+    if (!mine) return undefined;
+    const id = setTimeout(() => {
+      if (idx + 1 < ask.questions.length) setIdx(idx + 1); else onPick?.(picks);
+    }, 1300);
+    return () => clearTimeout(id);
+  }, [mine, idx]);
+  useEffect(() => {
+    if (!auto || mine) return undefined;
+    const id = setTimeout(() => setPicks((p) => ({ ...p, [idx]: real })), 1200);
+    return () => clearTimeout(id);
+  }, [auto, idx, mine]);
+
+  const choose = (pick) => setPicks((p) => (p[idx] ? p : { ...p, [idx]: pick }));
+  const same = (a, b) => a.kind === b.kind && (a.kind !== 'option' || a.index === b.index);
+  const row = (key, pick, label, description) => {
+    const isReal = mine && same(pick, real);
+    const isMine = mine && same(pick, mine);
+    const cls = `ss-opt${isReal ? ' ss-chosen' : ''}${isMine && !isReal ? ' ss-yours' : ''}`;
+    return h('button', { key, className: cls, disabled: Boolean(mine), onClick: () => choose(pick) },
+      h('span', { className: 'ss-onum' }, isReal ? '\u2713' : typeof key === 'number' ? key + 1 : '\u2026'),
+      h('span', null, h('b', null, label), description && h('small', null, description)));
+  };
+  return h('div', { className: 'ss-sheet', role: 'dialog', 'aria-label': 'Freeda is asking' },
+    ask.questions.length > 1 && h('div', { className: 'ss-tabs' }, ask.questions.map((qq, qi) => h('span', {
+      key: qi, className: `ss-tab${qi === idx ? ' ss-tab-now' : ''}${picks[qi] ? ' ss-tab-done' : ''}`,
+    }, qq.header || `Question ${qi + 1}`))),
+    ask.questions.length === 1 && q.header && h('span', { className: 'ss-bhead' }, q.header),
+    h('p', { className: 'ss-q' }, plain(q.question)),
+    h('div', { className: 'ss-opts' },
+      q.options.map((o, oi) => row(oi, { kind: 'option', index: oi }, o.label, o.description)),
+      real.kind === 'other' && row('other', { kind: 'other' }, mine ? plain(q.answer) : 'Other', mine ? `typed by ${person}` : 'type your own answer'),
+      real.kind === 'dismissed' && row('dismiss', { kind: 'dismissed' }, 'Type something else', 'close this and say what you want')),
+    h('p', { className: `ss-verdict${verdict?.same ? ' ss-same' : ''}` },
+      !verdict ? 'Your call.' : verdict.same ? `Same call as ${person}.` : `${person} ${real.kind === 'dismissed' ? '' : 'chose '}${verdict.real} in the real session, so that is where this goes.`));
 }
 
-function Step({ step, person, live, auto, onPick }) {
-  if (step.ask) return h(Board, { ask: step.ask, person, ms: step.ms, live, auto, onPick });
+// The record a board leaves in the conversation once it is answered: each question and what
+// was chosen, compact, the way the native transcript shows an answered question.
+export function Asked({ ask, person, ms, picks = {} }) {
+  return h('div', { className: 'ss-asked' },
+    ask.questions.map((q, qi) => {
+      const real = realPick(q, ask.dismissed);
+      const mine = picks[qi];
+      const v = mine && compare(q, ask.dismissed, mine);
+      const mineLabel = mine && (mine.kind === 'option' ? q.options[mine.index]?.label : mine.kind === 'other' ? 'Other' : 'to type something else');
+      return h('div', { key: qi, className: 'ss-aq' },
+        h('p', { className: 'ss-q' }, q.header && h('span', { className: 'ss-bhead' }, q.header), ' ', plain(q.question)),
+        h('p', { className: 'ss-a' }, real.kind === 'dismissed' ? '\u21b3 closed it' : `\u21b3 ${plain(real.label)}`),
+        v && !v.same && h('p', { className: 'ss-mine' }, `You picked ${mineLabel}`));
+    }),
+    h('div', { className: 'ss-bfoot' },
+      h('span', { className: 'ss-tag' }, ask.dismissed ? `${person} closed this and typed instead` : `${person} chose`),
+      h('span', { className: 'ss-dur' }, duration(ms))));
+}
+
+function Step({ step, person, picks, live }) {
+  if (step.ask) return live ? h('div', { className: 'ss-asking' }, 'Freeda is asking you\u2026') : h(Asked, { ask: step.ask, person, ms: step.ms, picks });
   return h('div', { className: `ss-step${step.group ? ' ss-group' : ''}` },
     h('span', { className: 'ss-dot' }),
     h('span', { className: 'ss-label' }, step.label),
@@ -152,6 +166,8 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
   useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' }); }, [log]);
 
   const [waiting, setWaiting] = useState(null); // key of the board waiting on the viewer
+  const [answers, setAnswers] = useState({});
+  const resumeRef = useRef(null);
 
   // Events play one after another; a board stops the clock until the viewer picks.
   const playFrom = (ti, i, delay) => {
@@ -165,7 +181,12 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
     const e = p.events[i];
     timers.current.push(setTimeout(() => {
       const key = `${ti}-${i}`;
-      setLog((l) => [...l, { ...e, key, resume: () => { setWaiting(null); playFrom(ti, i + 1, 500); } }]);
+      setLog((l) => [...l, { ...e, key }]);
+      if (e.kind === 'step' && e.step.ask) resumeRef.current = (picks) => {
+        setAnswers((a) => ({ ...a, [key]: picks }));
+        setWaiting(null);
+        playFrom(ti, i + 1, 500);
+      };
       if (e.kind === 'artifact') setMade((m) => [...m, e.artifact]);
       if (e.kind === 'step' && !e.step.ask) setWork((w) => ({ ms: w.ms + e.step.ms, steps: w.steps + (e.step.count ?? 1) }));
       if (e.kind === 'step' && e.step.ask) { setWaiting(key); return; }
@@ -190,7 +211,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
   const restart = () => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    setTurn(0); setPhase('ready'); setLog([]); setMade([]); setWork({ ms: 0, steps: 0 }); setWaiting(null);
+    setTurn(0); setPhase('ready'); setLog([]); setMade([]); setWork({ ms: 0, steps: 0 }); setWaiting(null); setAnswers({});
   };
 
   const next = plan[turn]?.command;
@@ -215,11 +236,12 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
               item.command.intervention && h('span', { className: 'ss-redirect' }, `${person} stepped in`),
               h('div', { className: 'ss-cmd' }, plain(item.command.text)));
           }
-          if (item.kind === 'step') return h(Step, { key: item.key, step: item.step, person, live: waiting === item.key, auto, onPick: item.resume });
+          if (item.kind === 'step') return h(Step, { key: item.key, step: item.step, person, live: waiting === item.key, picks: answers[item.key] });
           if (item.kind === 'reply') return h(Reply, { key: item.key, text: item.reply.text });
           return h('div', { key: item.key, className: 'ss-made' }, h('span', null, 'made'), ' ', item.artifact.title);
         }),
         phase === 'working' && !waiting && h('div', { className: 'ss-typing' }, h('i'), h('i'), h('i'))),
+      waiting ? h(Board, { key: waiting, ask: log.find((l) => l.key === waiting).step.ask, person, auto, onPick: (picks) => resumeRef.current?.(picks) }) :
       h('footer', { className: 'ss-composer' },
         phase === 'done'
           ? h('div', { className: 'ss-end' },
@@ -227,14 +249,14 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
             h('button', { className: 'ss-chip', onClick: restart }, 'Play again'))
           : h(Fragment, null,
             h('button', { className: 'ss-chip', disabled: phase !== 'ready', onClick: send },
-              h('small', null, waiting ? 'Your call: pick an option above' : phase === 'working' ? 'Freeda is working…' : phase === 'saying' ? 'listening…' : 'tap to send'),
+              h('small', null, phase === 'working' ? 'Freeda is working…' : phase === 'saying' ? 'listening…' : 'tap to send'),
               next && plain(next.text).slice(0, 140)),
             h('button', {
               className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready' && phase !== 'saying', 'aria-label': 'Hold to say it',
               onPointerDown: () => phase === 'ready' && setPhase('saying'), onPointerUp: send, onPointerLeave: () => phase === 'saying' && setPhase('ready'),
             }, '\u{1F3A4}'))),
-      showArtifacts && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
-      showArtifacts && tray && h('div', { className: 'ss-tray' }, artifactList)),
+      showArtifacts && !waiting && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
+      showArtifacts && tray && !waiting && h('div', { className: 'ss-tray' }, artifactList)),
     showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList),
     timeline && h(Timeline, { sc, turnIndex: turn, person }));
 }

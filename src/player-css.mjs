@@ -31,6 +31,21 @@ export const PLAYER_CSS = `
 .ss-group .ss-label{color:#8a7d68}
 .ss-label{flex:1;min-width:0;overflow-wrap:anywhere}
 .ss-dur{flex:none;font-size:12px;color:#8a7d68;font-variant-numeric:tabular-nums}
+.ss-sheet{flex:none;max-height:72%;overflow-y:auto;background:#fffaf0;border-top:1px solid #e3cf9f;border-radius:20px 20px 0 0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -8px 24px rgba(30,27,25,.12);font-size:13px;animation:ss-up .28s ease-out}
+.ss-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px;scrollbar-width:none}
+.ss-tab{flex:none;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:1px solid #e3cf9f;color:#8a7d68;border-radius:999px;padding:2px 9px}
+.ss-tab.ss-tab-done{background:#e8f1f3;border-color:#bcd5db;color:var(--ss-petrol)}
+.ss-tab.ss-tab-now{background:var(--ss-petrol);border-color:var(--ss-petrol);color:#fff}
+.ss-sheet .ss-q{margin:4px 0 10px;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.ss-sheet .ss-opts{display:flex;flex-direction:column;gap:6px}
+.ss-sim .ss-sheet button.ss-opt:disabled{cursor:default}
+.ss-asking{font-size:13px;color:var(--ss-petrol);font-weight:600;animation:ss-blink 1.4s infinite}
+.ss-asked{border-left:3px solid var(--ss-mustard);background:#fff8e8;border-radius:6px;padding:8px 10px;font-size:13px;animation:ss-in .25s ease-out}
+.ss-aq+.ss-aq{margin-top:6px}
+.ss-asked .ss-q{margin:0;color:#4a4238;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ss-asked .ss-a{margin:2px 0 0;font-weight:700;overflow-wrap:anywhere}
+.ss-mine{margin:1px 0 0;color:#a86a00;font-size:12px}
+@keyframes ss-up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
 .ss-board{background:#fff;border:1px solid #e3cf9f;border-radius:14px;padding:10px 12px;font-size:13px;box-shadow:0 2px 10px rgba(30,27,25,.06);animation:ss-in .25s ease-out}
 .ss-board .ss-bq+.ss-bq{margin-top:10px;padding-top:10px;border-top:1px dashed #eadcbc}
 .ss-bhead{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--ss-sand);border-radius:999px;padding:1px 8px}
@@ -43,10 +58,10 @@ export const PLAYER_CSS = `
 .ss-sim button.ss-opt{width:100%;text-align:left;background:#fff;cursor:pointer;transition:border-color .15s,background .15s}
 .ss-sim button.ss-opt:hover,.ss-sim button.ss-opt:focus-visible{border-color:var(--ss-petrol);background:#f3f8f9;outline:none}
 .ss-live-board{border-color:var(--ss-petrol);box-shadow:0 0 0 3px rgba(38,94,114,.15)}
-.ss-opt.ss-yours{border-color:var(--ss-mustard);background:#fff4dc}
-.ss-verdict{margin:6px 0 0;font-size:13px;color:#a86a00}
+.ss-sim .ss-opt.ss-yours,.ss-sim button.ss-opt.ss-yours{border-color:var(--ss-mustard);background:#fff4dc}
+.ss-verdict{min-height:1.4em;margin:8px 0 0;font-size:13px;color:#a86a00}
 .ss-verdict.ss-same{color:var(--ss-petrol);font-weight:600}
-.ss-opt.ss-chosen{border-color:var(--ss-petrol);background:#e8f1f3}
+.ss-sim .ss-opt.ss-chosen,.ss-sim button.ss-opt.ss-chosen{border-color:var(--ss-petrol);background:#e8f1f3}
 .ss-opt.ss-chosen .ss-onum{background:var(--ss-petrol);color:#fff}
 .ss-dismissed .ss-opt{opacity:.55}
 .ss-bfoot{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px}

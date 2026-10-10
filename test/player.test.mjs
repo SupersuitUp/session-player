@@ -2,8 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement as h } from 'react';
 import { renderToString } from 'react-dom/server';
-import { SimulatorPlayer, Board } from '../src/player.mjs';
-const await_board = () => ({ Board });
+import { SimulatorPlayer, Board, Asked } from '../src/player.mjs';
 
 const sc = (id, name) => ({
   format: 'supersuit-simulator/1', id, title: `A day as ${name}`, persona: { name, role: 'founder' },
@@ -42,43 +41,42 @@ test('a recast scenario says on screen that it is illustrative', () => {
   assert.doesNotMatch(renderToString(h(SimulatorPlayer, { scenario: sc('a', 'Gary') })), /Illustrative/);
 });
 
-test('a decision is drawn as the question board, with the chosen option marked', () => {
-  const s = sc('a', 'Gary');
-  s.turns[0].steps.push({ label: 'asked: Which cover?', tool: 'AskUserQuestion', ms: 40000, count: 1, at: 471000, ask: { dismissed: false, questions: [{ header: 'Cover', question: 'Which cover?', options: [{ label: 'Dancer', description: 'oil' }, { label: 'Cage', description: 'blue' }], answer: 'Dancer', chosen: 0 }] } });
-  const { Board } = await_board();
-  const html = renderToString(h(Board, { ask: s.turns[0].steps[1].ask, person: 'Gary', ms: 40000 }));
-  assert.match(html, /Cover/);
+const two = (extra = {}) => ({ dismissed: false, questions: [
+  { header: 'Cover', question: 'Which cover?', options: [{ label: 'Dancer', description: 'oil' }, { label: 'Cage', description: 'blue' }], answer: 'Dancer', chosen: 0 },
+  { header: 'Date', question: 'Release when?', options: [{ label: 'Today' }, { label: 'Next week' }, { label: 'Later' }], answer: 'Today', chosen: 0 },
+], ...extra });
+
+test('the live board shows one question at a time, with a tab for each and the real pick hidden', () => {
+  const html = renderToString(h(Board, { ask: two(), person: 'Gary', onPick: () => {} }));
+  assert.equal((html.match(/<button[^>]*class="ss-opt/g) ?? []).length, 2);
   assert.match(html, /Which cover\?/);
-  assert.match(html, /class="ss-opt ss-chosen"[^>]*>.*Dancer/s);
-  assert.match(html, /Cage/);
-  assert.match(html, /Gary chose/);
+  assert.doesNotMatch(html, /Release when\?/);
+  assert.match(html, /class="ss-tab ss-tab-now"[^>]*>Cover/);
+  assert.match(html, /class="ss-tab"[^>]*>Date/);
+  assert.doesNotMatch(html, /ss-chosen/);
 });
 
-test('an answer typed outside the options shows as the person\'s own words, and a dismissed board says so', () => {
-  const { Board } = await_board();
-  const typed = renderToString(h(Board, { ask: { dismissed: false, questions: [{ question: 'When?', options: [{ label: 'Today' }], answer: 'Friday', chosen: null }] }, person: 'Gary', ms: 1000 }));
-  assert.match(typed, /ss-opt ss-chosen ss-other/);
-  assert.match(typed, /Friday/);
-  const gone = renderToString(h(Board, { ask: { dismissed: true, questions: [{ question: 'Which?', options: [{ label: 'A' }], answer: null, chosen: null }] }, person: 'Gary', ms: 1000 }));
+test('a dismissed board offers typing something else, and a typed answer is offered as Other', () => {
+  const gone = renderToString(h(Board, { ask: { dismissed: true, questions: [{ question: 'Which?', options: [{ label: 'A' }], answer: null, chosen: null }] }, person: 'Gary', onPick: () => {} }));
+  assert.match(gone, /Type something else/);
+  const typed = renderToString(h(Board, { ask: { dismissed: false, questions: [{ question: 'When?', options: [{ label: 'Today' }], answer: 'Friday', chosen: null }] }, person: 'Gary', onPick: () => {} }));
+  assert.match(typed, /Other/);
+  assert.doesNotMatch(typed, /Friday/);
+});
+
+test('once answered, the conversation keeps a compact record: each question and what was chosen', () => {
+  const html = renderToString(h(Asked, { ask: two(), person: 'Gary', ms: 40000 }));
+  assert.match(html, /Which cover\?/);
+  assert.match(html, /Dancer/);
+  assert.match(html, /Release when\?/);
+  assert.match(html, /Today/);
+  assert.doesNotMatch(html, /Cage|Next week/);
+  assert.match(html, /Gary chose/);
+  const gone = renderToString(h(Asked, { ask: { dismissed: true, questions: [{ question: 'Which?', options: [{ label: 'A' }], answer: null, chosen: null }] }, person: 'Gary', ms: 1000 }));
   assert.match(gone, /Gary closed this and typed instead/);
 });
 
-test('a board waiting on the viewer offers every option as a button and hides the real pick', () => {
-  const ask = { dismissed: false, questions: [{ header: 'Cover', question: 'Which cover?', options: [{ label: 'Dancer' }, { label: 'Cage' }], answer: 'Dancer', chosen: 0 }] };
-  const html = renderToString(h(Board, { ask, person: 'Gary', ms: 1000, live: true, onPick: () => {} }));
-  assert.equal((html.match(/<button[^>]*class="ss-opt/g) ?? []).length, 2);
-  assert.doesNotMatch(html, /ss-chosen|Gary chose/);
-  assert.match(html, /Your call/);
-});
-
-test('a dismissed board, live, also offers typing something else, which is what really happened', () => {
-  const ask = { dismissed: true, questions: [{ question: 'Which?', options: [{ label: 'A' }], answer: null, chosen: null }] };
-  const html = renderToString(h(Board, { ask, person: 'Gary', ms: 1000, live: true, onPick: () => {} }));
-  assert.match(html, /Type something else/);
-});
-
-test('a typed answer is offered live as its own option', () => {
-  const ask = { dismissed: false, questions: [{ question: 'When?', options: [{ label: 'Today' }], answer: 'Friday', chosen: null }] };
-  const html = renderToString(h(Board, { ask, person: 'Gary', ms: 1000, live: true, onPick: () => {} }));
-  assert.match(html, /Other/);
+test('the record notes where the viewer chose differently', () => {
+  const html = renderToString(h(Asked, { ask: two(), person: 'Gary', ms: 1000, picks: { 0: { kind: 'option', index: 1 }, 1: { kind: 'option', index: 0 } } }));
+  assert.match(html, /You picked Cage/);
 });
