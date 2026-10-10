@@ -40,3 +40,12 @@ test('the embed page is bare, for an iframe, and passes its query switches throu
     assert.match(await r.text(), /background:transparent/);
   } finally { server.close(); }
 });
+
+test('the "made" button floats inside the conversation area, never over the composer', () => {
+  const html = renderToString(h(SimulatorPlayer, { scenario: sc('a', 'Dana') }));
+  const wrap = html.indexOf('class="ss-log-wrap"');
+  const handle = html.indexOf('class="ss-tray-handle"');
+  const composer = html.indexOf('class="ss-composer"');
+  assert.ok(wrap > -1 && handle > wrap && handle < composer, 'handle sits inside the log wrapper, before the composer');
+  assert.doesNotMatch(PLAYER_CSS, /ss-tray-handle\{[^}]*bottom:84px/);
+});

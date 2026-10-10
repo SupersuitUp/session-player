@@ -294,6 +294,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
       h('div', { className: 'ss-counter', 'aria-live': 'polite' },
         h('span', null, work.ms ? [h('b', { key: 'd' }, duration(work.ms)), ` of work done for ${person}`] : 'No work yet'),
         h('span', null, `${work.steps} of ${totals.steps} steps`)),
+      h('div', { className: 'ss-log-wrap' },
       h('div', { className: 'ss-log', ref: logRef },
         log.length === 0 && h('p', { className: 'ss-intro' }, `You are ${person}. Send the first command and watch what gets done.`),
         log.map((item) => {
@@ -308,6 +309,8 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
           return h('div', { key: item.key, className: 'ss-made' }, h('span', null, 'made'), ' ', item.artifact.title);
         }),
         phase === 'working' && !waiting && h('div', { className: 'ss-typing' }, h('i'), h('i'), h('i'))),
+      showArtifacts && !waiting && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
+      showArtifacts && tray && !waiting && h('div', { className: 'ss-tray' }, artifactList))),
       waiting ? h(Board, { key: waiting, ask: log.find((l) => l.key === waiting).step.ask, images: log.find((l) => l.key === waiting).step.images, person, auto, onPick: (picks) => resumeRef.current?.(picks) }) :
       h('footer', { className: 'ss-composer' },
         phase === 'done'
@@ -321,8 +324,6 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
             h('button', {
               className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
             }, '\u{1F3A4}'))),
-      showArtifacts && !waiting && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
-      showArtifacts && tray && !waiting && h('div', { className: 'ss-tray' }, artifactList)),
     showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList),
     timeline && h(Timeline, { sc, turnIndex: turn, person }),
     phase === 'done' && !closed && h(CloseCard, { sc, person, onReplay: restart, onBack }));

@@ -16,7 +16,8 @@ export const PLAYER_CSS = `
 .ss-auto{display:flex;align-items:center;gap:4px;font-size:12px;color:#7a6d5a}
 .ss-counter{display:flex;justify-content:space-between;gap:8px;padding:8px 14px;background:var(--ss-ink);color:var(--ss-cream);font-size:13px;font-variant-numeric:tabular-nums}
 .ss-counter b{color:var(--ss-mustard)}
-.ss-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+.ss-log-wrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.ss-log{flex:1;min-height:0;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
 .ss-intro{color:#7a6d5a;text-align:center;margin:auto 12px}
 .ss-cmd-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-top:6px}
 .ss-cmd{max-width:84%;background:var(--ss-petrol);color:#fff;padding:9px 13px;border-radius:18px 18px 4px 18px;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -83,8 +84,8 @@ export const PLAYER_CSS = `
 .ss-mic.ss-live{animation:ss-pulse 1s infinite}
 .ss-end{flex:1;display:flex;flex-direction:column;gap:8px}
 .ss-end p{margin:0;font-size:14px}
-.ss-sim .ss-tray-handle{position:absolute;z-index:2;right:12px;bottom:84px;border:0;border-radius:999px;background:var(--ss-ink);color:var(--ss-cream);padding:6px 12px;font-size:13px;display:flex;gap:6px;box-shadow:0 4px 14px rgba(0,0,0,.2)}
-.ss-tray{position:absolute;left:0;right:0;bottom:0;max-height:60%;overflow-y:auto;background:#fffaf0;border-top:1px solid #eadcbc;border-radius:20px 20px 0 0;padding:16px 14px 90px;box-shadow:0 -8px 30px rgba(0,0,0,.15)}
+.ss-sim .ss-tray-handle{position:absolute;z-index:2;right:12px;bottom:10px;border:0;border-radius:999px;background:var(--ss-ink);color:var(--ss-cream);padding:6px 12px;font-size:13px;display:flex;gap:6px;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.ss-tray{position:absolute;left:0;right:0;bottom:0;max-height:85%;overflow-y:auto;background:#fffaf0;border-top:1px solid #eadcbc;border-radius:20px 20px 0 0;padding:16px 14px 56px;box-shadow:0 -8px 30px rgba(0,0,0,.15)}
 .ss-panel{display:none}
 .ss-artifact-list{display:flex;flex-direction:column;gap:8px}
 .ss-artifact{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eadcbc;border-radius:10px;padding:8px 10px;animation:ss-in .3s ease-out}
