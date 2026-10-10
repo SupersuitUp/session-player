@@ -89,3 +89,14 @@ test('bundle writes a provenance recipe beside every image, carrying the source 
   assert.equal(pasted.mode, 'derive');
   assert.match(pasted.derivedFrom, /pasted/);
 });
+
+test('a recast renames every image to a neutral id, so no file name carries the original subject', () => {
+  const tidied = tidy(sc(), fixes);
+  const images = { 'gallery-1': '/noa/rain.png', 'gallery-2': '/noa/heron.png', 'opt-chains': '/noa/rain.png', 'opt-cage': '/noa/heron.png', 'pasted-t2-1': '/noa/pick.png' };
+  const out = recast(tidied, { id: 'noa', replace: [['Kingdom Free', 'Low Tide Tapes'], ['Gary', 'Noa'], ['Chains to Gold Dust', 'Rain Glass'], ['Open Cage', 'Heron Shore']], forbid: ['chains', 'cage'], images });
+  const ids = JSON.stringify(out).match(/"id":\s*"[^"]*"/g).join(' ');
+  assert.doesNotMatch(ids, /chains|cage|gallery|opt|pasted/);
+  // The same picture keeps one id wherever it appears, so bundle writes it once.
+  assert.equal(out.turns[0].steps[0].images[0].id, out.turns[0].steps[1].ask.questions[0].options[0].image.id);
+  assert.match(out.turns[0].steps[0].images[0].id, /^noa-image-\d+$/);
+});

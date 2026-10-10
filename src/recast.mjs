@@ -55,6 +55,13 @@ export function recast(source, { id, title, persona, keep, replace = [], forbid 
     img.src = typeof to === 'string' ? to : to.src;
     if (to.caption) img.caption = to.caption; else delete img.caption;
   }
+  // Image ids came from the original (often its subject: "chains-to-gold-dust") and become
+  // file names when bundled, so every image gets a neutral id; one picture keeps one id.
+  const newIds = new Map();
+  for (const img of allImages(sc)) {
+    if (!newIds.has(img.src)) newIds.set(img.src, `${id ?? `${sc.id}-recast`}-image-${newIds.size + 1}`);
+    img.id = newIds.get(img.src);
+  }
   for (const word of forbid) {
     // Anchored at a word start: "Eden" must not fire on "credentials", while "Christ" still
     // catches "Christofuturist".
