@@ -60,3 +60,14 @@ test('tidy applies fixes from a file and refuses a rewrite', () => {
   writeFileSync(join(dir, 'bad.json'), JSON.stringify({ t1: 'please shut the whole session down now' }));
   assert.equal(cli('tidy', sc, '--fixes', join(dir, 'bad.json')).status, 1);
 });
+
+test('bundle is a CLI command: it copies an image beside the scenario and rewrites its path', () => {
+  const src = join(dir, 'b.jsonl');
+  writeFileSync(src, session().humanWithImage('[Image #1] this one').jsonl());
+  const sc = join(dir, 'b.json');
+  assert.equal(cli('convert', src, '--out', sc, '--id', 'bun').status, 0);
+  const r = cli('bundle', sc);
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(readFileSync(sc, 'utf8'));
+  assert.match(out.turns[0].human.images[0].src, /^assets\/bun\/pasted-t1-1\.png$/);
+});

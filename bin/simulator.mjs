@@ -6,6 +6,8 @@ import { validate } from '../src/scenario.mjs';
 import { createServer } from '../src/serve.mjs';
 import { tidy } from '../src/tidy.mjs';
 import { recast } from '../src/recast.mjs';
+import { bundle } from '../src/bundle.mjs';
+import { dirname, resolve } from 'node:path';
 
 const HELP = `simulator - draft and check Supersuit Simulator scenarios
 
@@ -23,6 +25,9 @@ Usage:
       Tell a different story from the same run: spec is { id, title, persona, keep: [turn ids],
       replace: [[from, to]], forbid: [words] }. A "from" starting with re: is a regex (global,
       case-insensitive). Refuses while any forbidden word survives. Marked illustrative.
+  simulator bundle <scenario.json> [--out <file>]
+      Copy every image into assets/<scenario id>/ beside the scenario, shrunk for the phone,
+      and point the scenario at the copies. Refuses if an image source is missing.
   simulator serve <scenario.json>... [--port 4460] [--host 127.0.0.1]
       Watch scenarios in the player in a browser. Add ?autoplay, ?artifacts=off or
       ?timeline=off to the URL to see the limited views an embed uses.
@@ -82,6 +87,11 @@ try {
     const text = JSON.stringify(out, null, 2) + '\n';
     if (flags.out) writeFileSync(flags.out, text); else process.stdout.write(text);
     console.error(`recast ${out.turns.length} turns as ${out.persona.name}`);
+  } else if (cmd === 'bundle') {
+    if (!file) throw Object.assign(new Error('bundle needs a scenario file'), { code: 2 });
+    const out = bundle(JSON.parse(readFileSync(file, 'utf8')), { dir: dirname(resolve(file)) });
+    writeFileSync(flags.out ?? file, JSON.stringify(out, null, 2) + '\n');
+    console.error(`bundled images into ${dirname(resolve(file))}/assets/${out.id}`);
   } else if (cmd === 'serve') {
     const files = pos.slice(1);
     if (!files.length) throw Object.assign(new Error('serve needs at least one scenario file'), { code: 2 });
@@ -93,7 +103,7 @@ try {
     });
     const port = Number(flags.port ?? 4460);
     const host = flags.host ?? '127.0.0.1';
-    createServer({ scenarios }).listen(port, host, () => console.log(`simulator serving ${scenarios.length} scenario(s) at http://${host}:${port}/`));
+    createServer({ scenarios, assetsRoot: dirname(resolve(files[0])) }).listen(port, host, () => console.log(`simulator serving ${scenarios.length} scenario(s) at http://${host}:${port}/`));
   } else {
     throw Object.assign(new Error(`unknown command: ${cmd}`), { code: 2 });
   }
