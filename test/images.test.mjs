@@ -69,3 +69,23 @@ test('a recast image can carry its own caption; otherwise the original caption i
   const out = recast(tidied, { id: 'noa', replace: [['Kingdom Free', 'Low Tide Tapes'], ['Gary', 'Noa']], images });
   assert.deepEqual(out.turns[0].steps[0].images.map((i) => i.caption), ['Rain Glass', undefined]);
 });
+
+test('bundle writes a provenance recipe beside every image, carrying the source recipe when there is one', async () => {
+  const { readFileSync: read } = await import('node:fs');
+  const dir = mkdtempSync(join(tmpdir(), 'sim-recipe-'));
+  const png = join(dir, 'cover.png');
+  writeFileSync(png, Buffer.from('89504e470d0a1a0a', 'hex'));
+  writeFileSync(`${png}.recipe.json`, JSON.stringify({ model: 'gpt-image', prompt: 'a heron at dusk', refs: [], timestamp: '2026-10-10T00:00:00Z' }));
+  const s = tidy(sc(), { images: [{ turn: 't1', step: 'Open the nine', id: 'g1', src: png, caption: 'one' }] });
+  const out = bundle(s, { dir, resize: false });
+  const g = out.turns[0].steps[0].images[0].src;
+  const r = JSON.parse(read(join(dir, `${g}.recipe.json`), 'utf8'));
+  assert.equal(r.mode, 'derive');
+  assert.equal(r.derivedFrom, png);
+  assert.match(r.generator, /@supersuit\/simulator bundle/);
+  assert.equal(r.source.prompt, 'a heron at dusk');
+  assert.ok(r.timestamp);
+  const pasted = JSON.parse(read(join(dir, `${out.turns[1].human.images[0].src}.recipe.json`), 'utf8'));
+  assert.equal(pasted.mode, 'derive');
+  assert.match(pasted.derivedFrom, /pasted/);
+});
