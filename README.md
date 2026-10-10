@@ -51,6 +51,23 @@ import { SimulatorPlayer } from '@supersuit/simulator/player';
 
 The viewer taps each command (or holds the mic to say it) and watches the steps play, sped up from their real durations, with a running count of the work done for the persona. Decisions the person made show as their own cards; things made collect in a side panel on wide screens and a slide-up tray on phones. Needs React 18 or newer; no build step and no stylesheet to import.
 
+## Embedding it in a page or a book
+
+Any page, including a book reader, can drop in an iframe:
+
+```html
+<iframe src="https://<host>/embed?scenario=low-tide-tapes&timeline=off" style="width:100%;height:760px;border:0"></iframe>
+```
+
+A page that runs modules can use the tag instead (it brings its own React through an import map or a bundler):
+
+```html
+<supersuit-simulator src="/simulator/scenarios" scenario="low-tide-tapes" artifacts="off"></supersuit-simulator>
+<script type="module">import { defineSimulatorElement } from '@supersuit/simulator/embed'; defineSimulatorElement();</script>
+```
+
+Nothing in the player is fixed to the viewport: the close card and the enlarged image stay inside the player's own box.
+
 ## Library
 
 ```js

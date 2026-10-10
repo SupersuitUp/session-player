@@ -2,11 +2,11 @@
 // player can be dropped into any page (the wiki, a book reader) without colliding.
 export const PLAYER_CSS = `
 .ss-sim{--ss-ink:#1E1B19;--ss-cream:#F6E7C5;--ss-paper:#FBF5E7;--ss-tomato:#DB371F;--ss-petrol:#265E72;--ss-mustard:#E9A23B;--ss-sand:#EED79E;--ss-aqua:#69B1B5;
-  container-type:inline-size;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:var(--ss-ink);width:100%;max-width:1040px;margin:0 auto;-webkit-text-size-adjust:100%}
+  position:relative;container-type:inline-size;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:var(--ss-ink);width:100%;max-width:1040px;margin:0 auto;-webkit-text-size-adjust:100%}
 .ss-sim *{box-sizing:border-box}
 .ss-sim button{font:inherit;color:inherit;cursor:pointer}
 .ss-stage{display:grid;grid-template-columns:1fr;gap:16px}
-.ss-phone{position:relative;display:flex;flex-direction:column;height:min(760px,calc(100svh - 120px));min-height:520px;background:var(--ss-paper);border:1px solid #e6d7b4;border-radius:28px;overflow:hidden;box-shadow:0 10px 40px rgba(30,27,25,.12)}
+.ss-phone{position:relative;display:flex;flex-direction:column;height:var(--ss-height,min(760px,calc(100svh - 120px)));min-height:480px;background:var(--ss-paper);border:1px solid #e6d7b4;border-radius:28px;overflow:hidden;box-shadow:0 10px 40px rgba(30,27,25,.12)}
 .ss-head{display:flex;align-items:center;gap:10px;padding:14px 14px 10px;border-bottom:1px solid #eadcbc;background:#fffaf0}
 .ss-back{border:0;background:none;font-size:28px;line-height:1;padding:0 4px}
 .ss-avatar{flex:none;width:34px;height:34px;border-radius:50%;background:var(--ss-petrol);color:var(--ss-cream);display:grid;place-items:center;font-weight:700}
@@ -121,13 +121,13 @@ export const PLAYER_CSS = `
 .ss-strip .ss-thumb{flex:none;width:72px}
 .ss-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .ss-thumb span{position:absolute;left:0;right:0;bottom:0;font-size:10px;line-height:1.2;color:#fff;background:linear-gradient(transparent,rgba(0,0,0,.65));padding:10px 5px 4px;text-align:left}
-.ss-sim .ss-lightbox{position:fixed;inset:0;z-index:50;border:0;padding:16px;background:rgba(20,18,16,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
-.ss-lightbox img{max-width:100%;max-height:80vh;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.ss-sim .ss-lightbox{position:absolute;inset:0;z-index:50;border:0;padding:16px;background:rgba(20,18,16,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.ss-lightbox img{max-width:100%;max-height:80%;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 .ss-lightbox span{color:#f6e7c5;font-size:14px}
 .ss-oimg{flex:none;width:52px;height:52px;border-radius:8px;object-fit:cover}
 .ss-aimg{width:28px;height:28px;border-radius:5px;object-fit:cover;vertical-align:middle;margin-right:6px}
-.ss-close-wrap{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;background:rgba(30,27,25,.45);padding:12px;animation:ss-fade .3s ease-out}
-.ss-close{position:relative;overflow:hidden;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;background:#fffaf0;border-radius:24px;padding:22px 20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:ss-up .4s cubic-bezier(.2,.9,.3,1.2)}
+.ss-close-wrap{position:absolute;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;background:rgba(30,27,25,.45);padding:12px;animation:ss-fade .3s ease-out}
+.ss-close{position:relative;overflow:hidden;width:100%;max-width:440px;max-height:100%;overflow-y:auto;background:#fffaf0;border-radius:24px;padding:22px 20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:ss-up .4s cubic-bezier(.2,.9,.3,1.2)}
 .ss-burst{position:absolute;left:50%;top:26px;width:0;height:0;pointer-events:none}
 .ss-burst i{position:absolute;width:7px;height:7px;border-radius:2px;background:var(--ss-mustard);transform:rotate(calc(var(--i) * 25.7deg)) translateY(0);animation:ss-pop 1.1s ease-out forwards;opacity:0}
 .ss-burst i:nth-child(3n){background:var(--ss-tomato)}.ss-burst i:nth-child(3n+1){background:var(--ss-aqua)}

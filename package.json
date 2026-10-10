@@ -9,6 +9,7 @@
   "exports": {
     ".": "./src/index.mjs",
     "./player": "./src/player.mjs",
+    "./embed": "./src/embed.mjs",
     "./package.json": "./package.json"
   },
   "files": [

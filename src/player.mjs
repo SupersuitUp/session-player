@@ -185,13 +185,15 @@ export function CloseCard({ sc, person, onReplay, onBack }) {
         onBack && h('button', { className: 'ss-chip ss-ghost', onClick: onBack }, 'Step into someone else'))));
 }
 
-export function SimulatorPlayer({ scenario, scenarios, autoplay = false, artifacts = true, timeline = true, maxSteps = 5 }) {
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = false, artifacts = true, timeline = true, maxSteps = 5 }) {
   const list = scenarios ?? (scenario ? [scenario] : []);
-  const [pick, setPick] = useState(list.length > 1 ? null : 0);
+  // An embed may name one scenario from a list and skip the picker.
+  const start = scenarioId != null ? Math.max(0, list.findIndex((s) => s.id === scenarioId)) : list.length > 1 ? null : 0;
+  const [pick, setPick] = useState(start);
   const sc = pick == null ? null : list[pick];
-  return h('div', { className: 'ss-sim' },
+  return h('div', { className: 'ss-sim', style: height ? { '--ss-height': height } : undefined },
     h('style', null, PLAYER_CSS),
-    sc ? h(Run, { key: sc.id, sc, autoplay, artifacts, timeline, maxSteps, onBack: list.length > 1 ? () => setPick(null) : null })
+    sc ? h(Run, { key: sc.id, sc, autoplay, artifacts, timeline, maxSteps, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
       : h(Picker, { scenarios: list, onPick: setPick }));
 }
 
