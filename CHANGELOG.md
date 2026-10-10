@@ -10,4 +10,5 @@
 - `tidy`: cleans the person's commands for display (typo fixes from a reviewer, screenshot paths to [screenshot]), refusing any fix that rewrites what was said; originals kept in `human.raw`, changes in `cuts`.
 - Phone numbers and email addresses are removed from everything a scenario keeps, recorded as cuts.
 - Artifacts are deliverables only (pages, media, documents), never code, config or folders; `tidy` takes `artifacts: { drop, add }` so a reviewer can add what the transcript cannot show (kind `other`, e.g. a release submitted to a store).
-- The `simulator` CLI: `convert`, `validate`, `tidy`, `serve`.
+- `recast`: tells a different story from the same real run (new persona and subject, same commands, steps, timing and decisions), marked illustrative on screen, with a `forbid` list that refuses to finish while any word from the original survives.
+- The `simulator` CLI: `convert`, `validate`, `tidy`, `recast`, `serve`.

@@ -141,7 +141,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
       h('header', { className: 'ss-head' },
         onBack && h('button', { className: 'ss-back', onClick: onBack, 'aria-label': 'Choose another person' }, '‹'),
         h('span', { className: 'ss-avatar' }, initial(person)),
-        h('div', { className: 'ss-titles' }, h('b', null, sc.title), h('small', null, chapter ?? `as ${person}`)),
+        h('div', { className: 'ss-titles' }, h('b', null, sc.title), h('small', null, sc.source?.illustrative ? 'Illustrative: recast from a real session' : chapter ?? `as ${person}`)),
         h('label', { className: 'ss-auto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => setAuto(e.target.checked) }), 'auto')),
       h('div', { className: 'ss-counter', 'aria-live': 'polite' },
         h('span', null, h('b', null, duration(work.ms)), ` of work done for ${person}`),

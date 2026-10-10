@@ -33,3 +33,10 @@ test('the artifacts panel and the timeline can be switched off for a limited emb
   assert.doesNotMatch(html, /Made for|class="ss-tray-handle"|class="ss-panel"/);
   assert.doesNotMatch(html, /class="ss-timeline"/);
 });
+
+test('a recast scenario says on screen that it is illustrative', () => {
+  const s = sc('a', 'Maya');
+  s.source = { kind: 'persona', illustrative: true };
+  assert.match(renderToString(h(SimulatorPlayer, { scenario: s })), /Illustrative: recast from a real session/);
+  assert.doesNotMatch(renderToString(h(SimulatorPlayer, { scenario: sc('a', 'Gary') })), /Illustrative/);
+});

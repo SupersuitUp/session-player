@@ -5,6 +5,7 @@ import { convert, parseSession } from '../src/convert.mjs';
 import { validate } from '../src/scenario.mjs';
 import { createServer } from '../src/serve.mjs';
 import { tidy } from '../src/tidy.mjs';
+import { recast } from '../src/recast.mjs';
 
 const HELP = `simulator - draft and check Supersuit Simulator scenarios
 
@@ -18,6 +19,10 @@ Usage:
       Clean the person's commands for display: screenshot paths become [screenshot], and
       fixes ({"t7": "corrected text"}) correct typos. Refuses a fix that rewrites what was
       said. The original stays in human.raw; every change is recorded in cuts.
+  simulator recast <scenario.json> --spec <spec.json> [--out <file>]
+      Tell a different story from the same run: spec is { id, title, persona, keep: [turn ids],
+      replace: [[from, to]], forbid: [words] }. A "from" starting with re: is a regex (global,
+      case-insensitive). Refuses while any forbidden word survives. Marked illustrative.
   simulator serve <scenario.json>... [--port 4460] [--host 127.0.0.1]
       Watch scenarios in the player in a browser. Add ?autoplay, ?artifacts=off or
       ?timeline=off to the URL to see the limited views an embed uses.
@@ -67,6 +72,16 @@ try {
     const text = JSON.stringify(out, null, 2) + '\n';
     if (flags.out) writeFileSync(flags.out, text); else process.stdout.write(text);
     console.error(`tidied ${out.turns.filter((t) => t.human.raw).length} commands`);
+  } else if (cmd === 'recast') {
+    if (!file || !flags.spec) throw Object.assign(new Error('recast needs a scenario file and --spec'), { code: 2 });
+    const spec = JSON.parse(readFileSync(flags.spec, 'utf8'));
+    spec.replace = (spec.replace ?? []).map(([from, to]) => [from.startsWith('re:') ? new RegExp(from.slice(3), 'gi') : from, to]);
+    const out = recast(JSON.parse(readFileSync(file, 'utf8')), spec);
+    const problems = validate(out);
+    if (problems.length) throw new Error(`recast is not a valid scenario: ${problems[0]}`);
+    const text = JSON.stringify(out, null, 2) + '\n';
+    if (flags.out) writeFileSync(flags.out, text); else process.stdout.write(text);
+    console.error(`recast ${out.turns.length} turns as ${out.persona.name}`);
   } else if (cmd === 'serve') {
     const files = pos.slice(1);
     if (!files.length) throw Object.assign(new Error('serve needs at least one scenario file'), { code: 2 });
