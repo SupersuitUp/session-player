@@ -47,3 +47,16 @@ test('a session with no human turns is refused with exit 1', () => {
   assert.equal(r.status, 1);
   assert.match(r.stderr, /no human turns/);
 });
+
+test('tidy applies fixes from a file and refuses a rewrite', () => {
+  const src = join(dir, 't.jsonl');
+  writeFileSync(src, session().human('ckise').jsonl());
+  const sc = join(dir, 't.json');
+  assert.equal(cli('convert', src, '--out', sc).status, 0);
+  writeFileSync(join(dir, 'fix.json'), JSON.stringify({ t1: 'close' }));
+  const out = join(dir, 't2.json');
+  assert.equal(cli('tidy', sc, '--fixes', join(dir, 'fix.json'), '--out', out).status, 0);
+  assert.equal(JSON.parse(readFileSync(out, 'utf8')).turns[0].human.text, 'close');
+  writeFileSync(join(dir, 'bad.json'), JSON.stringify({ t1: 'please shut the whole session down now' }));
+  assert.equal(cli('tidy', sc, '--fixes', join(dir, 'bad.json')).status, 1);
+});

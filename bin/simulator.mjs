@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { convert, parseSession } from '../src/convert.mjs';
 import { validate } from '../src/scenario.mjs';
 import { createServer } from '../src/serve.mjs';
+import { tidy } from '../src/tidy.mjs';
 
 const HELP = `simulator - draft and check Supersuit Simulator scenarios
 
@@ -13,6 +14,10 @@ Usage:
       (or stdout) and a one-line summary to stderr; --json puts the summary on stdout instead.
   simulator validate <scenario.json> [--json]
       Check a scenario against the format. Exits 1 if anything is wrong.
+  simulator tidy <scenario.json> [--fixes <fixes.json>] [--out <file>]
+      Clean the person's commands for display: screenshot paths become [screenshot], and
+      fixes ({"t7": "corrected text"}) correct typos. Refuses a fix that rewrites what was
+      said. The original stays in human.raw; every change is recorded in cuts.
   simulator serve <scenario.json>... [--port 4460] [--host 127.0.0.1]
       Watch scenarios in the player in a browser. Add ?autoplay, ?artifacts=off or
       ?timeline=off to the URL to see the limited views an embed uses.
@@ -55,6 +60,13 @@ try {
     if (flags.json) console.log(JSON.stringify({ ok: problems.length === 0, problems }));
     else console.log(problems.length ? problems.map((p) => `- ${p}`).join('\n') : 'valid');
     process.exit(problems.length ? 1 : 0);
+  } else if (cmd === 'tidy') {
+    if (!file) throw Object.assign(new Error('tidy needs a scenario file'), { code: 2 });
+    const fixes = flags.fixes ? JSON.parse(readFileSync(flags.fixes, 'utf8')) : {};
+    const out = tidy(JSON.parse(readFileSync(file, 'utf8')), fixes);
+    const text = JSON.stringify(out, null, 2) + '\n';
+    if (flags.out) writeFileSync(flags.out, text); else process.stdout.write(text);
+    console.error(`tidied ${out.turns.filter((t) => t.human.raw).length} commands`);
   } else if (cmd === 'serve') {
     const files = pos.slice(1);
     if (!files.length) throw Object.assign(new Error('serve needs at least one scenario file'), { code: 2 });

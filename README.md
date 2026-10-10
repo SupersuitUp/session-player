@@ -14,6 +14,7 @@ npm install -g @supersuit/simulator
 
 ```
 simulator convert ~/.claude/projects/<dir>/<session-id>.jsonl --title "Releasing an album" --persona Gary --out album.json
+simulator tidy album.json --fixes fixes.json --out album.json   # {"t7": "corrected text"}
 simulator validate album.json
 simulator serve album.json            # watch it at http://127.0.0.1:4460/
 ```

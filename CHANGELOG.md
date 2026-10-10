@@ -7,4 +7,5 @@
 - Questions the agent asked are kept as decisions, with the question and the person's answer.
 - Steps and artifacts carry when they happened, so a replay interleaves them with replies.
 - The player: `SimulatorPlayer` (`@supersuit/simulator/player`), mobile first, with persona picker, artifacts and timeline switches; `playback` condenses long turns without changing their totals.
-- The `simulator` CLI: `convert`, `validate`, `serve`.
+- `tidy`: cleans the person's commands for display (typo fixes from a reviewer, screenshot paths to [screenshot]), refusing any fix that rewrites what was said; originals kept in `human.raw`, changes in `cuts`.
+- The `simulator` CLI: `convert`, `validate`, `tidy`, `serve`.
