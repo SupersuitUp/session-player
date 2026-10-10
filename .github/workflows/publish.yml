@@ -117,6 +117,7 @@ jobs:
       # before it is published, never after.
       - run: npm ci
       - run: npm test
+      - run: npm run smoke
 
       - name: Refuse a tag that disagrees with package.json
         if: startsWith(github.ref, 'refs/tags/v')

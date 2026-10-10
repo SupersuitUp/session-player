@@ -21,6 +21,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm ci
       - run: npm test
+      - run: npm run smoke
       # The package must run the way the README says, from outside the repo.
       - run: |
           cd "$RUNNER_TEMP"
