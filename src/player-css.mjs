@@ -126,6 +126,32 @@ export const PLAYER_CSS = `
 .ss-lightbox span{color:#f6e7c5;font-size:14px}
 .ss-oimg{flex:none;width:52px;height:52px;border-radius:8px;object-fit:cover}
 .ss-aimg{width:28px;height:28px;border-radius:5px;object-fit:cover;vertical-align:middle;margin-right:6px}
+.ss-close-wrap{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;background:rgba(30,27,25,.45);padding:12px;animation:ss-fade .3s ease-out}
+.ss-close{position:relative;overflow:hidden;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;background:#fffaf0;border-radius:24px;padding:22px 20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:ss-up .4s cubic-bezier(.2,.9,.3,1.2)}
+.ss-burst{position:absolute;left:50%;top:26px;width:0;height:0;pointer-events:none}
+.ss-burst i{position:absolute;width:7px;height:7px;border-radius:2px;background:var(--ss-mustard);transform:rotate(calc(var(--i) * 25.7deg)) translateY(0);animation:ss-pop 1.1s ease-out forwards;opacity:0}
+.ss-burst i:nth-child(3n){background:var(--ss-tomato)}.ss-burst i:nth-child(3n+1){background:var(--ss-aqua)}
+.ss-kicker{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ss-tomato);text-align:center}
+.ss-close h3{font-family:Fraunces,Georgia,serif;font-size:24px;margin:4px 0 14px;text-align:center}
+.ss-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.ss-split>div{background:#fff;border:1px solid #eadcbc;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:1px}
+.ss-split>div:first-child{background:var(--ss-ink);border-color:var(--ss-ink);color:var(--ss-cream)}
+.ss-split b{font-size:22px;font-family:Fraunces,Georgia,serif}
+.ss-split>div:first-child b{color:var(--ss-mustard)}
+.ss-split small{font-size:12px;opacity:.8}
+.ss-freed{margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#e8f1f3;color:var(--ss-petrol);font-weight:600;font-size:14px}
+.ss-edge{margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#fff4dc;border:1px solid #f0d89a;font-size:14px}
+.ss-edge b{font-size:18px;color:#a86a00}
+.ss-layers{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.ss-layers span{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#fff;border:1px solid #f0d89a;border-radius:999px;padding:1px 8px}
+.ss-close-made small{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a7d68}
+.ss-close-made ul{margin:4px 0 10px;padding-left:18px;font-size:14px}
+.ss-idle{font-size:12px;color:#8a7d68;margin:0 0 12px}
+.ss-close-actions{display:flex;gap:8px}
+.ss-close-actions .ss-chip{text-align:center;font-weight:700;align-items:center}
+.ss-sim .ss-ghost{border-color:#d9c79f;background:transparent}
+@keyframes ss-fade{from{opacity:0}to{opacity:1}}
+@keyframes ss-pop{0%{opacity:1;transform:rotate(calc(var(--i) * 25.7deg)) translateY(0)}100%{opacity:0;transform:rotate(calc(var(--i) * 25.7deg)) translateY(-90px)}}
 @keyframes ss-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes ss-blink{0%,100%{opacity:.3}50%{opacity:1}}
 @keyframes ss-pulse{0%,100%{box-shadow:0 0 0 0 rgba(219,55,31,.5)}50%{box-shadow:0 0 0 10px rgba(219,55,31,0)}}

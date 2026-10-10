@@ -48,6 +48,16 @@ export function validate(s) {
     for (const a of t.artifacts ?? []) if (!artifactIds.has(a)) p.push(`turn ${id}: unknown artifact ${a}`);
   }
   for (const c of s.chapters ?? []) if (!turnIds.has(c.turn)) p.push(`chapter "${c.title}" points at unknown turn ${c.turn}`);
+  if (s.close != null) {
+    // The close card says only what was measured: an edge block is the counter's output, so
+    // its parts must add up to its total, and nothing in it is an estimate.
+    if (!isObj(s.close)) p.push('close must be an object');
+    else if (s.close.edge) {
+      const L = s.close.edge.layers ?? {};
+      const sum = ['fueled', 'encoded', 'built', 'retired'].reduce((n, k) => n + (Number(L[k]) || 0), 0);
+      if (sum !== s.close.edge.total) p.push(`close: edge total ${s.close.edge.total} is not the sum of its four counts (${sum})`);
+    }
+  }
   for (const img of allImages(s)) if (!isStr(img.src) || !isStr(img.id)) p.push(`an image is missing its id or src (${JSON.stringify(img).slice(0, 80)})`);
   return p;
 }

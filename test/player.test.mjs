@@ -95,3 +95,27 @@ test('images show: a gallery on a step, a thumbnail on a board option, and on a 
   const live = renderToString(h(Board, { ask: { dismissed: false, questions: [{ question: 'Which?', options: [{ label: 'Rain', image: { src: 'assets/a/rain.png' } }], answer: 'Rain', chosen: 0 }] }, person: 'Gary', onPick: () => {} }));
   assert.match(live, /<img[^>]*src="assets\/a\/rain.png"/);
 });
+
+test('the close card celebrates with measured numbers only, and never claims time saved', async () => {
+  const { CloseCard } = await import('../src/player.mjs');
+  const s = sc('a', 'Gary');
+  s.close = { outcome: 'Album released.', edge: { total: 3, layers: { fueled: 0, encoded: 3, built: 0, retired: 0 }, sentence: 'You earned 3 edge points this session: 3 encoded.' }, freed: [{ task: 'releasing an album to streaming by hand', cadence: 'several times a month' }] };
+  s.artifacts = [{ id: 'a1', kind: 'link', title: 'The album page', turn: 't1' }];
+  const html = renderToString(h(CloseCard, { sc: s, person: 'Gary', onReplay: () => {} }));
+  assert.match(html, /Album released\./);
+  assert.match(html, /7 min/);             // Freeda's measured work in the fixture
+  assert.match(html, /1 command/);
+  assert.match(html, /3 edge points/);
+  assert.match(html, /encoded/);
+  assert.match(html, /permanently freed/);
+  assert.match(html, /releasing an album to streaming by hand/);
+  assert.match(html, /The album page/);
+  assert.doesNotMatch(html, /saved/i);
+});
+
+test('a close card without edge or freed data leaves those lines out rather than inventing them', async () => {
+  const { CloseCard } = await import('../src/player.mjs');
+  const html = renderToString(h(CloseCard, { sc: sc('a', 'Gary'), person: 'Gary', onReplay: () => {} }));
+  assert.doesNotMatch(html, /edge points|freed/);
+  assert.match(html, /of work/);
+});

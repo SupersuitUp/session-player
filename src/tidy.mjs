@@ -28,12 +28,15 @@ function distance(a, b) {
 
 export function tidy(scenario, fixes = {}) {
   const sc = structuredClone(scenario);
-  const { artifacts: curation, images, ...textFixes } = fixes;
+  const { artifacts: curation, images, close, ...textFixes } = fixes;
   fixes = textFixes;
   const ids = new Set(sc.turns.map((t) => t.id));
   for (const id of Object.keys(fixes)) if (!ids.has(id)) throw new Error(`fix for unknown turn ${id}`);
   if (curation) curate(sc, curation, ids);
   if (images) attach(sc, images);
+  // The close card's facts come from tools, not from the reviewer's memory: `edge` is
+  // end-a-session's edge-earned output for this session, `freed` a catalog row.
+  if (close) sc.close = close;
   for (const t of sc.turns) {
     const original = t.human.raw ?? t.human.text;
     let text = t.human.text.replace(IMAGE_PATH, () => {

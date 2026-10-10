@@ -46,3 +46,11 @@ test('each kind of defect is named', () => {
 test('a non-object is refused outright', () => {
   assert.match(validate(null)[0], /object/);
 });
+
+test('a close block is checked when present', () => {
+  const s = good();
+  s.close = { outcome: 'Done.', edge: { total: 3, layers: { fueled: 0, encoded: 3, built: 0, retired: 0 } } };
+  assert.deepEqual(validate(s), []);
+  s.close.edge.total = 5;
+  assert.ok(validate(s).some((p) => /edge total 5 is not the sum/.test(p)));
+});

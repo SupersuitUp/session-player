@@ -73,3 +73,20 @@ test('a forbidden word matches where a word starts, not inside another word', ()
   assert.doesNotThrow(() => recast(s, { ...spec, forbid: [...spec.forbid, 'Eden'] }));
   assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, 'Christ'] }), /forbidden "Christ"/);
 });
+
+test('a recast carries the close block, with its words recast too', () => {
+  const s = sc();
+  s.close = { outcome: 'Kingdom Free released.', edge: { total: 3, layers: { fueled: 0, encoded: 3, built: 0, retired: 0 } }, freed: [{ task: 'releasing Kingdom Free by hand', cadence: 'monthly' }] };
+  const out = recast(s, spec);
+  assert.equal(out.close.outcome, 'Slow Tide released.');
+  assert.equal(out.close.freed[0].task, 'releasing Slow Tide by hand');
+  assert.equal(out.close.edge.total, 3);
+});
+
+test('a recast can restate the close facts for the turns it keeps', () => {
+  const s = sc();
+  s.close = { outcome: 'Kingdom Free released.', edge: { total: 10, layers: { fueled: 0, encoded: 3, built: 7, retired: 0 } } };
+  const out = recast(s, { ...spec, close: { edge: { total: 5, layers: { fueled: 0, encoded: 3, built: 2, retired: 0 } } } });
+  assert.equal(out.close.edge.total, 5);
+  assert.equal(out.close.outcome, 'Slow Tide released.');
+});

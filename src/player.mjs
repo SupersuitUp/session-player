@@ -152,6 +152,39 @@ function Picker({ scenarios, onPick }) {
       h('span', null, h('b', null, s.persona?.name), s.persona?.role ? ` · ${s.persona.role}` : '', h('br'), h('small', null, s.title)))));
 }
 
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+// The celebration at the close: what the session took off the person, in numbers that were
+// measured. Freeda's work against the person's own attention, the things made, the edge
+// points the counter printed, and any chore the workflow catalog says is now off their hands.
+// Never "time saved": nobody measured the version where they did it by hand.
+export function CloseCard({ sc, person, onReplay, onBack }) {
+  const t = summarize(sc);
+  const close = sc.close ?? {};
+  const edge = close.edge;
+  const layers = edge ? ['fueled', 'encoded', 'built', 'retired'].filter((k) => edge.layers?.[k]) : [];
+  return h('div', { className: 'ss-close-wrap' },
+    h('div', { className: 'ss-close', role: 'dialog', 'aria-label': 'Session closed' },
+      h('div', { className: 'ss-burst', 'aria-hidden': true }, Array.from({ length: 14 }, (_, i) => h('i', { key: i, style: { '--i': i } }))),
+      h('span', { className: 'ss-kicker' }, 'Session closed'),
+      h('h3', null, close.outcome ?? sc.title),
+      h('div', { className: 'ss-split' },
+        h('div', null, h('b', null, duration(t.agentMs)), h('small', null, 'of work by Freeda'), h('small', null, plural(t.steps, 'step'))),
+        h('div', null, h('b', null, plural(t.commands, 'command')), h('small', null, `from ${person === 'You' ? 'you' : person}`),
+          h('small', null, t.decisions ? `${plural(t.decisions, 'decision')}, ${duration(t.decisionMs)} deciding` : 'no decisions needed'))),
+      (close.freed ?? []).map((f, i) => h('p', { key: i, className: 'ss-freed' }, `You permanently freed yourself from ${f.task}: ${f.cadence}.`)),
+      edge && edge.total > 0 && h('div', { className: 'ss-edge' },
+        h('b', null, plural(edge.total, 'edge point')), ' earned',
+        h('span', { className: 'ss-layers' }, layers.map((k) => h('span', { key: k }, `${edge.layers[k]} ${k}`)))),
+      sc.artifacts?.length > 0 && h('div', { className: 'ss-close-made' },
+        h('small', null, `${plural(sc.artifacts.length, 'thing')} made`),
+        h('ul', null, sc.artifacts.slice(0, 6).map((a) => h('li', { key: a.id }, a.title)))),
+      t.idleMs > 60000 && h('p', { className: 'ss-idle' }, `${duration(t.idleMs)} of idle time (hangs, timeouts, nobody at the keyboard) is not counted.`),
+      h('div', { className: 'ss-close-actions' },
+        h('button', { className: 'ss-chip', onClick: onReplay }, 'Play again'),
+        onBack && h('button', { className: 'ss-chip ss-ghost', onClick: onBack }, 'Step into someone else'))));
+}
+
 export function SimulatorPlayer({ scenario, scenarios, autoplay = false, artifacts = true, timeline = true, maxSteps = 5 }) {
   const list = scenarios ?? (scenario ? [scenario] : []);
   const [pick, setPick] = useState(list.length > 1 ? null : 0);
@@ -185,6 +218,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
   useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' }); }, [log]);
 
+  const [closed, setClosed] = useState(false);
   const [waiting, setWaiting] = useState(null); // key of the board waiting on the viewer
   const [answers, setAnswers] = useState({});
   const resumeRef = useRef(null);
@@ -241,7 +275,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
   const restart = () => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    setTurn(0); setPhase('ready'); setLog([]); setMade([]); setWork({ ms: 0, steps: 0 }); setWaiting(null); setAnswers({});
+    setTurn(0); setPhase('ready'); setLog([]); setMade([]); setWork({ ms: 0, steps: 0 }); setWaiting(null); setAnswers({}); setClosed(false);
   };
 
   const next = plan[turn]?.command;
@@ -288,5 +322,6 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
       showArtifacts && !waiting && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
       showArtifacts && tray && !waiting && h('div', { className: 'ss-tray' }, artifactList)),
     showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList),
-    timeline && h(Timeline, { sc, turnIndex: turn, person }));
+    timeline && h(Timeline, { sc, turnIndex: turn, person }),
+    phase === 'done' && !closed && h(CloseCard, { sc, person, onReplay: restart, onBack }));
 }
