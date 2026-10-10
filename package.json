@@ -1,0 +1,22 @@
+{
+  "name": "@supersuit/simulator",
+  "version": "0.1.0",
+  "description": "The Supersuit Simulator: turn a real Claude Code session into a scenario anyone can step into on a simulated phone, and watch the work and the artifacts appear.",
+  "type": "module",
+  "bin": {
+    "simulator": "bin/simulator.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": ["bin/", "src/", "README.md", "CHANGELOG.md", "LICENSE"],
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/SupersuitUp/simulator.git" },
+  "keywords": ["supersuit", "simulator", "claude-code", "agents", "replay"],
+  "publishConfig": { "access": "public" }
+}

@@ -1,0 +1,6 @@
+node_modules/
+*.tgz
+# Real Claude Code sessions and scenarios drafted from them are private and never belong in
+# this public repo. Tests build their sessions in code (test/fixtures.mjs).
+*.jsonl
+scenarios/
