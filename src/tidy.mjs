@@ -28,8 +28,11 @@ function distance(a, b) {
 
 export function tidy(scenario, fixes = {}) {
   const sc = structuredClone(scenario);
+  const { artifacts: curation, ...textFixes } = fixes;
+  fixes = textFixes;
   const ids = new Set(sc.turns.map((t) => t.id));
   for (const id of Object.keys(fixes)) if (!ids.has(id)) throw new Error(`fix for unknown turn ${id}`);
+  if (curation) curate(sc, curation, ids);
   for (const t of sc.turns) {
     const original = t.human.raw ?? t.human.text;
     let text = t.human.text.replace(IMAGE_PATH, () => {
@@ -48,4 +51,24 @@ export function tidy(scenario, fixes = {}) {
     if (text !== t.human.text) { t.human.raw = original; t.human.text = text; }
   }
   return sc;
+}
+
+// The transcript cannot see everything a session made (a release submitted through a web
+// form leaves no link) and sometimes names things that were not made. The reviewer decides.
+function curate(sc, { drop = [], add = [] }, turnIds) {
+  for (const id of drop) {
+    if (!sc.artifacts.some((a) => a.id === id)) throw new Error(`cannot drop unknown artifact ${id}`);
+    sc.artifacts = sc.artifacts.filter((a) => a.id !== id);
+    for (const t of sc.turns) t.artifacts = t.artifacts.filter((a) => a !== id);
+    sc.cuts.push({ turn: null, what: id, reason: 'artifact dropped by reviewer' });
+  }
+  let n = sc.artifacts.reduce((m, a) => Math.max(m, Number(a.id.replace(/\D/g, '')) || 0), 0);
+  for (const a of add) {
+    if (!turnIds.has(a.turn)) throw new Error(`artifact "${a.title}" names unknown turn ${a.turn}`);
+    const id = `a${++n}`;
+    const turn = sc.turns.find((t) => t.id === a.turn);
+    sc.artifacts.push({ id, ...a, at: a.at ?? turn.at });
+    turn.artifacts.push(id);
+    sc.cuts.push({ turn: a.turn, what: id, reason: 'artifact added by reviewer' });
+  }
 }

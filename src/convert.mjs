@@ -45,11 +45,26 @@ const SECRETS = [
   /\b[A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD)[A-Z0-9_]*=(["']?)([A-Za-z0-9_\-./+]{16,})\1/g,
 ];
 
+// Contact details: a scenario is shown to strangers, and an agent session is full of them
+// (every text-message approval names a number). Dates (2026-10-10), versions (4.259.1) and
+// counts (1,000) do not match: a phone needs 10 digits in 3-3-4 groups.
+const CONTACTS = [
+  [/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, '[email removed]'],
+  [/(?<![\w.-])(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?![\w-]|\.\d)/g, '[phone removed]'],
+  [/(?<![\w.-])\+\d{11,15}(?![\w-])/g, '[phone removed]'],
+];
+
 function cleaner(home, cuts) {
   const homeRe = home ? new RegExp(home.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g') : null;
   return (text, turn, where) => {
     let s = String(text ?? '');
     if (homeRe) s = s.replace(homeRe, '~');
+    for (const [re, mark] of CONTACTS) {
+      s = s.replace(re, () => {
+        cuts.push({ turn, what: where, reason: 'contact detail removed' });
+        return mark;
+      });
+    }
     for (const re of SECRETS) {
       s = s.replace(re, (m) => {
         cuts.push({ turn, what: where, reason: 'credential removed' });
@@ -93,6 +108,11 @@ function merge(steps) {
 const URL_RE = /https:\/\/[^\s)>\]"'`]+/g;
 // A path the agent names in backticks is something it is pointing the person at.
 const PATH_RE = /`((?:~|\/)[^`\s]*\/[^`\s]+)`/g;
+// What a viewer counts as "made": a page, a picture, a sound, a document. Code, config and
+// folders are how the work got done, and they already show as steps. Counting every file
+// written put a session's tooling in the "made" list (Gary, 2026-10-10: "This session
+// definitely didn't make all these files").
+const DELIVERABLE = /\.(md|pdf|docx?|pptx?|key|xlsx?|csv|html?|png|jpe?g|gif|webp|svg|heic|wav|mp3|m4a|aac|flac|mp4|mov|webm|epub)$/i;
 
 // Tools that are harness plumbing rather than work a viewer would recognize. They are not
 // shown; their time is carried into the next real step so the clock still adds up.
@@ -185,7 +205,7 @@ export function convert(lines, opts = {}) {
         turn.replies.push({ text, at: ts - start });
         cursor = Math.max(cursor, ts);
         for (const url of text.match(URL_RE) ?? []) addArtifact(turn, { kind: 'link', title: url.replace(/^https:\/\//, '').replace(/[.,;:]+$/, ''), url: url.replace(/[.,;:]+$/, '') }, ts - start);
-        for (const [, path] of text.matchAll(PATH_RE)) addArtifact(turn, { kind: 'file', title: base(path), path }, ts - start);
+        for (const [, path] of text.matchAll(PATH_RE)) if (DELIVERABLE.test(path)) addArtifact(turn, { kind: 'file', title: base(path), path }, ts - start);
       } else if (b.type === 'tool_use') {
         // Real tools return in well under a second; the time goes to the agent thinking
         // before it calls them. So a step owns the whole gap since the previous step ended.
@@ -204,7 +224,7 @@ export function convert(lines, opts = {}) {
           Object.assign(step, { kind: `ask:${b.id}`, label: question ? `asked: ${question}` : 'asked a question', ask: { question, answer } });
         }
         raw.push(step);
-        if (b.name === 'Write' && b.input?.file_path) addArtifact(turn, { kind: 'file', title: base(b.input.file_path), path: clean(b.input.file_path, turn.id, 'artifact') }, ts - start);
+        if (b.name === 'Write' && DELIVERABLE.test(b.input?.file_path ?? '')) addArtifact(turn, { kind: 'file', title: base(b.input.file_path), path: clean(b.input.file_path, turn.id, 'artifact') }, ts - start);
       }
     }
   }

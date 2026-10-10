@@ -38,7 +38,7 @@ function Step({ step, person }) {
 
 function ArtifactCard({ a }) {
   return h('div', { className: 'ss-artifact' },
-    h('span', { className: `ss-kind ss-${a.kind}` }, a.kind === 'link' ? 'page' : 'file'),
+    h('span', { className: `ss-kind ss-${a.kind}` }, a.kind === 'link' ? 'page' : a.kind === 'other' ? 'done' : 'file'),
     h('span', { className: 'ss-atitle' }, a.title));
 }
 

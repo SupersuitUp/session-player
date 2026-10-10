@@ -56,6 +56,7 @@ export const PLAYER_CSS = `
 .ss-artifact{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eadcbc;border-radius:10px;padding:8px 10px;animation:ss-in .3s ease-out}
 .ss-kind{flex:none;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:var(--ss-sand)}
 .ss-kind.ss-link{background:var(--ss-aqua);color:#fff}
+.ss-kind.ss-other{background:var(--ss-tomato);color:#fff}
 .ss-atitle{min-width:0;overflow-wrap:anywhere;font-size:14px}
 .ss-empty{color:#8a7d68;font-size:14px;margin:0}
 .ss-timeline{grid-column:1/-1;padding:4px 2px}

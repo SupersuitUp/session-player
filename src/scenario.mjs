@@ -5,7 +5,8 @@
 export const FORMAT = 'supersuit-simulator/1';
 export const INTERVENTIONS = [null, 'redirect', 'correct', 'approve', 'decide'];
 export const VIA = ['typed', 'spoken', 'tapped'];
-export const ARTIFACT_KINDS = ['file', 'link'];
+// `other`: something real that has no file or link, like a release submitted to a store.
+export const ARTIFACT_KINDS = ['file', 'link', 'other'];
 export const SOURCE_KINDS = ['session', 'persona'];
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);

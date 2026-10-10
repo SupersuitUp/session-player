@@ -39,3 +39,16 @@ test('tidy does not modify the scenario it is given', () => {
   assert.equal(s.turns[0].human.text, 'ckise');
   assert.equal(s.cuts.length, 0);
 });
+
+test('a reviewer can drop artifacts and add ones the transcript cannot show', () => {
+  const s = sc('go', 'release it');
+  s.artifacts = [{ id: 'a1', kind: 'file', title: 'Downloads', turn: 't1' }, { id: 'a2', kind: 'link', title: 'garysheng.com/art', url: 'https://garysheng.com/art', turn: 't1' }];
+  s.turns[0].artifacts = ['a1', 'a2'];
+  const out = tidy(s, { artifacts: { drop: ['a1'], add: [{ kind: 'other', title: 'Kingdom Free submitted to DistroKid', turn: 't2' }] } });
+  assert.deepEqual(out.artifacts.map((a) => a.title), ['garysheng.com/art', 'Kingdom Free submitted to DistroKid']);
+  assert.deepEqual(out.turns[0].artifacts, ['a2']);
+  assert.deepEqual(out.turns[1].artifacts, ['a3']);
+  assert.deepEqual(out.cuts.map((c) => c.reason), ['artifact dropped by reviewer', 'artifact added by reviewer']);
+  assert.deepEqual(validate(out), []);
+  assert.throws(() => tidy(s, { artifacts: { drop: ['a9'] } }), /unknown artifact a9/);
+});

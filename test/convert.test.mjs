@@ -80,21 +80,15 @@ test('a session with only automatic titles uses those for chapters', () => {
   assert.deepEqual(sc.chapters, [{ title: 'Upload album', turn: 't1' }]);
 });
 
-test('paths the agent names in a reply become artifacts', () => {
-  const s = session().human('where').say('Covers are at `/Users/someone/Desktop/kingdom-free/cover.png` and the masters in `/Users/someone/Desktop/kingdom-free`. Run `npm test` to check.');
-  const sc = run(s);
-  assert.deepEqual(sc.artifacts.map((a) => a.path), ['~/Desktop/kingdom-free/cover.png', '~/Desktop/kingdom-free']);
-  assert.deepEqual(sc.artifacts.map((a) => a.title), ['cover.png', 'kingdom-free']);
-});
-
-test('files written and links shared become artifacts, home paths become ~', () => {
+test('deliverables become artifacts: pages, media and documents, never code or folders', () => {
   const s = session()
     .human('ship it')
     .tool('Write', { file_path: '/Users/someone/site/album.md', content: 'x' })
     .tool('Write', { file_path: '/Users/someone/site/album.md', content: 'y' })
-    .say('Live at https://garysheng.com/art/kingdom-free and submitted.');
+    .tool('Write', { file_path: '/Users/someone/tool/write-checkpoint.mjs', content: 'z' })
+    .say('Live at https://garysheng.com/art/kingdom-free and the cover is `/Users/someone/Desktop/kingdom-free/cover.png`. Masters in `/Users/someone/Desktop/kingdom-free` and `/Users/someone/Downloads`; runner is `/Users/someone/x/run.mjs`.');
   const sc = run(s);
-  assert.deepEqual(sc.artifacts.map((a) => [a.kind, a.title]), [['file', 'album.md'], ['link', 'garysheng.com/art/kingdom-free']]);
+  assert.deepEqual(sc.artifacts.map((a) => [a.kind, a.title]), [['file', 'album.md'], ['link', 'garysheng.com/art/kingdom-free'], ['file', 'cover.png']]);
   assert.equal(sc.artifacts[0].path, '~/site/album.md');
   assert.deepEqual(sc.turns[0].artifacts, sc.artifacts.map((a) => a.id));
 });
@@ -170,4 +164,20 @@ test('steps and artifacts carry when they happened, so a replay can interleave t
   assert.deepEqual(t.steps.map((x) => x.at), [11000, 15000]);
   assert.equal(t.replies[0].at, 13000);
   assert.equal(run(s).artifacts[0].at, 14000);
+});
+
+test('phone numbers and email addresses never survive into a scenario', () => {
+  const s = session()
+    .human('text me at 630-555-0142 or someone@example.com')
+    .tool('AskUserQuestion', { questions: [{ question: 'To Gary, iMessage (+1 630 555 0142):\n\nkingdom free is live\n\nSend that?' }] }, { result: 'User has answered your questions: "q"="Freeda sends it".' })
+    .tool('Bash', { command: 'x', description: 'Text (917) 555-0317 the link' })
+    .say('Sent to +16305550142 and cc wilson@example.org. Version 4.259.1, commit 2026-10-10, 1,000 steps.');
+  const sc = run(s);
+  const all = JSON.stringify(sc);
+  for (const leak of ['555-0142', '555 0142', '5550142', '555-0317', 'someone@example.com', 'wilson@example.org']) assert.ok(!all.includes(leak), leak);
+  // Versions, dates and counts are not phone numbers.
+  assert.match(all, /4\.259\.1/);
+  assert.match(all, /2026-10-10/);
+  assert.match(all, /1,000 steps/);
+  assert.ok(sc.cuts.filter((c) => c.reason === 'contact detail removed').length >= 5);
 });
