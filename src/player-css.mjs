@@ -81,6 +81,9 @@ export const PLAYER_CSS = `
 .ss-chip:disabled{opacity:.55;cursor:default}
 .ss-sim .ss-mic{flex:none;align-self:center;width:48px;height:48px;padding:0;border:0;border-radius:50%;background:var(--ss-tomato);color:#fff;font-size:20px;touch-action:none;-webkit-user-select:none;user-select:none}
 .ss-mic:disabled{opacity:.4}
+.ss-sim .ss-send{flex:none;align-self:center;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:var(--ss-petrol);color:#fff;font-size:20px;font-weight:700}
+.ss-send:disabled{opacity:.35}
+.ss-term .ss-send{background:#5c5751}
 .ss-mic.ss-live{animation:ss-pulse 1s infinite}
 .ss-end{flex:1;display:flex;flex-direction:column;gap:8px}
 .ss-end p{margin:0;font-size:14px}
@@ -253,5 +256,10 @@ export const PLAYER_CSS = `
 .ss-term .ss-tray{background:#232120;border-top-color:#3a3633}
 .ss-term .ss-artifact{background:#232120;border-color:#3a3633;color:#e6e1d9}
 .ss-term .ss-panel h3{font-family:inherit;font-size:14px}
+.ss-devhint{font-size:inherit;opacity:.85}
+/* Toasts float over the top of the demo: no layout shift, gone after a few seconds. */
+.ss-toast{position:absolute;z-index:60;left:50%;top:40px;transform:translateX(-50%);width:max-content;max-width:min(92%,420px);pointer-events:none}
+.ss-toast span{display:block;background:var(--ss-ink);color:var(--ss-cream);font-size:13px;line-height:1.35;border-radius:12px;padding:8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.25);text-align:center;animation:ss-toast 3.2s ease forwards}
+@keyframes ss-toast{0%{opacity:0;transform:translateY(-4px)}8%,85%{opacity:1;transform:none}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.ss-sim *{animation:none!important;transition:none!important}}
 `;

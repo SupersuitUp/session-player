@@ -9,7 +9,7 @@
 import { createElement as h, useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import { script, summarize, duration, realPick, compare, dictate } from './playback.mjs';
 import { PLAYER_CSS } from './player-css.mjs';
-import { resolveDevice, normalizeMode, readViewer, watchViewer } from './device.mjs';
+import { resolveDevice, normalizeMode, readViewer, watchViewer, autoHint, deviceToast, autoplayToast, choiceToast } from './device.mjs';
 
 const plain = (s) => String(s).replace(/\*\*([^*]+)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^#+\s*/gm, '');
 const initial = (name = '?') => name.trim().charAt(0).toUpperCase();
@@ -41,7 +41,7 @@ function Reply({ text }) {
 // the composer, one question at a time, a tab per question. The viewer picks; the pick is
 // answered with what the person really chose, then the next question, then the replay goes
 // on along the real path (a recording has one path, so no branch is ever invented).
-export function Board({ ask, person, auto = false, onPick, images }) {
+export function Board({ ask, person, auto = false, onPick, images, onToast }) {
   const [idx, setIdx] = useState(0);
   const [picks, setPicks] = useState({});
   const q = ask.questions[idx];
@@ -62,7 +62,11 @@ export function Board({ ask, person, auto = false, onPick, images }) {
     return () => clearTimeout(id);
   }, [auto, idx, mine]);
 
-  const choose = (pick) => setPicks((p) => (p[idx] ? p : { ...p, [idx]: pick }));
+  const choose = (pick) => {
+    if (picks[idx]) return;
+    onToast?.(choiceToast(person, compare(q, ask.dismissed, pick)));
+    setPicks((p) => (p[idx] ? p : { ...p, [idx]: pick }));
+  };
   const same = (a, b) => a.kind === b.kind && (a.kind !== 'option' || a.index === b.index);
   const row = (key, pick, label, description, image) => {
     const isReal = mine && same(pick, real);
@@ -187,7 +191,7 @@ export function CloseCard({ sc, person, onReplay, onBack }) {
         onBack && h('button', { className: 'ss-chip ss-ghost', onClick: onBack }, 'Step into someone else'))));
 }
 
-export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = false, artifacts = true, timeline = true, maxSteps = 5, device, viewer }) {
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer }) {
   const list = scenarios ?? (scenario ? [scenario] : []);
   // An embed may name one scenario from a list and skip the picker.
   const start = scenarioId != null ? Math.max(0, list.findIndex((s) => s.id === scenarioId)) : list.length > 1 ? null : 0;
@@ -209,11 +213,24 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
 const MODE_NAMES = { auto: 'Auto', iphone: 'iPhone', macbook: 'MacBook' };
 
 // The small switch on the demo itself, outside the device: Auto / iPhone / MacBook.
-function DeviceSwitch({ mode, setMode }) {
+function DeviceSwitch({ mode, setMode, hint, onToast }) {
   return h('div', { className: 'ss-devswitch', role: 'radiogroup', 'aria-label': 'Simulated device' },
     Object.entries(MODE_NAMES).map(([m, name]) => h('button', {
-      key: m, role: 'radio', 'aria-checked': mode === m, type: 'button', className: 'ss-devopt', onClick: () => setMode(m),
-    }, name)));
+      key: m, role: 'radio', 'aria-checked': mode === m, type: 'button', className: 'ss-devopt', onClick: () => { setMode(m); onToast?.(m); },
+    }, name, m === 'auto' && mode === 'auto' && hint ? h('small', { className: 'ss-devhint' }, ` · ${hint}`) : null)));
+}
+
+// One quiet message at a time, over the demo rather than in its flow, read out politely.
+function useToast() {
+  const [toast, setToast] = useState(null);
+  const timer = useRef(null);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const show = (text) => {
+    clearTimeout(timer.current);
+    setToast({ text, id: Date.now() });
+    timer.current = setTimeout(() => setToast(null), 3200);
+  };
+  return [toast, show];
 }
 
 // A clock that keeps real time, for the status bar and the menu bar.
@@ -267,6 +284,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
   const [made, setMade] = useState([]);
   const [work, setWork] = useState({ ms: 0, steps: 0 });
   const [auto, setAuto] = useState(autoplay);
+  const [toast, showToast] = useToast();
   const [tray, setTray] = useState(false);
   const timers = useRef([]);
   const logRef = useRef(null);
@@ -350,7 +368,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
         onBack && h('button', { className: 'ss-back', onClick: onBack, 'aria-label': 'Choose another person' }, '‹'),
         h('span', { className: 'ss-avatar' }, initial(person)),
         h('div', { className: 'ss-titles' }, h('b', null, sc.title), h('small', null, sc.source?.illustrative ? 'Illustrative: recast from a real session' : chapter ?? `as ${person}`)),
-        h('label', { className: 'ss-auto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => setAuto(e.target.checked) }), 'auto')),
+        h('label', { className: 'ss-auto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => { setAuto(e.target.checked); showToast(autoplayToast(e.target.checked)); } }), 'Autoplay')),
       h('div', { className: 'ss-counter', 'aria-live': 'polite' },
         h('span', null, work.ms ? [h('b', { key: 'd' }, duration(work.ms)), ` of work done for ${person}`] : 'No work yet'),
         h('span', null, `${work.steps} of ${totals.steps} steps`)),
@@ -371,7 +389,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
         phase === 'working' && !waiting && h('div', { className: 'ss-typing' }, h('i'), h('i'), h('i'))),
       showArtifacts && !waiting && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
       showArtifacts && tray && !waiting && h('div', { className: 'ss-tray' }, artifactList)),
-      waiting ? h(Board, { key: waiting, ask: log.find((l) => l.key === waiting).step.ask, images: log.find((l) => l.key === waiting).step.images, person, auto, onPick: (picks) => resumeRef.current?.(picks) }) :
+      waiting ? h(Board, { key: waiting, ask: log.find((l) => l.key === waiting).step.ask, images: log.find((l) => l.key === waiting).step.images, person, auto, onToast: auto ? undefined : showToast, onPick: (picks) => resumeRef.current?.(picks) }) :
       h('footer', { className: 'ss-composer' },
         phase === 'done'
           ? h('div', { className: 'ss-end' },
@@ -379,15 +397,16 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
             h('button', { className: 'ss-chip', onClick: restart }, 'Play again'))
           : h(Fragment, null,
             h('button', { className: 'ss-chip', disabled: phase !== 'ready', onClick: send },
-              h('small', null, phase === 'working' ? 'Freeda is working…' : phase === 'saying' ? 'listening…' : 'tap to send, or tap the mic to say it'),
+              h('small', null, phase === 'working' ? 'Freeda is working…' : phase === 'saying' ? 'listening…' : auto ? 'sending on autoplay…' : `you are ${person}: tap to send, or tap the mic`),
               phase === 'saying' ? spoken : next && plain(next.text).slice(0, 140)),
+            h('button', { className: 'ss-send', disabled: phase !== 'ready', 'aria-label': 'Send', onClick: send }, '\u2191'),
             h('button', {
               className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
             }, '\u{1F3A4}'))));
   const panel = showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList);
   const bar = h('div', { className: 'ss-devicebar' },
     label ? h('span', { className: frame === 'macbook-compact' ? 'ss-simpill' : 'ss-simlabel' }, label) : h('span'),
-    setMode && h(DeviceSwitch, { mode, setMode }));
+    setMode && h(DeviceSwitch, { mode, setMode, hint: autoHint({ viewer, device: sc.device }), onToast: (m) => showToast(deviceToast({ mode: m, viewer, device: sc.device })) }));
   // The device around the conversation. On a phone nothing is drawn: the demo is the phone.
   let device = phone;
   if (frame === 'iphone') {
@@ -410,6 +429,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
   }
   const inGrid = frame !== 'macbook';
   return h(Fragment, null,
+    h('div', { className: `ss-toast${toast ? ' ss-toast-on' : ''}`, role: 'status', 'aria-live': 'polite' }, toast ? h('span', { key: toast.id }, toast.text) : null),
     bar,
     h('div', { className: `ss-stage ss-frame-${frame}${inGrid && showArtifacts ? ' ss-has-panel' : ''}` },
       device,

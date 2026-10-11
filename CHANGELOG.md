@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2 (2026-10-11)
+
+- **Autoplay is on by default, and is called Autoplay.** The playback checkbox was labelled "auto", next to a device switch whose first option is also Auto, and it was unticked by default, so a viewer read Auto as not selected. Off, the viewer plays the person: each message waits, prefilled, for a tap on Send (or the mic), and each board waits for the viewer's pick, answered with what the person really chose. Turning it on or off says so in a toast. `autoplay={false}`, `?autoplay=off` or `autoplay="off"` on the tag start it off (the old bare `?autoplay` still means on).
+- The device switch marks the active mode and, on Auto, what Auto resolved to: "Auto · iPhone", "Auto · MacBook", or "Auto · this phone". A forced mode is the marked one and Auto carries no hint.
+- Toasts: a tap on the device switch says what is shown now and why ("Now simulating a MacBook: this session ran in Claude Code on a Mac."); a pick on a board says "Same call as X." or "In the real session, X chose Y." Quiet, polite to screen readers, over the demo with no layout shift, gone after about three seconds.
+
 ## 0.2.1 (2026-10-11)
 
 - A MacBook in a column too narrow for a believable laptop (under 560 px, such as the book's 434 px figure) keeps its Claude Code window and its "Simulating a MacBook" label and drops the lid, menu bar and base, rather than shrinking into a toy where the composer and the counter overlap.
