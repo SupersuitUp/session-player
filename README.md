@@ -1,5 +1,7 @@
 # @supersuit/simulator
 
+> **Renamed to [`@supersuit/session-player`](https://www.npmjs.com/package/@supersuit/session-player).** It plays recorded sessions; case studies and the coming Helm demo are content it plays. 0.3.2 is the last `@supersuit/simulator`: install `@supersuit/session-player` instead, whose exports, CLI (`simulator` still works) and scenario format are the same.
+
 The Supersuit Session demo: step into the shoes of someone who needs a great deal of work done, give their commands on a simulated phone, and watch the work and the things it makes appear. Every scenario is built from a real agent session, with the person's corrections left in.
 
 The demo was called the Supersuit Simulator until 0.1.1; the package keeps the name `@supersuit/simulator`, as do the CLI, the scenario format and the exports, so nothing that installs it changes.

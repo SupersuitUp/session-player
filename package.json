@@ -1,7 +1,7 @@
 {
   "name": "@supersuit/simulator",
-  "version": "0.3.1",
-  "description": "The Supersuit Session demo: turn a real Claude Code session into a scenario anyone can step into on a simulated phone, and watch the work and the artifacts appear.",
+  "version": "0.3.2",
+  "description": "Renamed to @supersuit/session-player. Plays recorded agent sessions (case studies) on a simulated phone or MacBook.",
   "type": "module",
   "bin": {
     "simulator": "bin/simulator.mjs"

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2 (2026-10-11)
+
+- The last `@supersuit/simulator`. The package is renamed `@supersuit/session-player` (Gary, 2026-10-11: it plays recorded sessions, and case studies and the coming Helm demo are content it plays). No code change; the README and description point to the new name.
+
 ## 0.3.1 (2026-10-11)
 
 - A moment never clips a line in half. In a short screen (the MacBook window on continentalworks.ai/demo) the moment's parts were squeezed by flexbox, so the answer and the person's line were cut mid-line. Each part now keeps its height, the big answer is a little smaller (up to 22 px, five lines), and the moment scrolls rather than clipping if it still does not fit. In moments the composer no longer repeats the person's line, which the moment already shows; it keeps its status and its Send and mic.
