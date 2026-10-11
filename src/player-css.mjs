@@ -14,10 +14,11 @@ export const PLAYER_CSS = `
 .ss-titles b{font-family:Fraunces,Georgia,serif;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ss-titles small{color:#7a6d5a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ss-auto{display:flex;align-items:center;gap:4px;font-size:12px;color:#7a6d5a}
-.ss-moment{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:16px 18px;overflow:hidden;animation:ss-in .35s ease-out}
+.ss-moment{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:16px 18px;overflow-y:auto;animation:ss-in .35s ease-out}
+.ss-moment>*{flex:none}
 .ss-mcount{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.6}
 .ss-mcmd{margin:0;font-size:14px;opacity:.75;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.ss-mbig{margin:auto 0;font-size:clamp(17px,3.4cqi,26px);line-height:1.3;font-weight:600;overflow:hidden;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;animation:ss-in .4s ease-out}
+.ss-mbig{margin:auto 0;font-size:clamp(16px,2.6cqi,22px);line-height:1.3;font-weight:600;overflow:hidden;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;animation:ss-in .4s ease-out}
 .ss-mwork{margin:auto 0;opacity:.6;font-size:15px}
 .ss-mticks{list-style:none;margin:0;padding:8px 0 0;border-top:1px dashed rgba(127,127,127,.35);display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px}
 .ss-mticks li{position:relative;padding-left:20px}

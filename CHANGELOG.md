@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 (2026-10-11)
+
+- A moment never clips a line in half. In a short screen (the MacBook window on continentalworks.ai/demo) the moment's parts were squeezed by flexbox, so the answer and the person's line were cut mid-line. Each part now keeps its height, the big answer is a little smaller (up to 22 px, five lines), and the moment scrolls rather than clipping if it still does not fit. In moments the composer no longer repeats the person's line, which the moment already shows; it keeps its status and its Send and mic.
+
 ## 0.3.0 (2026-10-11)
 
 - Highlights (Wilson, 2026-10-11: "make it 40 seconds", "the key things, the most important moments for the human"): `speed` (embed `speed=3`) shortens the work between beats; `highlights` (embed `highlights`) shows where each turn landed, its last answer's first paragraph, with reading time that is never sped up; `steps` (embed) sets how many steps a turn keeps. A recast spec may name a turn's landing answer with `highlight: { "t6": 1 }`.

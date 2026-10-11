@@ -450,7 +450,9 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
           : h(Fragment, null,
             h('button', { className: 'ss-chip', disabled: phase !== 'ready', onClick: send },
               h('small', null, phase === 'working' ? 'Freeda is working…' : phase === 'saying' ? 'listening…' : auto ? 'sending on autoplay…' : `you are ${person}: tap to send, or tap the mic`),
-              phase === 'saying' ? spoken : next && plain(next.text).slice(0, 140)),
+              // In moments the line already sits on the moment's screen; repeating it here took the room
+              // the answer needs in a short MacBook window.
+              phase === 'saying' ? spoken : moments ? null : next && plain(next.text).slice(0, 140)),
             h('button', { className: 'ss-send', disabled: phase !== 'ready', 'aria-label': 'Send', onClick: send }, '\u2191'),
             h('button', {
               className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
