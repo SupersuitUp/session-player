@@ -18,6 +18,7 @@ export function propsFromAttributes(a) {
     autoplay: a.autoplay !== 'off',
     height: a.height || undefined,
     device: a.device || undefined,
+    start: a.start || undefined,
   };
 }
 

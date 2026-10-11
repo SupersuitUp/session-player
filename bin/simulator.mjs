@@ -32,7 +32,7 @@ Usage:
       and point the scenario at the copies. Refuses if an image source is missing.
   simulator serve <scenario.json>... [--port 4460] [--host 127.0.0.1]
       Watch scenarios in the player in a browser. Add ?autoplay=off, ?artifacts=off,
-      ?timeline=off or ?device=iphone|macbook to the URL to see the limited views an embed uses.
+      ?timeline=off, ?device=iphone|macbook or ?start=auto to the URL to see the limited views an embed uses.
 
 A draft is not a publishable scenario: people in it are not anonymized yet.
 Exit codes: 0 ok, 1 invalid or refused, 2 usage error.`;

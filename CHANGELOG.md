@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3 (2026-10-11)
+
+- **A Start demo button.** Nothing plays on load anywhere. The device shows a Start card over its screen: the scenario's title, one measured line (commands from the person, Freeda's minutes of work), a Start demo button, and the Autoplay choice beside it (on: it plays itself; off: you play the person). Sending a command or tapping the mic also counts as starting. Play again appears at the end, as before. A host opts into starting at once with `start: 'auto'`, `?start=auto` or `start="auto"` on the tag. Reduced motion is respected (no animation on the card).
+
 ## 0.2.2 (2026-10-11)
 
 - **Autoplay is on by default, and is called Autoplay.** The playback checkbox was labelled "auto", next to a device switch whose first option is also Auto, and it was unticked by default, so a viewer read Auto as not selected. Off, the viewer plays the person: each message waits, prefilled, for a tap on Send (or the mic), and each board waits for the viewer's pick, answered with what the person really chose. Turning it on or off says so in a toast. `autoplay={false}`, `?autoplay=off` or `autoplay="off"` on the tag start it off (the old bare `?autoplay` still means on).

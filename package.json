@@ -1,6 +1,6 @@
 {
   "name": "@supersuit/simulator",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "The Supersuit Session demo: turn a real Claude Code session into a scenario anyone can step into on a simulated phone, and watch the work and the artifacts appear.",
   "type": "module",
   "bin": {
