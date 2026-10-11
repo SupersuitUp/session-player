@@ -2,7 +2,7 @@
 // player can be dropped into any page (the wiki, a book reader) without colliding.
 export const PLAYER_CSS = `
 .ss-sim{--ss-ink:#1E1B19;--ss-cream:#F6E7C5;--ss-paper:#FBF5E7;--ss-tomato:#DB371F;--ss-petrol:#265E72;--ss-mustard:#E9A23B;--ss-sand:#EED79E;--ss-aqua:#69B1B5;
-  position:relative;container-type:inline-size;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:var(--ss-ink);width:100%;max-width:1040px;margin:0 auto;-webkit-text-size-adjust:100%}
+  position:relative;container:ss-sim/inline-size;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:var(--ss-ink);width:100%;max-width:1040px;margin:0 auto;-webkit-text-size-adjust:100%}
 .ss-sim *{box-sizing:border-box}
 .ss-sim button{font:inherit;color:inherit;cursor:pointer}
 .ss-stage{display:grid;grid-template-columns:1fr;gap:16px}
@@ -108,7 +108,7 @@ export const PLAYER_CSS = `
 .ss-picker{display:flex;flex-direction:column;gap:10px;padding:8px}
 .ss-picker h2{font-family:Fraunces,Georgia,serif;margin:0 0 6px}
 .ss-persona{display:flex;gap:12px;align-items:center;text-align:left;border:1px solid #eadcbc;background:var(--ss-paper);border-radius:14px;padding:12px}
-@container (min-width:760px){
+@container ss-sim (min-width:760px){
   .ss-stage.ss-has-panel{grid-template-columns:minmax(360px,420px) 1fr}
   .ss-has-panel .ss-tray-handle,.ss-has-panel .ss-tray{display:none}
   .ss-panel{display:flex;flex-direction:column;gap:10px;align-self:start;max-height:760px;overflow-y:auto;padding:16px;background:#fffaf0;border:1px solid #eadcbc;border-radius:20px}
@@ -156,5 +156,93 @@ export const PLAYER_CSS = `
 @keyframes ss-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes ss-blink{0%,100%{opacity:.3}50%{opacity:1}}
 @keyframes ss-pulse{0%,100%{box-shadow:0 0 0 0 rgba(219,55,31,.5)}50%{box-shadow:0 0 0 10px rgba(219,55,31,0)}}
-@media (prefers-reduced-motion:reduce){.ss-sim *{animation:none!important}}
+/* Device framing (device.mjs). The bar sits outside the device: what is simulated, and the switch. */
+.ss-devicebar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 2px 8px;min-height:26px;font-size:12px;color:#7a6d5a}
+.ss-simlabel{letter-spacing:.02em}
+.ss-simpill{background:var(--ss-ink);color:var(--ss-cream);border-radius:999px;padding:3px 10px;font-weight:600;white-space:nowrap}
+.ss-devswitch{display:inline-flex;border:1px solid #e3cf9f;border-radius:999px;padding:2px;background:#fffaf0}
+.ss-sim .ss-devopt{border:0;background:none;border-radius:999px;padding:2px 9px;font-size:12px;color:#7a6d5a;line-height:18px}
+.ss-sim .ss-devopt[aria-checked="true"]{background:var(--ss-petrol);color:#fff}
+.ss-sim .ss-devopt:focus-visible{outline:2px solid var(--ss-petrol);outline-offset:1px}
+.ss-frame-iphone,.ss-frame-macbook{justify-items:center}
+/* The iPhone: drawn in CSS, sized from the height it is given and never wider than its column. */
+.ss-iphone{--ss-dh:var(--ss-height,min(820px,calc(100svh - 110px)));position:relative;height:min(var(--ss-dh),calc(100cqw * 2.09));aspect-ratio:414/868;max-width:100%;container-type:size;padding:2.9%;background:#121212;border-radius:13.5%/6.45%;box-shadow:0 0 0 1.5px #3b3b3d,0 0 0 4px #1b1b1c,0 24px 60px rgba(30,27,25,.28)}
+.ss-iphone>.ss-phone{height:100%;min-height:0;border:0;border-radius:11cqw;box-shadow:none}
+.ss-btn{position:absolute;width:3px;background:#2b2b2d;border-radius:2px}
+.ss-btn-a{left:-5px;top:16%;height:3.6%}.ss-btn-v1{left:-5px;top:23%;height:7%}.ss-btn-v2{left:-5px;top:31.5%;height:7%}.ss-btn-p{right:-5px;top:26%;height:10.5%}
+.ss-status{flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:12.5cqw;padding:0 6.5cqw;background:#fffaf0;font-weight:600;font-size:4.1cqw;color:var(--ss-ink)}
+.ss-island{width:31cqw;height:9.2cqw;border-radius:999px;background:#000}
+.ss-status-icons{justify-self:end;display:flex;gap:1.6cqw;align-items:center}
+.ss-status-icons svg{height:3.2cqw;width:auto;fill:currentColor}
+.ss-frame-iphone .ss-head{padding-top:4px}
+/* The MacBook: lid, screen with a menu bar and a Claude Code window, base. Fluid: the window
+   reflows at the width it gets rather than shrinking text. */
+.ss-mac{--ss-dh:var(--ss-height,min(820px,calc(100svh - 110px)));width:min(92%,calc((var(--ss-dh) - 16px) * 1.54));margin:0 auto}
+.ss-mac-lid{position:relative;aspect-ratio:1.54;padding:1.6% 1.6% 2.4%;background:#0e0e10;border-radius:18px 18px 8px 8px;box-shadow:0 0 0 1.5px #3c3c40,0 24px 60px rgba(30,27,25,.25)}
+.ss-mac-screen{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;border-radius:6px;background:linear-gradient(140deg,#265E72 0%,#69B1B5 42%,#EED79E 72%,#E9A23B 88%,#DB371F 100%)}
+.ss-mac-notch{position:absolute;z-index:2;left:50%;top:0;width:11%;height:22px;transform:translateX(-50%);background:#0e0e10;border-radius:0 0 7px 7px}
+.ss-menubar{flex:none;display:flex;align-items:center;gap:14px;height:24px;padding:0 12px;overflow:hidden;white-space:nowrap;font:12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:#1e1b19;background:rgba(251,245,231,.78);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.ss-menu-mark{width:11px;height:11px;border-radius:50%;background:var(--ss-ink)}
+.ss-menu-right{margin-left:auto;display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums}
+.ss-menu-right svg{fill:currentColor}
+.ss-mac-base{position:relative;width:108%;margin-left:-4%;height:16px;background:linear-gradient(#e4e4e8,#b4b4ba 70%,#8e8e95);border-radius:0 0 50% 50%/0 0 14px 14px}
+.ss-mac-base::before{content:"";position:absolute;left:50%;top:0;width:15%;height:6px;transform:translateX(-50%);background:#a2a2a8;border-radius:0 0 8px 8px}
+.ss-window{container:ss-sim/inline-size;display:flex;flex-direction:column;overflow:hidden;border-radius:10px;background:#1a1918;border:1px solid rgba(0,0,0,.55);box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.ss-mac-screen>.ss-window{flex:1;min-height:0;margin:3% 3.5% 3.5%}
+.ss-titlebar{flex:none;display:flex;align-items:center;gap:10px;height:28px;padding:0 10px;background:#2b2927;border-bottom:1px solid #111;color:#bdb6ab;font:12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+.ss-traffic{display:flex;gap:7px}
+.ss-traffic i{width:11px;height:11px;border-radius:50%;background:#ff5f57}
+.ss-traffic i:nth-child(2){background:#febc2e}.ss-traffic i:nth-child(3){background:#28c840}
+.ss-wtitle{flex:1;text-align:center;font-weight:600;margin-right:50px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ss-in-window{flex:1;min-height:0;gap:0;grid-template-rows:minmax(0,1fr)}
+.ss-in-window>.ss-phone{height:100%;min-height:0;border:0;border-radius:0;box-shadow:none}
+@container ss-sim (min-width:760px){
+  .ss-in-window.ss-has-panel{grid-template-columns:minmax(0,1fr) minmax(220px,32%)}
+  .ss-in-window .ss-panel{max-height:none;height:100%;border-radius:0;border-width:0 0 0 1px;background:#201e1c;border-color:#33302d;color:#e6e1d9}
+}
+.ss-window-compact{width:100%}
+.ss-window-compact>.ss-phone{height:calc(var(--ss-height,min(760px,calc(100svh - 120px))) - 28px);border:0;border-radius:0;box-shadow:none}
+/* Claude Code's terminal, inside either MacBook window. */
+.ss-term .ss-phone{background:#1a1918;color:#e6e1d9;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.ss-term .ss-head{background:#232120;border-bottom-color:#33302d}
+.ss-term .ss-titles b{font-family:inherit;font-size:13px;color:#e6e1d9}
+.ss-term .ss-titles small,.ss-term .ss-auto,.ss-term .ss-intro,.ss-term .ss-dur,.ss-term .ss-empty,.ss-term .ss-group .ss-label,.ss-term .ss-opt small{color:#8f887d}
+.ss-term .ss-avatar{background:#d97757;color:#1a1918;border-radius:6px}
+.ss-term .ss-counter{background:#0f0e0d;color:#cfc8bd}
+.ss-term .ss-counter b{color:#d97757}
+.ss-term .ss-cmd-wrap{align-items:stretch}
+.ss-term .ss-cmd{max-width:none;background:#2a2826;color:#e6e1d9;border-radius:4px;border-left:2px solid #8f887d;padding:6px 10px}
+.ss-term .ss-cmd::before{content:"> ";color:#8f887d}
+.ss-term .ss-who,.ss-term .ss-more,.ss-term .ss-asking{color:#d97757}
+.ss-term .ss-reply p{color:#e6e1d9}
+.ss-term .ss-step{color:#bdb6ab}
+.ss-term .ss-dot{background:#7fb069}
+.ss-term .ss-group .ss-dot{background:#5c5751}
+.ss-term .ss-asked{background:#2a2622;border-left-color:#d9a441}
+.ss-term .ss-asked .ss-q{color:#bdb6ab}
+.ss-term .ss-mine,.ss-term .ss-tag,.ss-term .ss-verdict{color:#d9a441}
+.ss-term .ss-verdict.ss-same{color:#69b1b5}
+.ss-term .ss-bhead{background:#3a3633;color:#e6e1d9}
+.ss-term .ss-made{background:#22302c;color:#cfe3dc}
+.ss-term .ss-made span{color:#7fc4b0}
+.ss-term .ss-typing i{background:#5c5751}
+.ss-term .ss-composer{background:#1a1918;border-top-color:#33302d}
+.ss-term .ss-chip{background:#1a1918;border-color:#5c5751;border-radius:8px;color:#e6e1d9}
+.ss-term .ss-chip small{color:#d97757}
+.ss-term .ss-mic{background:#d97757}
+.ss-term .ss-sheet{background:#232120;border-top-color:#3a3633;color:#e6e1d9}
+.ss-term .ss-tab{border-color:#3a3633;color:#8f887d}
+.ss-term .ss-tab.ss-tab-done{background:#24343a;border-color:#3e5a63;color:#9cc7d3}
+.ss-term .ss-tab.ss-tab-now{background:#d97757;border-color:#d97757;color:#1a1918}
+.ss-sim .ss-term button.ss-opt{background:#1a1918;border-color:#3a3633;color:#bdb6ab}
+.ss-term .ss-opt b{color:#e6e1d9}
+.ss-term .ss-onum{background:#33302d;color:#e6e1d9}
+.ss-sim .ss-term button.ss-opt:hover,.ss-sim .ss-term button.ss-opt:focus-visible{background:#2a2826;border-color:#d97757}
+.ss-sim .ss-term button.ss-opt.ss-chosen{background:#24343a;border-color:#69b1b5}
+.ss-sim .ss-term button.ss-opt.ss-yours{background:#3a2f1e;border-color:#d9a441}
+.ss-sim .ss-term .ss-tray-handle{background:#e6e1d9;color:#1a1918}
+.ss-term .ss-tray{background:#232120;border-top-color:#3a3633}
+.ss-term .ss-artifact{background:#232120;border-color:#3a3633;color:#e6e1d9}
+.ss-term .ss-panel h3{font-family:inherit;font-size:14px}
+@media (prefers-reduced-motion:reduce){.ss-sim *{animation:none!important;transition:none!important}}
 `;

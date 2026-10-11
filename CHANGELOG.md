@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 (2026-10-11)
+
+- Device framing. On a desktop or tablet the demo is drawn inside a device: an iPhone (status bar with a real clock, Dynamic Island, side buttons), or a MacBook (lid, notch, menu bar with a real clock, a Claude Code window in a terminal theme, base) when the scenario ran on a Mac. On a phone the demo is the phone, full-bleed, as before.
+- `device` mode: `auto` (default), `iphone` or `macbook`, set by the `device` prop, `?device=` on the embed URL, the `device` attribute on `<supersuit-simulator>`, or the switch on the demo itself (Auto / iPhone / MacBook).
+- A MacBook forced on a phone is never a laptop shrunk into a phone: it is a desktop-style window at phone width with a persistent "Simulating a MacBook" pill. Whenever a frame is drawn, a quiet label outside the screen says what is simulated.
+- Phone or desktop is decided from capability signals (`pointer: coarse`, `hover: none`, `maxTouchPoints`) and the viewport's shorter side, re-read on resize and rotation (`classifyViewer`, `resolveDevice` in `device.mjs`).
+- The scenario format gains an optional `device: "iphone" | "macbook"`, validated; scenarios without it are unchanged and show as an iPhone. `convert` sets `macbook` for a session typed in a terminal (or the desktop app) on a Mac and leaves it unset when it cannot tell; `convert --device` overrides; `recast` keeps it.
+- The player's main container is now named (`container: ss-sim`), so its wide-layout rule follows the MacBook window it sits in. Hosts that copy the player's browser files must also copy `device.mjs` (the player imports it).
+
 ## 0.1.1 (2026-10-11)
 
 - Renamed for readers: the Supersuit Simulator is now the **Supersuit Session demo** (the README, the package description, the CLI help and the default page title of `simulator serve`). The package name, the `simulator` CLI, the `supersuit-simulator/1` format, `SimulatorPlayer` and `<supersuit-simulator>` are unchanged, so no install or embed breaks.
