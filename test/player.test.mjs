@@ -120,3 +120,39 @@ test('a close card without edge or freed data leaves those lines out rather than
   assert.doesNotMatch(html, /edge points|freed/);
   assert.match(html, /of work/);
 });
+
+test('one obvious Play: the Start card button is the big Play, and nothing else is a Play', () => {
+  const html = renderToString(h(SimulatorPlayer, { scenario: sc('a', 'Theo'), speed: 3, highlights: true })).replace(/<style>[\s\S]*?<\/style>/, '');
+  // Wilson's big pulsing Play is the Start demo button (Gary's Start card), not a second control.
+  assert.match(html, /<button[^>]*class="ss-startbtn"[^>]*><span class="ss-startplay" aria-hidden="true">\u25B6<\/span>Start demo<\/button>/);
+  assert.equal((html.match(/\u25B6/g) ?? []).length, 1, 'exactly one Play glyph on the screen');
+  assert.doesNotMatch(html, /aria-label="(Play|Pause)"/);
+  // The header keeps Autoplay, on by default; the composer keeps Send and the mic.
+  assert.match(html, /class="ss-auto"[\s\S]*?Autoplay/);
+  assert.match(html, /aria-label="Say it out loud"/);
+  assert.match(html, /aria-label="Send"/);
+  // A host that opts into starting at once shows no Start card and still no extra Play.
+  const auto = renderToString(h(SimulatorPlayer, { scenario: sc('a', 'Theo'), start: 'auto', highlights: true })).replace(/<style>[\s\S]*?<\/style>/, '');
+  assert.doesNotMatch(auto, /ss-startplay/);
+  assert.doesNotMatch(auto, /\u25B6/);
+});
+
+test('the close card lists what Freeda handled when the scenario names it', async () => {
+  const { CloseCard } = await import('../src/player.mjs');
+  const one = { ...sc('a', 'Theo'), close: { outcome: 'Phone sorted.', handled: ['Searched six inboxes', 'Grabbed a same-day slot'] } };
+  const html = renderToString(h(CloseCard, { sc: one, person: 'Theo', highlights: true, onReplay: () => {} }));
+  assert.match(html, /What Freeda handled for Theo/);
+  assert.match(html, /Grabbed a same-day slot/);
+});
+
+test('moments show one screen: the line small, where Freeda landed large, what is handled so far', async () => {
+  const { Moment } = await import('../src/player.mjs');
+  const plan = [{ command: { text: 'Is my phone covered?' }, events: [] }, { command: { text: 'Next' }, events: [] }];
+  const log = [{ kind: 'command', key: 'c0' }, { kind: 'reply', key: '0-3', reply: { text: 'Your phone is covered.' } }];
+  const made = [{ id: 'a1', kind: 'other', title: 'Coverage found', turnIndex: 0 }, { id: 'a2', kind: 'link', title: 'att.com', turnIndex: 0 }];
+  const html = renderToString(h(Moment, { plan, turn: 0, log, made, person: 'Theo', phase: 'working' }));
+  assert.match(html, /1 of 2/);
+  assert.match(html, /class="ss-mbig"[^>]*>Your phone is covered\./);
+  assert.match(html, /Coverage found/);
+  assert.doesNotMatch(html, /att\.com/);
+});

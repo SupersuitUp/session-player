@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 (2026-10-11)
+
+- Highlights (Wilson, 2026-10-11: "make it 40 seconds", "the key things, the most important moments for the human"): `speed` (embed `speed=3`) shortens the work between beats; `highlights` (embed `highlights`) shows where each turn landed, its last answer's first paragraph, with reading time that is never sped up; `steps` (embed) sets how many steps a turn keeps. A recast spec may name a turn's landing answer with `highlight: { "t6": 1 }`.
+- Relief you can see: in highlights the panel is "Handled for <person>", only what got handled (artifacts of kind `other`) ticking off as it lands; the close card can list what Freeda handled (`close.handled`, carried and recast by `recast`). Measured facts only, never time saved.
+- One moment per screen: `moments` (embed `moments`) replaces the scrolling log with the person's line small, where Freeda landed large, a counter ("3 of 8") and what is handled so far. Wilson: "the scroll down ... doesn't give me the TL;DR."
+- An obvious Play, folded into the one Start (Wilson: "make sure the red button is a play button"): the Start demo card's button is now a large pulsing red Play with "Start demo" under it, the Autoplay choice still beside it. There is exactly one Play: the header keeps the Autoplay switch (on by default, named so), and the composer keeps Send and the mic, so no second Play competes with Start.
+- Embeds take the cut too: `speed`, `highlights`, `moments` and `steps` on the iframe URL and as attributes on `<supersuit-simulator>`. A highlights cut still waits on the Start card unless the host opts in with `start=auto`.
+- Board picks on autoplay follow `speed`, as the rest of the run does.
+
 ## 0.2.3 (2026-10-11)
 
 - **A Start demo button.** Nothing plays on load anywhere. The device shows a Start card over its screen: the scenario's title, one measured line (commands from the person, Freeda's minutes of work), a Start demo button, and the Autoplay choice beside it (on: it plays itself; off: you play the person). Sending a command or tapping the mic also counts as starting. Play again appears at the end, as before. A host opts into starting at once with `start: 'auto'`, `?start=auto` or `start="auto"` on the tag. Reduced motion is respected (no animation on the card).

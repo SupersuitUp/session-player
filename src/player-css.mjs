@@ -14,6 +14,22 @@ export const PLAYER_CSS = `
 .ss-titles b{font-family:Fraunces,Georgia,serif;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ss-titles small{color:#7a6d5a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ss-auto{display:flex;align-items:center;gap:4px;font-size:12px;color:#7a6d5a}
+.ss-moment{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:16px 18px;overflow:hidden;animation:ss-in .35s ease-out}
+.ss-mcount{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.6}
+.ss-mcmd{margin:0;font-size:14px;opacity:.75;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ss-mbig{margin:auto 0;font-size:clamp(17px,3.4cqi,26px);line-height:1.3;font-weight:600;overflow:hidden;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;animation:ss-in .4s ease-out}
+.ss-mwork{margin:auto 0;opacity:.6;font-size:15px}
+.ss-mticks{list-style:none;margin:0;padding:8px 0 0;border-top:1px dashed rgba(127,127,127,.35);display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px}
+.ss-mticks li{position:relative;padding-left:20px}
+.ss-mticks li::before{content:"\\2713";position:absolute;left:0;color:#2f8f5b;font-weight:800}
+.ss-mticks li.ss-new{font-weight:700;animation:ss-in .4s ease-out}
+.ss-tick{display:flex;gap:10px;align-items:flex-start;animation:ss-in .35s ease-out}
+.ss-check{flex:none;width:22px;height:22px;border-radius:50%;background:#2f8f5b;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
+.ss-handled{text-align:left;margin:10px 0 4px}
+.ss-handled small{display:block;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:11px;color:#7a6d5a;margin-bottom:4px}
+.ss-handled ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.ss-handled li{position:relative;padding-left:24px;opacity:0;animation:ss-in .3s ease-out forwards;animation-delay:calc(var(--i) * 180ms)}
+.ss-handled li::before{content:"\\2713";position:absolute;left:0;top:0;color:#2f8f5b;font-weight:800}
 .ss-counter{display:flex;justify-content:space-between;gap:8px;padding:8px 14px;background:var(--ss-ink);color:var(--ss-cream);font-size:13px;font-variant-numeric:tabular-nums}
 .ss-counter b{color:var(--ss-mustard)}
 .ss-log-wrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
@@ -136,6 +152,10 @@ export const PLAYER_CSS = `
 .ss-burst i{position:absolute;width:7px;height:7px;border-radius:2px;background:var(--ss-mustard);transform:rotate(calc(var(--i) * 25.7deg)) translateY(0);animation:ss-pop 1.1s ease-out forwards;opacity:0}
 .ss-burst i:nth-child(3n){background:var(--ss-tomato)}.ss-burst i:nth-child(3n+1){background:var(--ss-aqua)}
 .ss-kicker{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ss-tomato);text-align:center}
+.ss-close-tight{padding:14px 16px 12px}
+.ss-close-tight h3{font-size:clamp(16px,2.6cqi,20px)!important;margin:2px 0 8px!important}
+.ss-close-tight .ss-handled li{font-size:12.5px;line-height:1.35}
+.ss-close-tight .ss-split{display:none}
 .ss-close h3{font-family:Fraunces,Georgia,serif;font-size:24px;margin:4px 0 14px;text-align:center}
 .ss-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .ss-split>div{background:#fff;border:1px solid #eadcbc;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:1px}
@@ -261,12 +281,13 @@ export const PLAYER_CSS = `
 .ss-starttitle{font-family:Fraunces,Georgia,serif;font-size:20px;line-height:1.25}
 .ss-startcard p{margin:0;color:#4a4238;font-size:14px}
 .ss-startcard small{color:#7a6d5a;font-size:12px}
-.ss-sim .ss-startbtn{margin-top:6px;border:0;border-radius:999px;background:var(--ss-tomato);color:#fff;font-weight:700;font-size:16px;padding:12px 26px;box-shadow:0 6px 18px rgba(219,55,31,.3)}
+.ss-sim .ss-startbtn{margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:8px;border:0;background:none;padding:0;color:inherit;font-weight:700;font-size:16px}
+.ss-startplay{width:76px;height:76px;border-radius:50%;background:var(--ss-tomato);color:#fff;display:grid;place-items:center;font-size:30px;padding-left:6px;box-sizing:border-box;box-shadow:0 8px 24px rgba(219,55,31,.35);animation:ss-pulse 1.6s infinite}
 .ss-sim .ss-startbtn:focus-visible{outline:3px solid var(--ss-petrol);outline-offset:2px}
 .ss-startauto{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
 .ss-term .ss-start{background:rgba(26,25,24,.86)}
 .ss-term .ss-startcard p{color:#cfc8bd}.ss-term .ss-startcard small{color:#8f887d}.ss-term .ss-starttitle,.ss-term .ss-startauto{color:#e6e1d9}
-.ss-term .ss-startbtn{background:#d97757}
+.ss-term .ss-startplay{background:#d97757}.ss-term .ss-startbtn{color:#e6e1d9}
 .ss-devhint{font-size:inherit;opacity:.85}
 /* Toasts float over the top of the demo: no layout shift, gone after a few seconds. */
 .ss-toast{position:absolute;z-index:60;left:50%;top:40px;transform:translateX(-50%);width:max-content;max-width:min(92%,420px);pointer-events:none}

@@ -41,7 +41,7 @@ function Reply({ text }) {
 // the composer, one question at a time, a tab per question. The viewer picks; the pick is
 // answered with what the person really chose, then the next question, then the replay goes
 // on along the real path (a recording has one path, so no branch is ever invented).
-export function Board({ ask, person, auto = false, onPick, images, onToast }) {
+export function Board({ ask, person, auto = false, onPick, images, onToast, speed = 1 }) {
   const [idx, setIdx] = useState(0);
   const [picks, setPicks] = useState({});
   const q = ask.questions[idx];
@@ -53,12 +53,12 @@ export function Board({ ask, person, auto = false, onPick, images, onToast }) {
     if (!mine) return undefined;
     const id = setTimeout(() => {
       if (idx + 1 < ask.questions.length) setIdx(idx + 1); else onPick?.(picks);
-    }, 1300);
+    }, Math.round(1300 / speed));
     return () => clearTimeout(id);
   }, [mine, idx]);
   useEffect(() => {
     if (!auto || mine) return undefined;
-    const id = setTimeout(() => setPicks((p) => ({ ...p, [idx]: real })), 1200);
+    const id = setTimeout(() => setPicks((p) => ({ ...p, [idx]: real })), Math.round(1200 / speed));
     return () => clearTimeout(id);
   }, [auto, idx, mine]);
 
@@ -124,7 +124,23 @@ function StepLine({ step }) {
     h('span', { className: 'ss-dur' }, step.stalled ? 'timed out' : duration(step.ms)));
 }
 
-function ArtifactCard({ a }) {
+// One moment per screen (Wilson, 2026-10-11: "the scroll down ... doesn't give me the TL;DR"):
+// the person's line small, where Freeda landed large, and what is handled so far, with no log
+// to scroll. Everything shown is the recording's own text; nothing is summarised for it.
+export function Moment({ plan, turn, log, made, person, phase }) {
+  const reply = [...log].reverse().find((l) => l.kind === 'reply' && l.key.startsWith(`${turn}-`));
+  const done = made.filter((a) => a.kind === 'other');
+  const here = done.find((a) => a.turnIndex === turn) ?? null;
+  return h('div', { className: 'ss-moment', key: turn },
+    h('div', { className: 'ss-mcount' }, `${turn + 1} of ${plan.length}`),
+    h('p', { className: 'ss-mcmd' }, h('b', null, `${person}: `), plain(plan[turn].command.text).slice(0, 160)),
+    reply ? h('p', { className: 'ss-mbig', key: reply.key }, plain(reply.reply.text))
+      : h('p', { className: 'ss-mwork' }, phase === 'working' ? 'Freeda is on it\u2026' : ''),
+    done.length > 0 && h('ul', { className: 'ss-mticks' }, done.map((a) => h('li', { key: a.id, className: a.id === here?.id ? 'ss-new' : '' }, a.title))));
+}
+
+function ArtifactCard({ a, tick = false }) {
+  if (tick) return h('div', { className: 'ss-artifact ss-tick' }, h('span', { className: 'ss-check', 'aria-hidden': true }, '\u2713'), h('span', { className: 'ss-atitle' }, a.title));
   return h('div', { className: 'ss-artifact' },
     h('span', { className: `ss-kind ss-${a.kind}` }, a.kind === 'link' ? 'page' : a.kind === 'other' ? 'done' : 'file'),
     h('span', { className: 'ss-atitle' }, a.title));
@@ -175,16 +191,21 @@ export function autoSendReady({ auto, phase, started }) {
 // measured. Freeda's work against the person's own attention, the things made, the edge
 // points the counter printed, and any chore the workflow catalog says is now off their hands.
 // Never "time saved": nobody measured the version where they did it by hand.
-export function CloseCard({ sc, person, onReplay, onBack }) {
+export function CloseCard({ sc, person, onReplay, onBack, highlights = false }) {
   const t = summarize(sc);
   const close = sc.close ?? {};
   const edge = close.edge;
   const layers = edge ? ['fueled', 'encoded', 'built', 'retired'].filter((k) => edge.layers?.[k]) : [];
   return h('div', { className: 'ss-close-wrap' },
-    h('div', { className: 'ss-close', role: 'dialog', 'aria-label': 'Session closed' },
+    h('div', { className: `ss-close${highlights ? ' ss-close-tight' : ''}`, role: 'dialog', 'aria-label': 'Session closed' },
       h('div', { className: 'ss-burst', 'aria-hidden': true }, Array.from({ length: 14 }, (_, i) => h('i', { key: i, style: { '--i': i } }))),
       h('span', { className: 'ss-kicker' }, 'Session closed'),
       h('h3', null, close.outcome ?? sc.title),
+      // What the agent carried, in the session's own facts (close.handled): the weight that came
+      // off the person, never a time-saved figure nobody measured.
+      close.handled?.length > 0 && h('div', { className: 'ss-handled' },
+        h('small', null, `What Freeda handled for ${person === 'You' ? 'you' : person}`),
+        h('ul', null, close.handled.map((x, i) => h('li', { key: i, style: { '--i': i } }, x)))),
       h('div', { className: 'ss-split' },
         h('div', null, h('b', null, duration(t.agentMs)), h('small', null, 'of work by Freeda'), h('small', null, plural(t.steps, 'step'))),
         h('div', null, h('b', null, plural(t.commands, 'command')), h('small', null, `from ${person === 'You' ? 'you' : person}`),
@@ -193,7 +214,7 @@ export function CloseCard({ sc, person, onReplay, onBack }) {
       edge && edge.total > 0 && h('div', { className: 'ss-edge' },
         h('b', null, plural(edge.total, 'edge point')), ' earned',
         h('span', { className: 'ss-layers' }, layers.map((k) => h('span', { key: k }, `${edge.layers[k]} ${k}`)))),
-      sc.artifacts?.length > 0 && h('div', { className: 'ss-close-made' },
+      !highlights && sc.artifacts?.length > 0 && h('div', { className: 'ss-close-made' },
         h('small', null, `${plural(sc.artifacts.length, 'thing')} made`),
         h('ul', null, sc.artifacts.slice(0, 6).map((a) => h('li', { key: a.id }, a.title)))),
       t.idleMs > 60000 && h('p', { className: 'ss-idle' }, `${duration(t.idleMs)} of idle time (hangs, timeouts, nobody at the keyboard) is not counted.`),
@@ -202,7 +223,10 @@ export function CloseCard({ sc, person, onReplay, onBack }) {
         onBack && h('button', { className: 'ss-chip ss-ghost', onClick: onBack }, 'Step into someone else'))));
 }
 
-export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode }) {
+// speed shortens the work between beats; highlights shows each turn's landing answer (first
+// paragraph) with reading time, and ticks off what got handled (Wilson, 2026-10-11: "make it 40
+// seconds", "I want the user to realize how much work, and how relieving it is").
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, speed = 1, highlights = false, moments = false, start: startMode }) {
   const list = scenarios ?? (scenario ? [scenario] : []);
   // An embed may name one scenario from a list and skip the picker.
   const start = scenarioId != null ? Math.max(0, list.findIndex((s) => s.id === scenarioId)) : list.length > 1 ? null : 0;
@@ -217,7 +241,7 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
   const sc = pick == null ? null : list[pick];
   return h('div', { className: 'ss-sim', style: height ? { '--ss-height': height } : undefined },
     h('style', null, PLAYER_CSS),
-    sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
+    sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, speed, highlights, moments, mode, setMode, viewer: viewer ?? seen, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
       : h(Picker, { scenarios: list, onPick: setPick }));
 }
 
@@ -284,9 +308,9 @@ function TitleBar() {
     h('span', { className: 'ss-wtitle' }, 'Claude Code'));
 }
 
-function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps, onBack, mode = 'auto', setMode, viewer = 'desktop' }) {
+function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps, speed = 1, highlights = false, moments = false, onBack, mode = 'auto', setMode, viewer = 'desktop' }) {
   const { frame, label } = resolveDevice({ mode, viewer, device: sc.device });
-  const plan = useMemo(() => script(sc, { maxSteps }), [sc, maxSteps]);
+  const plan = useMemo(() => script(sc, { maxSteps, speed, leadOnly: highlights }), [sc, maxSteps, speed, highlights]);
   const totals = useMemo(() => summarize(sc), [sc]);
   const person = sc.persona?.name ?? 'You';
   const [turn, setTurn] = useState(0);
@@ -333,9 +357,9 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
       if (e.kind === 'step' && e.step.ask) resumeRef.current = (picks) => {
         setAnswers((a) => ({ ...a, [key]: picks }));
         setWaiting(null);
-        playFrom(ti, i + 1, 500);
+        playFrom(ti, i + 1, Math.round(500 / speed));
       };
-      if (e.kind === 'artifact') setMade((m) => [...m, e.artifact]);
+      if (e.kind === 'artifact') setMade((m) => [...m, { ...e.artifact, turnIndex: ti }]);
       if (e.kind === 'step' && !e.step.ask) setWork((w) => ({ ms: w.ms + e.step.ms, steps: w.steps + (e.step.count ?? 1) }));
       if (e.kind === 'step' && e.step.ask) { setWaiting(key); return; }
       const next = p.events[i + 1];
@@ -358,12 +382,12 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   const sendNow = () => {
     setLog((l) => [...l, { kind: 'command', key: `c${turn}`, command: plan[turn].command }]);
     setPhase('working');
-    playFrom(turn, 0, 450);
+    playFrom(turn, 0, Math.round(450 / speed));
   };
 
   useEffect(() => {
     if (!autoSendReady({ auto, phase, started })) return undefined;
-    const id = setTimeout(send, 1400);
+    const id = setTimeout(send, Math.round(1400 / speed));
     return () => clearTimeout(id);
   });
 
@@ -374,8 +398,10 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   };
 
   const next = plan[turn]?.command;
+  // A highlights cut shows the load coming off: only what got handled, ticked as it lands.
+  const shown = highlights ? made.filter((a) => a.kind === 'other') : made;
   const artifactList = h('div', { className: 'ss-artifact-list' },
-    made.length ? made.map((a) => h(ArtifactCard, { key: a.id, a })) : h('p', { className: 'ss-empty' }, 'What Freeda makes will collect here.'));
+    shown.length ? shown.map((a) => h(ArtifactCard, { key: a.id, a, tick: highlights })) : h('p', { className: 'ss-empty' }, highlights ? 'What gets handled will tick off here.' : 'What Freeda makes will collect here.'));
 
   const phone = h('div', { className: 'ss-phone' },
       frame === 'iphone' && h(StatusBar),
@@ -388,6 +414,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
         h('span', null, work.ms ? [h('b', { key: 'd' }, duration(work.ms)), ` of work done for ${person}`] : 'No work yet'),
         h('span', null, `${work.steps} of ${totals.steps} steps`)),
       h('div', { className: 'ss-log-wrap' },
+      moments && log.length > 0 ? h(Moment, { plan, turn, log, made, person, phase }) :
       h('div', { className: 'ss-log', ref: logRef },
         log.length === 0 && h('p', { className: 'ss-intro' }, `You are ${person}. Send the first command and watch what gets done.`),
         log.map((item) => {
@@ -399,7 +426,8 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
           }
           if (item.kind === 'step') return h(Step, { key: item.key, step: item.step, person, live: waiting === item.key, picks: answers[item.key] });
           if (item.kind === 'reply') return h(Reply, { key: item.key, text: item.reply.text });
-          return h('div', { key: item.key, className: 'ss-made' }, h('span', null, 'made'), ' ', item.artifact.title);
+          if (highlights && item.artifact.kind !== 'other') return null;
+          return h('div', { key: item.key, className: 'ss-made' }, h('span', null, highlights ? '\u2713 handled' : 'made'), ' ', item.artifact.title);
         }),
         phase === 'working' && !waiting && h('div', { className: 'ss-typing' }, h('i'), h('i'), h('i'))),
       showArtifacts && !waiting && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
@@ -408,10 +436,12 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
         h('div', { className: 'ss-startcard' },
           h('b', { className: 'ss-starttitle' }, sc.title),
           h('p', null, startLine(sc, person)),
-          h('button', { type: 'button', className: 'ss-startbtn', onClick: () => setStarted(true) }, 'Start demo'),
+          // One start (Wilson's big pulsing Play, Gary's Start demo card): the round Play is the
+          // button, "Start demo" its words, Autoplay the choice beside it. Nothing else plays.
+          h('button', { type: 'button', className: 'ss-startbtn', onClick: () => setStarted(true) }, h('span', { className: 'ss-startplay', 'aria-hidden': true }, '\u25B6'), 'Start demo'),
           h('label', { className: 'ss-startauto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => toggleAuto(e.target.checked) }), 'Autoplay'),
           h('small', null, auto ? 'It plays itself. Untick Autoplay to play the human.' : `You play ${person}: tap to send each message and make each call.`))),
-      waiting ? h(Board, { key: waiting, ask: log.find((l) => l.key === waiting).step.ask, images: log.find((l) => l.key === waiting).step.images, person, auto, onToast: auto ? undefined : showToast, onPick: (picks) => resumeRef.current?.(picks) }) :
+      waiting ? h(Board, { speed, key: waiting, ask: log.find((l) => l.key === waiting).step.ask, images: log.find((l) => l.key === waiting).step.images, person, auto, onToast: auto ? undefined : showToast, onPick: (picks) => resumeRef.current?.(picks) }) :
       h('footer', { className: 'ss-composer' },
         phase === 'done'
           ? h('div', { className: 'ss-end' },
@@ -425,7 +455,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
             h('button', {
               className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
             }, '\u{1F3A4}'))));
-  const panel = showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList);
+  const panel = showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `${highlights ? 'Handled' : 'Made'} for ${person}`, h('span', null, shown.length)), artifactList);
   const bar = h('div', { className: 'ss-devicebar' },
     label ? h('span', { className: frame === 'macbook-compact' ? 'ss-simpill' : 'ss-simlabel' }, label) : h('span'),
     setMode && h(DeviceSwitch, { mode, setMode, hint: autoHint({ viewer, device: sc.device }), onToast: (m) => showToast(deviceToast({ mode: m, viewer, device: sc.device })) }));
@@ -457,5 +487,5 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
       device,
       inGrid && panel,
       timeline && h(Timeline, { sc, turnIndex: turn, person }),
-      phase === 'done' && !closed && h(CloseCard, { sc, person, onReplay: restart, onBack })));
+      phase === 'done' && !closed && h(CloseCard, { sc, person, onReplay: restart, onBack, highlights })));
 }

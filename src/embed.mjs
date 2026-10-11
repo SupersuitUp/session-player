@@ -2,7 +2,8 @@
 // rather than in an iframe. The page supplies React through an import map (or a bundler).
 //
 //   <supersuit-simulator src="/simulator/scenarios" scenario="low-tide-tapes"
-//                        artifacts="off" timeline="off" autoplay="off" height="620px" device="auto"></supersuit-simulator>
+//                        artifacts="off" timeline="off" autoplay="off" height="620px" device="auto"
+//                        speed="3" highlights moments steps="1"></supersuit-simulator>
 //   <script type="module">import { defineSimulatorElement } from '@supersuit/simulator/embed'; defineSimulatorElement();</script>
 //
 // `src` returns a JSON array of scenarios (or one scenario). Image paths in it resolve against
@@ -19,6 +20,11 @@ export function propsFromAttributes(a) {
     height: a.height || undefined,
     device: a.device || undefined,
     start: a.start || undefined,
+    // The highlights cut (Wilson, 0.3.0): speed="3" highlights moments steps="1".
+    speed: Number(a.speed) || undefined,
+    highlights: a.highlights != null && a.highlights !== 'off',
+    moments: a.moments != null && a.moments !== 'off',
+    maxSteps: Number(a.steps) || undefined,
   };
 }
 
