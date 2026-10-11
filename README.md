@@ -1,6 +1,8 @@
 # @supersuit/simulator
 
-The Supersuit Simulator: step into the shoes of someone who needs a great deal of work done, give their commands on a simulated phone, and watch the work and the things it makes appear. Every scenario is built from a real agent session, with the person's corrections left in.
+The Supersuit Session demo: step into the shoes of someone who needs a great deal of work done, give their commands on a simulated phone, and watch the work and the things it makes appear. Every scenario is built from a real agent session, with the person's corrections left in.
+
+The demo was called the Supersuit Simulator until 0.1.1; the package keeps the name `@supersuit/simulator`, as do the CLI, the scenario format and the exports, so nothing that installs it changes.
 
 This package holds the **scenario format**, the **converter** that drafts a scenario from a Claude Code session transcript, and the **player**, a React component that plays scenarios on a simulated phone.
 

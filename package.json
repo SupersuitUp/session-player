@@ -1,7 +1,7 @@
 {
   "name": "@supersuit/simulator",
-  "version": "0.1.0",
-  "description": "The Supersuit Simulator: turn a real Claude Code session into a scenario anyone can step into on a simulated phone, and watch the work and the artifacts appear.",
+  "version": "0.1.1",
+  "description": "The Supersuit Session demo: turn a real Claude Code session into a scenario anyone can step into on a simulated phone, and watch the work and the artifacts appear.",
   "type": "module",
   "bin": {
     "simulator": "bin/simulator.mjs"
