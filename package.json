@@ -1,9 +1,10 @@
 {
-  "name": "@supersuit/simulator",
-  "version": "0.3.2",
-  "description": "Renamed to @supersuit/session-player. Plays recorded agent sessions (case studies) on a simulated phone or MacBook.",
+  "name": "@supersuit/session-player",
+  "version": "0.4.0",
+  "description": "Plays recorded agent sessions (case studies) on a simulated phone or MacBook: a scenario format, a converter from Claude Code transcripts, and a React player anyone can step into.",
   "type": "module",
   "bin": {
+    "session-player": "bin/simulator.mjs",
     "simulator": "bin/simulator.mjs"
   },
   "exports": {
@@ -29,7 +30,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SupersuitUp/simulator.git"
+    "url": "git+https://github.com/SupersuitUp/session-player.git"
   },
   "keywords": [
     "supersuit",

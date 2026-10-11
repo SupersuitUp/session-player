@@ -35,17 +35,17 @@ export function bundle(scenario, { dir, resize = true, max = 900 } = {}) {
       if (!data) throw new Error(`image ${img.id} has an unreadable data URI`);
       name = `${img.id}${EXT[type] ?? '.png'}`;
       writeFileSync(join(dir, rel, name), Buffer.from(data, 'base64'));
-      writeRecipe(join(dir, rel, name), { derivedFrom: `an image pasted into the session by the operator (${type})`, generator: '@supersuit/simulator convert + bundle (decoded from the transcript)' });
+      writeRecipe(join(dir, rel, name), { derivedFrom: `an image pasted into the session by the operator (${type})`, generator: '@supersuit/session-player convert + bundle (decoded from the transcript)' });
     } else {
       if (!existsSync(img.src)) throw new Error(`image ${img.id}: ${img.src} does not exist`);
       if (resize && process.platform === 'darwin') {
         name = `${img.id}.jpg`;
         execFileSync('sips', ['-Z', String(max), '-s', 'format', 'jpeg', '-s', 'formatOptions', '80', img.src, '--out', join(dir, rel, name)], { stdio: 'ignore' });
-        writeRecipe(join(dir, rel, name), { derivedFrom: img.src, generator: `@supersuit/simulator bundle (sips -Z ${max}, jpeg quality 80)`, sourceFile: img.src });
+        writeRecipe(join(dir, rel, name), { derivedFrom: img.src, generator: `@supersuit/session-player bundle (sips -Z ${max}, jpeg quality 80)`, sourceFile: img.src });
       } else {
         name = `${img.id}${extname(img.src) || '.png'}`;
         copyFileSync(img.src, join(dir, rel, name));
-        writeRecipe(join(dir, rel, name), { derivedFrom: img.src, generator: '@supersuit/simulator bundle (copied unchanged)', sourceFile: img.src });
+        writeRecipe(join(dir, rel, name), { derivedFrom: img.src, generator: '@supersuit/session-player bundle (copied unchanged)', sourceFile: img.src });
       }
     }
     const out = `${rel}/${name}`.split('\\').join('/');

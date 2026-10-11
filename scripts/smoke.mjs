@@ -13,7 +13,7 @@ const app = join(out, 'app');
 execFileSync('mkdir', ['-p', app]);
 writeFileSync(join(app, 'package.json'), '{"name":"smoke","version":"1.0.0","type":"module"}');
 execFileSync('npm', ['install', '--silent', '--no-audit', '--no-fund', join(out, packed.filename)], { cwd: app, stdio: 'inherit' });
-writeFileSync(join(app, 'check.mjs'), `import { convert, parseSession, validate, FORMAT } from '@supersuit/simulator';
+writeFileSync(join(app, 'check.mjs'), `import { convert, parseSession, validate, FORMAT } from '@supersuit/session-player';
 const line = JSON.stringify({ type: 'user', sessionId: 's', timestamp: '2026-01-01T00:00:00Z', origin: { kind: 'human' }, message: { content: 'ship it' } });
 const sc = convert(parseSession(line), { title: 'smoke' });
 if (FORMAT !== 'supersuit-simulator/1' || sc.turns.length !== 1 || validate(sc).length) { console.error('library smoke failed'); process.exit(1); }
@@ -21,4 +21,7 @@ console.log('library ok');`);
 execFileSync(process.execPath, ['check.mjs'], { cwd: app, stdio: 'inherit' });
 const help = execFileSync(join(app, 'node_modules', '.bin', 'simulator'), ['--help'], { cwd: app, encoding: 'utf8' });
 if (!/simulator convert/.test(help) || !/simulator bundle/.test(help)) { console.error('CLI smoke failed'); process.exit(1); }
+// Renamed 2026-10-11: the new command answers, and the old one still does.
+const help2 = execFileSync(join(app, 'node_modules', '.bin', 'session-player'), ['--help'], { cwd: app, encoding: 'utf8' });
+if (!/convert/.test(help2)) { console.error('session-player CLI smoke failed'); process.exit(1); }
 console.log('cli ok');

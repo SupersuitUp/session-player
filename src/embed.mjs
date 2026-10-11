@@ -4,7 +4,7 @@
 //   <supersuit-simulator src="/simulator/scenarios" scenario="low-tide-tapes"
 //                        artifacts="off" timeline="off" autoplay="off" height="620px" device="auto"
 //                        speed="3" highlights moments steps="1"></supersuit-simulator>
-//   <script type="module">import { defineSimulatorElement } from '@supersuit/simulator/embed'; defineSimulatorElement();</script>
+//   <script type="module">import { defineSimulatorElement } from '@supersuit/session-player/embed'; defineSimulatorElement();</script>
 //
 // `src` returns a JSON array of scenarios (or one scenario). Image paths in it resolve against
 // the page, so serve the scenario's assets/ folder beside it. Any page that cannot run modules

@@ -1,17 +1,15 @@
-# @supersuit/simulator
+# @supersuit/session-player
 
-> **Renamed to [`@supersuit/session-player`](https://www.npmjs.com/package/@supersuit/session-player).** It plays recorded sessions; case studies and the coming Helm demo are content it plays. 0.3.2 is the last `@supersuit/simulator`: install `@supersuit/session-player` instead, whose exports, CLI (`simulator` still works) and scenario format are the same.
+Plays recorded agent sessions (case studies, and the coming Helm demo): step into the shoes of someone who needs a great deal of work done, give their commands on a simulated phone, and watch the work and the things it makes appear. Every scenario is built from a real agent session, with the person's corrections left in.
 
-The Supersuit Session demo: step into the shoes of someone who needs a great deal of work done, give their commands on a simulated phone, and watch the work and the things it makes appear. Every scenario is built from a real agent session, with the person's corrections left in.
-
-The demo was called the Supersuit Simulator until 0.1.1; the package keeps the name `@supersuit/simulator`, as do the CLI, the scenario format and the exports, so nothing that installs it changes.
+Renamed from `@supersuit/simulator` in 0.4.0 (2026-10-11): it plays recorded sessions, and case studies and the coming Helm demo are content it plays. To move, swap the package name in your imports; the exports, the scenario format (`supersuit-simulator/1`), `SimulatorPlayer` and `<supersuit-simulator>` are unchanged, and the CLI answers to both `session-player` and the old `simulator`.
 
 This package holds the **scenario format**, the **converter** that drafts a scenario from a Claude Code session transcript, and the **player**, a React component that plays scenarios on a simulated phone.
 
 ## Install
 
 ```
-npm install -g @supersuit/simulator
+npm install -g @supersuit/session-player
 ```
 
 ## Use
@@ -49,7 +47,7 @@ simulator serve album.json            # watch it at http://127.0.0.1:4460/
 ## The player
 
 ```js
-import { SimulatorPlayer } from '@supersuit/simulator/player';
+import { SimulatorPlayer } from '@supersuit/session-player/player';
 <SimulatorPlayer scenario={album} />                       // one scenario
 <SimulatorPlayer scenarios={[dana, marcus]} />             // persona picker first
 <SimulatorPlayer scenario={album} artifacts={false} timeline={false} />  // a limited embed
@@ -69,7 +67,7 @@ A page that runs modules can use the tag instead (it brings its own React throug
 
 ```html
 <supersuit-simulator src="/simulator/scenarios" scenario="low-tide-tapes" artifacts="off"></supersuit-simulator>
-<script type="module">import { defineSimulatorElement } from '@supersuit/simulator/embed'; defineSimulatorElement();</script>
+<script type="module">import { defineSimulatorElement } from '@supersuit/session-player/embed'; defineSimulatorElement();</script>
 ```
 
 ## A highlights cut
@@ -93,7 +91,7 @@ Nothing in the player is fixed to the viewport: the close card and the enlarged 
 ## Library
 
 ```js
-import { convert, parseSession, validate } from '@supersuit/simulator';
+import { convert, parseSession, validate } from '@supersuit/session-player';
 const scenario = convert(parseSession(text), { title: 'Releasing an album' });
 const problems = validate(scenario); // [] when valid
 ```

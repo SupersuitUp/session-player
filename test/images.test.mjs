@@ -82,7 +82,7 @@ test('bundle writes a provenance recipe beside every image, carrying the source 
   const r = JSON.parse(read(join(dir, `${g}.recipe.json`), 'utf8'));
   assert.equal(r.mode, 'derive');
   assert.equal(r.derivedFrom, png);
-  assert.match(r.generator, /@supersuit\/simulator bundle/);
+  assert.match(r.generator, /@supersuit\/session-player bundle/);
   assert.equal(r.source.prompt, 'a heron at dusk');
   assert.ok(r.timestamp);
   const pasted = JSON.parse(read(join(dir, `${out.turns[1].human.images[0].src}.recipe.json`), 'utf8'));

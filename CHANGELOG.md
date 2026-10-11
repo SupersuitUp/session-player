@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0 (2026-10-11)
+
+- **Renamed `@supersuit/session-player`** (Gary, 2026-10-11: it plays recorded sessions; case studies and the coming Helm demo are content it plays). Same code as 0.3.2. Swap the package name in your imports; the exports, the scenario format, `SimulatorPlayer` and `<supersuit-simulator>` are unchanged. The CLI is `session-player`, and `simulator` still works. The repository is SupersuitUp/session-player (GitHub redirects the old address).
+
 ## 0.3.2 (2026-10-11)
 
 - The last `@supersuit/simulator`. The package is renamed `@supersuit/session-player` (Gary, 2026-10-11: it plays recorded sessions, and case studies and the coming Helm demo are content it plays). No code change; the README and description point to the new name.
