@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 (2026-10-11)
+
+- A MacBook in a column too narrow for a believable laptop (under 560 px, such as the book's 434 px figure) keeps its Claude Code window and its "Simulating a MacBook" label and drops the lid, menu bar and base, rather than shrinking into a toy where the composer and the counter overlap.
+
 ## 0.2.0 (2026-10-11)
 
 - Device framing. On a desktop or tablet the demo is drawn inside a device: an iPhone (status bar with a real clock, Dynamic Island, side buttons), or a MacBook (lid, notch, menu bar with a real clock, a Claude Code window in a terminal theme, base) when the scenario ran on a Mac. On a phone the demo is the phone, full-bleed, as before.

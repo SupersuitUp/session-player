@@ -159,3 +159,12 @@ test('a recast keeps where the real session ran', () => {
   const out = recast(sc({ device: 'macbook' }), { id: 'b', title: 'B', persona: { name: 'Bo' }, forbid: [] });
   assert.equal(out.device, 'macbook');
 });
+
+test('a MacBook in a column too narrow for a laptop keeps its window and label, and drops the lid', async () => {
+  const { PLAYER_CSS } = await import('../src/player-css.mjs');
+  const narrow = PLAYER_CSS.match(/@container ss-sim \(max-width:559px\)\{([\s\S]*?)\n\}/);
+  assert.ok(narrow, 'no narrow-container rule for the MacBook');
+  assert.match(narrow[1], /\.ss-menubar,\.ss-mac-notch,\.ss-mac-base\{display:none\}/);
+  assert.match(narrow[1], /\.ss-mac-lid\{aspect-ratio:auto;height:var\(--ss-dh\)/);
+  assert.doesNotMatch(narrow[1], /ss-window\{[^}]*display:none/);
+});
