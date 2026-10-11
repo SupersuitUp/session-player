@@ -160,6 +160,17 @@ function Picker({ scenarios, onPick }) {
 
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
+// The one line under the title on the Start card: measured counts only.
+export function startLine(sc, person) {
+  const t = summarize(sc);
+  return `${plural(t.commands, 'command')} from ${person}, ${duration(t.agentMs)} of work by Freeda.`;
+}
+
+// Autoplay sends the next command only once the viewer has pressed Start.
+export function autoSendReady({ auto, phase, started }) {
+  return Boolean(auto && started && phase === 'ready');
+}
+
 // The celebration at the close: what the session took off the person, in numbers that were
 // measured. Freeda's work against the person's own attention, the things made, the edge
 // points the counter printed, and any chore the workflow catalog says is now off their hands.
@@ -191,7 +202,7 @@ export function CloseCard({ sc, person, onReplay, onBack }) {
         onBack && h('button', { className: 'ss-chip ss-ghost', onClick: onBack }, 'Step into someone else'))));
 }
 
-export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer }) {
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode }) {
   const list = scenarios ?? (scenario ? [scenario] : []);
   // An embed may name one scenario from a list and skip the picker.
   const start = scenarioId != null ? Math.max(0, list.findIndex((s) => s.id === scenarioId)) : list.length > 1 ? null : 0;
@@ -206,7 +217,7 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
   const sc = pick == null ? null : list[pick];
   return h('div', { className: 'ss-sim', style: height ? { '--ss-height': height } : undefined },
     h('style', null, PLAYER_CSS),
-    sc ? h(Run, { key: sc.id, sc, autoplay, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
+    sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
       : h(Picker, { scenarios: list, onPick: setPick }));
 }
 
@@ -273,7 +284,7 @@ function TitleBar() {
     h('span', { className: 'ss-wtitle' }, 'Claude Code'));
 }
 
-function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBack, mode = 'auto', setMode, viewer = 'desktop' }) {
+function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps, onBack, mode = 'auto', setMode, viewer = 'desktop' }) {
   const { frame, label } = resolveDevice({ mode, viewer, device: sc.device });
   const plan = useMemo(() => script(sc, { maxSteps }), [sc, maxSteps]);
   const totals = useMemo(() => summarize(sc), [sc]);
@@ -285,6 +296,9 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
   const [work, setWork] = useState({ ms: 0, steps: 0 });
   const [auto, setAuto] = useState(autoplay);
   const [toast, showToast] = useToast();
+  // Nothing plays on load: the viewer presses Start (a host may opt in with start: 'auto').
+  const [started, setStarted] = useState(start === 'auto');
+  const toggleAuto = (on) => { setAuto(on); showToast(autoplayToast(on)); };
   const [tray, setTray] = useState(false);
   const timers = useRef([]);
   const logRef = useRef(null);
@@ -333,13 +347,14 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
   // The mic "says" the command: words stream into the composer like dictation, then it sends.
   const say = () => {
     if (phase !== 'ready') return;
+    setStarted(true);
     setPhase('saying');
     const frames = dictate(plain(plan[turn].command.text));
     frames.forEach((f, i) => timers.current.push(setTimeout(() => setSpoken(f), 120 * i)));
     timers.current.push(setTimeout(() => sendNow(), 120 * frames.length + 450));
   };
 
-  const send = () => { if (phase === 'ready') sendNow(); };
+  const send = () => { if (phase === 'ready') { setStarted(true); sendNow(); } };
   const sendNow = () => {
     setLog((l) => [...l, { kind: 'command', key: `c${turn}`, command: plan[turn].command }]);
     setPhase('working');
@@ -347,7 +362,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
   };
 
   useEffect(() => {
-    if (!auto || phase !== 'ready') return undefined;
+    if (!autoSendReady({ auto, phase, started })) return undefined;
     const id = setTimeout(send, 1400);
     return () => clearTimeout(id);
   });
@@ -368,7 +383,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
         onBack && h('button', { className: 'ss-back', onClick: onBack, 'aria-label': 'Choose another person' }, '‹'),
         h('span', { className: 'ss-avatar' }, initial(person)),
         h('div', { className: 'ss-titles' }, h('b', null, sc.title), h('small', null, sc.source?.illustrative ? 'Illustrative: recast from a real session' : chapter ?? `as ${person}`)),
-        h('label', { className: 'ss-auto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => { setAuto(e.target.checked); showToast(autoplayToast(e.target.checked)); } }), 'Autoplay')),
+        h('label', { className: 'ss-auto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => toggleAuto(e.target.checked) }), 'Autoplay')),
       h('div', { className: 'ss-counter', 'aria-live': 'polite' },
         h('span', null, work.ms ? [h('b', { key: 'd' }, duration(work.ms)), ` of work done for ${person}`] : 'No work yet'),
         h('span', null, `${work.steps} of ${totals.steps} steps`)),
@@ -389,6 +404,13 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
         phase === 'working' && !waiting && h('div', { className: 'ss-typing' }, h('i'), h('i'), h('i'))),
       showArtifacts && !waiting && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
       showArtifacts && tray && !waiting && h('div', { className: 'ss-tray' }, artifactList)),
+      !started && h('div', { className: 'ss-start', role: 'dialog', 'aria-label': 'Start the demo' },
+        h('div', { className: 'ss-startcard' },
+          h('b', { className: 'ss-starttitle' }, sc.title),
+          h('p', null, startLine(sc, person)),
+          h('button', { type: 'button', className: 'ss-startbtn', onClick: () => setStarted(true) }, 'Start demo'),
+          h('label', { className: 'ss-startauto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => toggleAuto(e.target.checked) }), 'Autoplay'),
+          h('small', null, auto ? 'It plays itself. Untick Autoplay to play the human.' : `You play ${person}: tap to send each message and make each call.`))),
       waiting ? h(Board, { key: waiting, ask: log.find((l) => l.key === waiting).step.ask, images: log.find((l) => l.key === waiting).step.images, person, auto, onToast: auto ? undefined : showToast, onPick: (picks) => resumeRef.current?.(picks) }) :
       h('footer', { className: 'ss-composer' },
         phase === 'done'

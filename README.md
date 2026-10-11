@@ -53,7 +53,7 @@ import { SimulatorPlayer } from '@supersuit/simulator/player';
 <SimulatorPlayer scenario={album} artifacts={false} timeline={false} />  // a limited embed
 ```
 
-By default the session plays itself (Autoplay). Untick Autoplay and the viewer plays the person: they tap each command (or the mic to say it) and watches the steps play, sped up from their real durations, with a running count of the work done for the persona. Decisions the person made show as their own cards; things made collect in a side panel on wide screens and a slide-up tray on phones. Needs React 18 or newer; no build step and no stylesheet to import.
+Nothing plays until the viewer presses Start demo (a host may pass `start: 'auto'` or `?start=auto`). By default the session then plays itself (Autoplay). Untick Autoplay and the viewer plays the person, tapping each command (or the mic to say it), and watches the steps play, sped up from their real durations, with a running count of the work done for the persona. Decisions the person made show as their own cards; things made collect in a side panel on wide screens and a slide-up tray on phones. Needs React 18 or newer; no build step and no stylesheet to import.
 
 ## Embedding it in a page or a book
 

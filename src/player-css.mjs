@@ -256,6 +256,17 @@ export const PLAYER_CSS = `
 .ss-term .ss-tray{background:#232120;border-top-color:#3a3633}
 .ss-term .ss-artifact{background:#232120;border-color:#3a3633;color:#e6e1d9}
 .ss-term .ss-panel h3{font-family:inherit;font-size:14px}
+.ss-start{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(251,245,231,.82);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.ss-startcard{display:flex;flex-direction:column;align-items:center;gap:8px;max-width:300px;text-align:center}
+.ss-starttitle{font-family:Fraunces,Georgia,serif;font-size:20px;line-height:1.25}
+.ss-startcard p{margin:0;color:#4a4238;font-size:14px}
+.ss-startcard small{color:#7a6d5a;font-size:12px}
+.ss-sim .ss-startbtn{margin-top:6px;border:0;border-radius:999px;background:var(--ss-tomato);color:#fff;font-weight:700;font-size:16px;padding:12px 26px;box-shadow:0 6px 18px rgba(219,55,31,.3)}
+.ss-sim .ss-startbtn:focus-visible{outline:3px solid var(--ss-petrol);outline-offset:2px}
+.ss-startauto{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
+.ss-term .ss-start{background:rgba(26,25,24,.86)}
+.ss-term .ss-startcard p{color:#cfc8bd}.ss-term .ss-startcard small{color:#8f887d}.ss-term .ss-starttitle,.ss-term .ss-startauto{color:#e6e1d9}
+.ss-term .ss-startbtn{background:#d97757}
 .ss-devhint{font-size:inherit;opacity:.85}
 /* Toasts float over the top of the demo: no layout shift, gone after a few seconds. */
 .ss-toast{position:absolute;z-index:60;left:50%;top:40px;transform:translateX(-50%);width:max-content;max-width:min(92%,420px);pointer-events:none}
