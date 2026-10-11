@@ -53,7 +53,7 @@ import { SimulatorPlayer } from '@supersuit/simulator/player';
 <SimulatorPlayer scenario={album} artifacts={false} timeline={false} />  // a limited embed
 ```
 
-The viewer taps each command (or holds the mic to say it) and watches the steps play, sped up from their real durations, with a running count of the work done for the persona. Decisions the person made show as their own cards; things made collect in a side panel on wide screens and a slide-up tray on phones. Needs React 18 or newer; no build step and no stylesheet to import.
+By default the session plays itself (Autoplay). Untick Autoplay and the viewer plays the person: they tap each command (or the mic to say it) and watches the steps play, sped up from their real durations, with a running count of the work done for the persona. Decisions the person made show as their own cards; things made collect in a side panel on wide screens and a slide-up tray on phones. Needs React 18 or newer; no build step and no stylesheet to import.
 
 ## Embedding it in a page or a book
 

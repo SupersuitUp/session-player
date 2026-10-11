@@ -74,3 +74,32 @@ export function deviceFromSession(lines) {
   const desk = human.filter((o) => onMac(o) && ((o.entrypoint === 'cli' && ['typed', 'queued'].includes(o.promptSource)) || o.entrypoint === 'claude-desktop'));
   return desk.length * 2 > human.length ? 'macbook' : undefined;
 }
+
+// What Auto resolved to, for the hint beside it on the switch.
+export function autoHint({ viewer, device } = {}) {
+  const { frame } = resolveDevice({ mode: 'auto', viewer, device });
+  return frame === 'macbook' ? 'MacBook' : frame === 'iphone' ? 'iPhone' : 'this phone';
+}
+
+// The toast after a tap on the device switch: what is shown now, and why.
+export function deviceToast({ mode, viewer, device } = {}) {
+  const m = normalizeMode(mode);
+  const mac = device === 'macbook';
+  const onMac = 'this session ran in Claude Code on a Mac';
+  if (viewer === 'phone') {
+    if (m === 'macbook') return 'Now simulating a MacBook, in a window at phone width.';
+    return `${m === 'auto' ? 'Auto' : 'iPhone'}: you're on a phone, so the demo is the phone.`;
+  }
+  if (m === 'auto') return mac ? `Auto: showing a MacBook because ${onMac}.` : "Auto: showing an iPhone because you're on a desktop.";
+  if (m === 'macbook') return `Now simulating a MacBook: ${mac ? onMac : 'this session actually ran on a phone'}.`;
+  return mac ? 'Now simulating an iPhone: this session actually ran on a Mac.' : 'Now simulating an iPhone.';
+}
+
+export function autoplayToast(on) {
+  return on ? 'Autoplay: the session plays itself.' : "You're the human now: tap to send each message and make each call.";
+}
+
+// After the viewer picks on a board: the real person's choice, which is where the replay goes.
+export function choiceToast(person, verdict) {
+  return verdict.same ? `Same call as ${person}.` : `In the real session, ${person} chose ${verdict.real}.`;
+}
