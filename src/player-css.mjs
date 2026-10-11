@@ -200,6 +200,15 @@ export const PLAYER_CSS = `
   .ss-in-window.ss-has-panel{grid-template-columns:minmax(0,1fr) minmax(220px,32%)}
   .ss-in-window .ss-panel{max-height:none;height:100%;border-radius:0;border-width:0 0 0 1px;background:#201e1c;border-color:#33302d;color:#e6e1d9}
 }
+/* Too narrow for a believable laptop (a book column, a sidebar): the MacBook keeps its window
+   and its label and drops the lid, menu bar and base, rather than shrinking into a toy. */
+@container ss-sim (max-width:559px){
+  .ss-mac{width:100%}
+  .ss-mac-lid{aspect-ratio:auto;height:var(--ss-dh);padding:0;background:none;box-shadow:none;border-radius:0}
+  .ss-mac-screen{background:none;border-radius:0;overflow:visible}
+  .ss-menubar,.ss-mac-notch,.ss-mac-base{display:none}
+  .ss-mac-screen>.ss-window{margin:0}
+}
 .ss-window-compact{width:100%}
 .ss-window-compact>.ss-phone{height:calc(var(--ss-height,min(760px,calc(100svh - 120px))) - 28px);border:0;border-radius:0;box-shadow:none}
 /* Claude Code's terminal, inside either MacBook window. */
