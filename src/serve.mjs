@@ -9,7 +9,7 @@ import { join } from 'node:path';
 
 const SRC = fileURLToPath(new URL('.', import.meta.url));
 
-export function page({ title = 'Supersuit Simulator', embed = false, react = 'https://esm.sh/react@19', reactDom = 'https://esm.sh/react-dom@19/client?deps=react@19' } = {}) {
+export function page({ title = 'Supersuit Session demo', embed = false, react = 'https://esm.sh/react@19', reactDom = 'https://esm.sh/react-dom@19/client?deps=react@19' } = {}) {
   // The embed page is bare (no margin, transparent) so an <iframe> in any page or book shows
   // only the simulator; its switches come from the iframe's query string.
   const body = embed ? 'html,body{margin:0;padding:0;background:transparent}body{margin:0;padding:0;background:transparent}' : 'html,body{margin:0;background:#F6E7C5}body{padding:16px 12px}@media(max-width:480px){body{padding:8px 6px}}';

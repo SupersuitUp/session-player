@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// simulator: draft and check Supersuit Simulator scenarios.
+// simulator: draft and check Supersuit Session demo scenarios.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { convert, parseSession } from '../src/convert.mjs';
 import { validate } from '../src/scenario.mjs';
@@ -9,7 +9,7 @@ import { recast } from '../src/recast.mjs';
 import { bundle } from '../src/bundle.mjs';
 import { dirname, resolve } from 'node:path';
 
-const HELP = `simulator - draft and check Supersuit Simulator scenarios
+const HELP = `simulator - draft and check Supersuit Session demo scenarios
 
 Usage:
   simulator convert <session.jsonl> [--out <file>] [--title <t>] [--persona <name>] [--id <id>] [--json]

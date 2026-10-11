@@ -42,3 +42,10 @@ test('the server serves a scenario\'s bundled images, and nothing outside assets
     for (const bad of ['/assets/../secret.jpg', '/assets/album/../../secret.jpg', '/secret.jpg', '/assets/album/nope.jpg']) assert.equal((await fetch(base + bad)).status, 404, bad);
   } finally { server.close(); }
 });
+
+test('a page with no title of its own is the Supersuit Session demo, the name readers see (renamed 2026-10-11)', async () => {
+  const { page } = await import('../src/serve.mjs');
+  const html = page();
+  assert.match(html, /<title>Supersuit Session demo<\/title>/);
+  assert.doesNotMatch(html, /Supersuit Simulator/);
+});

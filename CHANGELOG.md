@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 (2026-10-11)
+
+- Renamed for readers: the Supersuit Simulator is now the **Supersuit Session demo** (the README, the package description, the CLI help and the default page title of `simulator serve`). The package name, the `simulator` CLI, the `supersuit-simulator/1` format, `SimulatorPlayer` and `<supersuit-simulator>` are unchanged, so no install or embed breaks.
+
 ## 0.1.0 (2026-10-10)
 
 - The scenario format (`supersuit-simulator/1`) and `validate`.
