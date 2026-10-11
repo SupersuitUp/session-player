@@ -4,3 +4,4 @@ export { tidy } from './tidy.mjs';
 export { recast } from './recast.mjs';
 export { bundle } from './bundle.mjs';
 export { allImages } from './scenario.mjs';
+export { resolveDevice, classifyViewer, normalizeMode, deviceFromSession, MODES, DEVICES } from './device.mjs';

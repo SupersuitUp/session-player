@@ -24,8 +24,8 @@ test('an embed can open one scenario from a list directly, skipping the picker, 
 
 test('the custom element reads its switches from attributes', () => {
   assert.deepEqual(propsFromAttributes({ src: '/s.json', scenario: 'b', artifacts: 'off', timeline: 'off', autoplay: '', height: '600px' }),
-    { src: '/s.json', scenarioId: 'b', artifacts: false, timeline: false, autoplay: true, height: '600px' });
-  assert.deepEqual(propsFromAttributes({ src: '/s.json' }), { src: '/s.json', scenarioId: undefined, artifacts: true, timeline: true, autoplay: false, height: undefined });
+    { src: '/s.json', scenarioId: 'b', artifacts: false, timeline: false, autoplay: true, height: '600px', device: undefined });
+  assert.deepEqual(propsFromAttributes({ src: '/s.json' }), { src: '/s.json', scenarioId: undefined, artifacts: true, timeline: true, autoplay: false, height: undefined, device: undefined });
 });
 
 test('the embed page is bare, for an iframe, and passes its query switches through', async () => {

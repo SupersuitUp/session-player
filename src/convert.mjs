@@ -9,6 +9,7 @@
 // and every edit it makes is written to `cuts`, so nothing is staged silently.
 
 import { FORMAT } from './scenario.mjs';
+import { deviceFromSession } from './device.mjs';
 
 const LONG_PASTE = 600;
 // Idle time is not work. A session's clock keeps running while a command hangs, the laptop
@@ -268,12 +269,15 @@ export function convert(lines, opts = {}) {
   if (turns.length === 0) throw new Error('no human turns in this session: nothing to draft');
 
   const first = lines.find((o) => o.timestamp && !o.isSidechain);
+  // Where it ran, when the transcript can tell (or the caller knows); left out otherwise.
+  const device = opts.device ?? deviceFromSession(lines);
   return {
     format: FORMAT,
     id: opts.id ?? `session-${(sessionId ?? 'unknown').slice(0, 8)}`,
     title: opts.title ?? title ?? turns[0].human.text.slice(0, 60),
     persona: { name: 'the operator', role: '', blurb: '', ...opts.persona },
     source: { kind: 'session', sessionId, date: first ? first.timestamp.slice(0, 10) : null, illustrative: false },
+    ...(device ? { device } : {}),
     chapters,
     turns,
     artifacts,

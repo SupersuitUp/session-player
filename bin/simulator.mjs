@@ -12,9 +12,11 @@ import { dirname, resolve } from 'node:path';
 const HELP = `simulator - draft and check Supersuit Session demo scenarios
 
 Usage:
-  simulator convert <session.jsonl> [--out <file>] [--title <t>] [--persona <name>] [--id <id>] [--json]
+  simulator convert <session.jsonl> [--out <file>] [--title <t>] [--persona <name>] [--id <id>] [--device iphone|macbook] [--json]
       Draft a scenario from a Claude Code session transcript. Writes the scenario to --out
       (or stdout) and a one-line summary to stderr; --json puts the summary on stdout instead.
+      Records where the session ran (device) when the transcript can tell: typed in a terminal
+      on a Mac is a macbook; --device sets it when you know better.
   simulator validate <scenario.json> [--json]
       Check a scenario against the format. Exits 1 if anything is wrong.
   simulator tidy <scenario.json> [--fixes <fixes.json>] [--out <file>]
@@ -29,8 +31,8 @@ Usage:
       Copy every image into assets/<scenario id>/ beside the scenario, shrunk for the phone,
       and point the scenario at the copies. Refuses if an image source is missing.
   simulator serve <scenario.json>... [--port 4460] [--host 127.0.0.1]
-      Watch scenarios in the player in a browser. Add ?autoplay, ?artifacts=off or
-      ?timeline=off to the URL to see the limited views an embed uses.
+      Watch scenarios in the player in a browser. Add ?autoplay, ?artifacts=off,
+      ?timeline=off or ?device=iphone|macbook to the URL to see the limited views an embed uses.
 
 A draft is not a publishable scenario: people in it are not anonymized yet.
 Exit codes: 0 ok, 1 invalid or refused, 2 usage error.`;
@@ -54,8 +56,10 @@ if (flags.help || flags.h || !cmd) { console.log(HELP); process.exit(cmd || flag
 try {
   if (cmd === 'convert') {
     if (!file) throw Object.assign(new Error('convert needs a session file'), { code: 2 });
+    if (flags.device && !['iphone', 'macbook'].includes(flags.device)) throw Object.assign(new Error('--device must be iphone or macbook'), { code: 2 });
     const sc = convert(parseSession(readFileSync(file, 'utf8')), {
       title: flags.title, id: flags.id, persona: flags.persona ? { name: flags.persona } : undefined,
+      device: flags.device,
     });
     const problems = validate(sc);
     const out = JSON.stringify(sc, null, 2) + '\n';

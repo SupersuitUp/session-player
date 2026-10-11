@@ -8,6 +8,8 @@ export const VIA = ['typed', 'spoken', 'tapped'];
 // `other`: something real that has no file or link, like a release submitted to a store.
 export const ARTIFACT_KINDS = ['file', 'link', 'other'];
 export const SOURCE_KINDS = ['session', 'persona'];
+// Where the real session ran, when known. Optional: a scenario without it is shown as an iPhone.
+export const SCENARIO_DEVICES = ['iphone', 'macbook'];
 
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isStr = (v) => typeof v === 'string' && v.length > 0;
@@ -20,6 +22,7 @@ export function validate(s) {
   for (const k of ['id', 'title']) if (!isStr(s[k])) p.push(`${k} is required`);
   if (!isObj(s.persona) || !isStr(s.persona.name)) p.push('persona.name is required');
   if (!isObj(s.source) || !SOURCE_KINDS.includes(s.source.kind)) p.push(`source.kind must be one of ${SOURCE_KINDS.join(', ')}`);
+  if (s.device != null && !SCENARIO_DEVICES.includes(s.device)) p.push(`device must be one of ${SCENARIO_DEVICES.join(', ')}, got ${JSON.stringify(s.device)}`);
 
   const artifactIds = new Set();
   for (const a of s.artifacts ?? []) {

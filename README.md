@@ -40,6 +40,8 @@ simulator serve album.json            # watch it at http://127.0.0.1:4460/
 | `artifacts[]` | `{ id, kind: file \| link \| other, title, path \| url, turn, at }` |
 | `cuts[]` | `{ turn, what, reason }`: every edit, so nothing is changed silently |
 
+`device` (optional) is where the real session ran: `iphone` or `macbook`. The converter sets `macbook` when the person typed into a terminal (or the desktop app) on a Mac, and leaves it out when it cannot tell (Remote Control and SDK sessions); a scenario without it is shown as an iPhone.
+
 `intervention` is one of `null`, `redirect`, `correct`, `approve`, `decide`. The converter sets only `redirect`; the rest are set by the person reviewing the draft.
 
 ## The player
@@ -67,6 +69,18 @@ A page that runs modules can use the tag instead (it brings its own React throug
 <supersuit-simulator src="/simulator/scenarios" scenario="low-tide-tapes" artifacts="off"></supersuit-simulator>
 <script type="module">import { defineSimulatorElement } from '@supersuit/simulator/embed'; defineSimulatorElement();</script>
 ```
+
+## Device framing
+
+`device` is `auto` (the default), `iphone` or `macbook`: the `device` prop, `?device=` on the embed URL, or the `device` attribute on the tag. The viewer can also switch it on the demo (Auto / iPhone / MacBook).
+
+| | on a phone | on a desktop or tablet |
+| --- | --- | --- |
+| `auto` | full-bleed: the demo is the phone | an iPhone, or a MacBook when the scenario's `device` is `macbook` |
+| `iphone` | full-bleed | an iPhone |
+| `macbook` | a desktop-style window at phone width, labelled "Simulating a MacBook"; never a laptop shrunk into a phone | a MacBook: lid, menu bar clock, a Claude Code window, base |
+
+Whenever a device is drawn, a quiet label outside its screen says what is simulated. Phone or desktop is read from capability signals (coarse pointer, no hover, touch points) and the viewport's shorter side, again on every resize and rotation; a narrow desktop window is still a desktop and an iPad is a desktop unless it is in a narrow split view. Frames are CSS and SVG, sized from the height the player is given, so the same iframe height keeps fitting.
 
 Nothing in the player is fixed to the viewport: the close card and the enlarged image stay inside the player's own box.
 

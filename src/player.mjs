@@ -2,12 +2,14 @@
 // (tap it, or hold the mic to "say" it), watches the work play out, and sees what got made
 // collect beside the conversation. Plain React.createElement so it needs no build step.
 //
-// Switches: autoplay, artifacts, timeline, maxSteps, and `scenarios` (more than one shows the
-// persona picker). Mobile first; the side panel appears when the container is wide enough.
+// Switches: autoplay, artifacts, timeline, maxSteps, device (auto, iphone, macbook), and
+// `scenarios` (more than one shows the persona picker). Mobile first; the side panel appears
+// when the container is wide enough. On a desktop the demo is drawn inside a device (device.mjs).
 
 import { createElement as h, useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import { script, summarize, duration, realPick, compare, dictate } from './playback.mjs';
 import { PLAYER_CSS } from './player-css.mjs';
+import { resolveDevice, normalizeMode, readViewer, watchViewer } from './device.mjs';
 
 const plain = (s) => String(s).replace(/\*\*([^*]+)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^#+\s*/gm, '');
 const initial = (name = '?') => name.trim().charAt(0).toUpperCase();
@@ -185,19 +187,77 @@ export function CloseCard({ sc, person, onReplay, onBack }) {
         onBack && h('button', { className: 'ss-chip ss-ghost', onClick: onBack }, 'Step into someone else'))));
 }
 
-export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = false, artifacts = true, timeline = true, maxSteps = 5 }) {
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = false, artifacts = true, timeline = true, maxSteps = 5, device, viewer }) {
   const list = scenarios ?? (scenario ? [scenario] : []);
   // An embed may name one scenario from a list and skip the picker.
   const start = scenarioId != null ? Math.max(0, list.findIndex((s) => s.id === scenarioId)) : list.length > 1 ? null : 0;
   const [pick, setPick] = useState(start);
+  // The device mode starts where the embedder put it and the viewer may switch it.
+  const [mode, setMode] = useState(() => normalizeMode(device));
+  useEffect(() => { setMode(normalizeMode(device)); }, [device]);
+  // What the viewer is holding: read now (so nothing flashes), then again on resize or rotation.
+  // `viewer` forces it, for tests and for hosts that already know.
+  const [seen, setSeen] = useState(() => viewer ?? readViewer());
+  useEffect(() => (viewer ? undefined : watchViewer(setSeen)), [viewer]);
   const sc = pick == null ? null : list[pick];
   return h('div', { className: 'ss-sim', style: height ? { '--ss-height': height } : undefined },
     h('style', null, PLAYER_CSS),
-    sc ? h(Run, { key: sc.id, sc, autoplay, artifacts, timeline, maxSteps, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
+    sc ? h(Run, { key: sc.id, sc, autoplay, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
       : h(Picker, { scenarios: list, onPick: setPick }));
 }
 
-function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBack }) {
+const MODE_NAMES = { auto: 'Auto', iphone: 'iPhone', macbook: 'MacBook' };
+
+// The small switch on the demo itself, outside the device: Auto / iPhone / MacBook.
+function DeviceSwitch({ mode, setMode }) {
+  return h('div', { className: 'ss-devswitch', role: 'radiogroup', 'aria-label': 'Simulated device' },
+    Object.entries(MODE_NAMES).map(([m, name]) => h('button', {
+      key: m, role: 'radio', 'aria-checked': mode === m, type: 'button', className: 'ss-devopt', onClick: () => setMode(m),
+    }, name)));
+}
+
+// A clock that keeps real time, for the status bar and the menu bar.
+function useNow() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const id = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(id); }, []);
+  return now;
+}
+const hm = (d) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+function StatusBar() {
+  const now = useNow();
+  return h('div', { className: 'ss-status', 'aria-hidden': true },
+    h('span', { className: 'ss-status-time' }, hm(now).replace(/\s?[AP]M$/, '')),
+    h('span', { className: 'ss-island', 'aria-hidden': true }),
+    h('span', { className: 'ss-status-icons' },
+      h('svg', { viewBox: '0 0 18 12', width: 18, height: 12 }, [0, 1, 2, 3].map((i) => h('rect', { key: i, x: i * 4.6, y: 9 - i * 3, width: 3.2, height: 3 + i * 3, rx: 0.8 }))),
+      h('svg', { viewBox: '0 0 16 12', width: 16, height: 12 }, h('path', { d: 'M8 11.2 5.6 8.6a3.4 3.4 0 0 1 4.8 0L8 11.2Zm-4.3-4.6L2 4.8a8.5 8.5 0 0 1 12 0l-1.7 1.8a6 6 0 0 0-8.6 0Z' })),
+      h('svg', { viewBox: '0 0 27 12', width: 27, height: 12 },
+        h('rect', { x: 0.5, y: 0.5, width: 23, height: 11, rx: 3.2, fill: 'none', stroke: 'currentColor', opacity: 0.45 }),
+        h('rect', { x: 2, y: 2, width: 17, height: 8, rx: 1.8 }),
+        h('rect', { x: 24.6, y: 4, width: 1.6, height: 4, rx: 0.8, opacity: 0.45 }))));
+}
+
+function MenuBar() {
+  const now = useNow();
+  const day = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', '');
+  return h('div', { className: 'ss-menubar' },
+    h('span', { className: 'ss-menu-mark', 'aria-hidden': true }),
+    h('b', null, 'Claude'),
+    ['File', 'Edit', 'View', 'Window', 'Help'].map((m) => h('span', { key: m, className: 'ss-menu-item', 'aria-hidden': true }, m)),
+    h('span', { className: 'ss-menu-right' },
+      h('svg', { viewBox: '0 0 16 12', width: 15, height: 11, 'aria-hidden': true }, h('path', { d: 'M8 11.2 5.6 8.6a3.4 3.4 0 0 1 4.8 0L8 11.2Zm-4.3-4.6L2 4.8a8.5 8.5 0 0 1 12 0l-1.7 1.8a6 6 0 0 0-8.6 0Z' })),
+      h('span', { className: 'ss-clock' }, `${day}  ${hm(now)}`)));
+}
+
+function TitleBar() {
+  return h('div', { className: 'ss-titlebar' },
+    h('span', { className: 'ss-traffic', 'aria-hidden': true }, h('i'), h('i'), h('i')),
+    h('span', { className: 'ss-wtitle' }, 'Claude Code'));
+}
+
+function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBack, mode = 'auto', setMode, viewer = 'desktop' }) {
+  const { frame, label } = resolveDevice({ mode, viewer, device: sc.device });
   const plan = useMemo(() => script(sc, { maxSteps }), [sc, maxSteps]);
   const totals = useMemo(() => summarize(sc), [sc]);
   const person = sc.persona?.name ?? 'You';
@@ -284,8 +344,8 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
   const artifactList = h('div', { className: 'ss-artifact-list' },
     made.length ? made.map((a) => h(ArtifactCard, { key: a.id, a })) : h('p', { className: 'ss-empty' }, 'What Freeda makes will collect here.'));
 
-  return h('div', { className: `ss-stage${showArtifacts ? ' ss-has-panel' : ''}` },
-    h('div', { className: 'ss-phone' },
+  const phone = h('div', { className: 'ss-phone' },
+      frame === 'iphone' && h(StatusBar),
       h('header', { className: 'ss-head' },
         onBack && h('button', { className: 'ss-back', onClick: onBack, 'aria-label': 'Choose another person' }, '‹'),
         h('span', { className: 'ss-avatar' }, initial(person)),
@@ -323,8 +383,37 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, onBac
               phase === 'saying' ? spoken : next && plain(next.text).slice(0, 140)),
             h('button', {
               className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
-            }, '\u{1F3A4}')))),
-    showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList),
-    timeline && h(Timeline, { sc, turnIndex: turn, person }),
-    phase === 'done' && !closed && h(CloseCard, { sc, person, onReplay: restart, onBack }));
+            }, '\u{1F3A4}'))));
+  const panel = showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList);
+  const bar = h('div', { className: 'ss-devicebar' },
+    label ? h('span', { className: frame === 'macbook-compact' ? 'ss-simpill' : 'ss-simlabel' }, label) : h('span'),
+    setMode && h(DeviceSwitch, { mode, setMode }));
+  // The device around the conversation. On a phone nothing is drawn: the demo is the phone.
+  let device = phone;
+  if (frame === 'iphone') {
+    device = h('div', { className: 'ss-iphone' },
+      h('span', { className: 'ss-btn ss-btn-a', 'aria-hidden': true }), h('span', { className: 'ss-btn ss-btn-v1', 'aria-hidden': true }),
+      h('span', { className: 'ss-btn ss-btn-v2', 'aria-hidden': true }), h('span', { className: 'ss-btn ss-btn-p', 'aria-hidden': true }),
+      phone);
+  } else if (frame === 'macbook-compact') {
+    // Forced MacBook on a phone: a window at phone width, never a laptop shrunk to fit.
+    device = h('div', { className: 'ss-window ss-term ss-window-compact' }, h(TitleBar), phone);
+  } else if (frame === 'macbook') {
+    device = h('div', { className: 'ss-mac' },
+      h('div', { className: 'ss-mac-lid' },
+        h('div', { className: 'ss-mac-screen' },
+          h('span', { className: 'ss-mac-notch', 'aria-hidden': true }),
+          h(MenuBar),
+          h('div', { className: 'ss-window ss-term' }, h(TitleBar),
+            h('div', { className: `ss-stage ss-in-window${showArtifacts ? ' ss-has-panel' : ''}` }, phone, panel)))),
+      h('div', { className: 'ss-mac-base', 'aria-hidden': true }));
+  }
+  const inGrid = frame !== 'macbook';
+  return h(Fragment, null,
+    bar,
+    h('div', { className: `ss-stage ss-frame-${frame}${inGrid && showArtifacts ? ' ss-has-panel' : ''}` },
+      device,
+      inGrid && panel,
+      timeline && h(Timeline, { sc, turnIndex: turn, person }),
+      phase === 'done' && !closed && h(CloseCard, { sc, person, onReplay: restart, onBack })));
 }
