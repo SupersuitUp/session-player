@@ -152,6 +152,10 @@ export const PLAYER_CSS = `
 .ss-burst i{position:absolute;width:7px;height:7px;border-radius:2px;background:var(--ss-mustard);transform:rotate(calc(var(--i) * 25.7deg)) translateY(0);animation:ss-pop 1.1s ease-out forwards;opacity:0}
 .ss-burst i:nth-child(3n){background:var(--ss-tomato)}.ss-burst i:nth-child(3n+1){background:var(--ss-aqua)}
 .ss-kicker{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ss-tomato);text-align:center}
+.ss-close-tight{padding:14px 16px 12px}
+.ss-close-tight h3{font-size:clamp(16px,2.6cqi,20px)!important;margin:2px 0 8px!important}
+.ss-close-tight .ss-handled li{font-size:12.5px;line-height:1.35}
+.ss-close-tight .ss-split{display:none}
 .ss-close h3{font-family:Fraunces,Georgia,serif;font-size:24px;margin:4px 0 14px;text-align:center}
 .ss-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .ss-split>div{background:#fff;border:1px solid #eadcbc;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:1px}

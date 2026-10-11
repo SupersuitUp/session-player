@@ -182,7 +182,7 @@ export function CloseCard({ sc, person, onReplay, onBack, highlights = false }) 
   const edge = close.edge;
   const layers = edge ? ['fueled', 'encoded', 'built', 'retired'].filter((k) => edge.layers?.[k]) : [];
   return h('div', { className: 'ss-close-wrap' },
-    h('div', { className: 'ss-close', role: 'dialog', 'aria-label': 'Session closed' },
+    h('div', { className: `ss-close${highlights ? ' ss-close-tight' : ''}`, role: 'dialog', 'aria-label': 'Session closed' },
       h('div', { className: 'ss-burst', 'aria-hidden': true }, Array.from({ length: 14 }, (_, i) => h('i', { key: i, style: { '--i': i } }))),
       h('span', { className: 'ss-kicker' }, 'Session closed'),
       h('h3', null, close.outcome ?? sc.title),
