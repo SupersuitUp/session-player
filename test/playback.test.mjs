@@ -104,3 +104,27 @@ test('condense never hides a step that showed the person images', () => {
   const steps = [step('a', 1), step('Open the nine covers in Preview', 2, { images: [{ id: 'x', src: 's' }] }), step('big', 9000), step('c', 3)];
   assert.ok(condense(steps, 1).some((s) => s.label === 'Open the nine covers in Preview'));
 });
+
+test('speed shortens the work but a highlights cut keeps reading time for the answer', async () => {
+  const { lead, readMs } = await import('../src/playback.mjs');
+  const sc = { turns: [{ id: 't1', at: 0, human: { text: 'go' }, steps: [{ label: 'a', tool: 'Bash', ms: 60000, count: 1, at: 1 }], replies: [{ text: 'It worked.\n\nHere is a long second paragraph nobody needs in a highlight.', at: 2 }], artifacts: [] }], artifacts: [] };
+  const slow = script(sc), fast = script(sc, { speed: 4 }), hi = script(sc, { speed: 4, leadOnly: true });
+  assert.ok(fast[0].events[1].t < slow[0].events[1].t);
+  assert.equal(hi[0].events[1].reply.text, 'It worked.');
+  assert.equal(lead('One.\n\nTwo.'), 'One.');
+  assert.equal(hi[0].length - hi[0].events[1].t, readMs('It worked.'));
+  assert.ok(readMs('word '.repeat(500)) <= 2800);
+});
+
+test('a highlights cut shows only where each turn landed', () => {
+  const sc = { turns: [{ id: 't1', at: 0, human: { text: 'go' }, steps: [], replies: [{ text: 'Looking now.', at: 1 }, { text: 'Found it.', at: 2 }], artifacts: [] }], artifacts: [] };
+  const replies = script(sc, { leadOnly: true })[0].events.filter((e) => e.kind === 'reply');
+  assert.deepEqual(replies.map((e) => e.reply.text), ['Found it.']);
+  assert.equal(script(sc)[0].events.filter((e) => e.kind === 'reply').length, 2);
+});
+
+test('a turn can name which answer is its highlight', () => {
+  const sc = { turns: [{ id: 't1', at: 0, human: { text: 'go' }, steps: [], replies: [{ text: 'Covered.', at: 1 }, { text: 'Wait a day.', at: 2 }], artifacts: [], highlight: 0 }], artifacts: [] };
+  const replies = script(sc, { leadOnly: true })[0].events.filter((e) => e.kind === 'reply');
+  assert.deepEqual(replies.map((e) => e.reply.text), ['Covered.']);
+});

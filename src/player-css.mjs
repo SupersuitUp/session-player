@@ -14,6 +14,16 @@ export const PLAYER_CSS = `
 .ss-titles b{font-family:Fraunces,Georgia,serif;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ss-titles small{color:#7a6d5a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ss-auto{display:flex;align-items:center;gap:4px;font-size:12px;color:#7a6d5a}
+.ss-sim .ss-play-toggle{flex:none;border:0;border-radius:999px;background:var(--ss-tomato);color:#fff;font-size:12px;font-weight:700;padding:6px 12px;white-space:nowrap}
+.ss-start{margin:auto;display:flex;flex-direction:column;align-items:center;gap:10px}
+.ss-sim .ss-big-play{width:76px;height:76px;border:0;border-radius:50%;background:var(--ss-tomato);color:#fff;font-size:30px;padding-left:6px;box-shadow:0 8px 24px rgba(219,55,31,.35);animation:ss-pulse 1.6s infinite}
+.ss-tick{display:flex;gap:10px;align-items:flex-start;animation:ss-in .35s ease-out}
+.ss-check{flex:none;width:22px;height:22px;border-radius:50%;background:#2f8f5b;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
+.ss-handled{text-align:left;margin:10px 0 4px}
+.ss-handled small{display:block;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:11px;color:#7a6d5a;margin-bottom:4px}
+.ss-handled ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.ss-handled li{position:relative;padding-left:24px;opacity:0;animation:ss-in .3s ease-out forwards;animation-delay:calc(var(--i) * 180ms)}
+.ss-handled li::before{content:"\\2713";position:absolute;left:0;top:0;color:#2f8f5b;font-weight:800}
 .ss-counter{display:flex;justify-content:space-between;gap:8px;padding:8px 14px;background:var(--ss-ink);color:var(--ss-cream);font-size:13px;font-variant-numeric:tabular-nums}
 .ss-counter b{color:var(--ss-mustard)}
 .ss-log-wrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}

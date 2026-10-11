@@ -31,7 +31,7 @@ import { SimulatorPlayer } from './src/player.mjs';
 const scenarios = await (await fetch('./scenarios.json')).json();
 const q = new URLSearchParams(location.search);
 createRoot(document.getElementById('root')).render(h(SimulatorPlayer, {
-  scenarios, scenarioId: q.get('scenario') ?? undefined, height: q.get('height') ?? undefined, autoplay: q.has('autoplay'), artifacts: q.get('artifacts') !== 'off', timeline: q.get('timeline') !== 'off', device: q.get('device') ?? undefined,
+  scenarios, scenarioId: q.get('scenario') ?? undefined, height: q.get('height') ?? undefined, autoplay: q.has('autoplay'), artifacts: q.get('artifacts') !== 'off', timeline: q.get('timeline') !== 'off', device: q.get('device') ?? undefined, speed: Number(q.get('speed')) || undefined, highlights: q.has('highlights'), maxSteps: Number(q.get('steps')) || undefined,
 }));
 </script></body></html>`;
 }

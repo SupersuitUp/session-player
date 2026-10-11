@@ -64,13 +64,24 @@ export function summarize(sc) {
 // One entry per turn: the command the viewer sends, then the events that follow it in the
 // order they really happened, each with a playback offset `t`. `length` is the turn's
 // playback time.
-export function script(sc, { maxSteps = 5 } = {}) {
+// A reply's first paragraph is its answer (the house style leads with it), so a highlights
+// cut can show only that and give the viewer time to read it rather than a fixed beat.
+export function lead(text) {
+  return String(text).split(/\n\s*\n/)[0].trim();
+}
+export function readMs(text) {
+  const words = String(text).trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(900, Math.min(2800, 600 + 50 * words));
+}
+
+export function script(sc, { maxSteps = 5, speed = 1, leadOnly = false } = {}) {
   const byId = new Map((sc.artifacts ?? []).map((a) => [a.id, a]));
   return sc.turns.map((turn) => {
     const steps = condense(turn.steps, maxSteps);
     const items = [
       ...steps.map((s) => ({ kind: 'step', real: s.at ?? turn.at, step: s })),
-      ...turn.replies.map((r) => ({ kind: 'reply', real: r.at, reply: r })),
+      // A highlight shows where the turn landed: its last answer, not the progress notes before it.
+      ...(leadOnly ? [turn.replies[turn.highlight ?? turn.replies.length - 1]].filter(Boolean) : turn.replies).map((r) => ({ kind: 'reply', real: r.at, reply: leadOnly ? { ...r, text: lead(r.text) } : r })),
       ...turn.artifacts.map((id) => byId.get(id)).filter(Boolean).map((a) => ({ kind: 'artifact', real: a.at ?? turn.at, artifact: a })),
     ].map((e, i) => ({ ...e, i }));
     // Stable by real time; within one instant, steps before replies before artifacts.
@@ -79,7 +90,8 @@ export function script(sc, { maxSteps = 5 } = {}) {
     let t = 0;
     const events = items.map(({ i, ...e }) => {
       const at = t;
-      t += e.kind === 'step' ? pace(e.step.ms) : e.kind === 'reply' ? 900 : 500;
+      // speed shortens the work; reading time in a highlights cut is never sped up.
+      t += e.kind === 'step' ? Math.round(pace(e.step.ms) / speed) : e.kind === 'reply' ? (leadOnly ? readMs(e.reply.text) : Math.round(900 / speed)) : Math.round(500 / speed);
       return { ...e, t: at };
     });
     return { id: turn.id, command: { text: turn.human.text, intervention: turn.intervention, images: turn.human.images }, events, length: t };

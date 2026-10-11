@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 (2026-10-11)
+
+- Highlights (Wilson, 2026-10-11: "make it 40 seconds", "the key things, the most important moments for the human"): `speed` (embed `speed=3`) shortens the work between beats; `highlights` (embed `highlights`) shows where each turn landed, its last answer's first paragraph, with reading time that is never sped up; `steps` (embed) sets how many steps a turn keeps. A recast spec may name a turn's landing answer with `highlight: { "t6": 1 }`.
+- Relief you can see: in highlights the panel is "Handled for <person>", only what got handled (artifacts of kind `other`) ticking off as it lands; the close card can list what Freeda handled (`close.handled`, carried and recast by `recast`). Measured facts only, never time saved.
+- An obvious Play (Wilson: "make sure the red button is a play button"): a large pulsing Play before the run starts, a red Play / Pause in the header in place of the "auto" checkbox, and the red circle by the composer is a Play arrow (it still plays the command as dictation).
+
 ## 0.2.1 (2026-10-11)
 
 - A MacBook in a column too narrow for a believable laptop (under 560 px, such as the book's 434 px figure) keeps its Claude Code window and its "Simulating a MacBook" label and drops the lid, menu bar and base, rather than shrinking into a toy where the composer and the counter overlap.

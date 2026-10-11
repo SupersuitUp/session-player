@@ -17,7 +17,7 @@ const TEXT_FIELDS = (sc) => [
     ...t.replies.map((r) => [r, 'text']),
   ]),
   ...sc.artifacts.flatMap((a) => [[a, 'title'], [a, 'url'], [a, 'path']]),
-  ...(sc.close ? [[sc.close, 'outcome'], ...(sc.close.edge ? [[sc.close.edge, 'source']] : []), ...(sc.close.freed ?? []).flatMap((f) => [[f, 'task'], [f, 'cadence'], [f, 'source']])] : []),
+  ...(sc.close ? [[sc.close, 'outcome'], ...(sc.close.handled ?? []).map((_, i) => [sc.close.handled, i]), ...(sc.close.edge ? [[sc.close.edge, 'source']] : []), ...(sc.close.freed ?? []).flatMap((f) => [[f, 'task'], [f, 'cadence'], [f, 'source']])] : []),
 ];
 
 const inAsk = (s, obj) => (s.ask?.questions ?? []).some((q) => q === obj || q.options.includes(obj));
@@ -27,7 +27,7 @@ const where = (sc, obj) => sc.turns.find((t) => t.human === obj || t.steps.some(
 
 import { allImages } from './scenario.mjs';
 
-export function recast(source, { id, title, persona, keep, replace = [], forbid = [], images = {}, close }) {
+export function recast(source, { id, title, persona, keep, replace = [], forbid = [], images = {}, close, highlight = {} }) {
   const sc = structuredClone(source);
   const cuts = [];
   if (keep) {
@@ -39,6 +39,12 @@ export function recast(source, { id, title, persona, keep, replace = [], forbid 
     sc.chapters = sc.chapters.filter((c) => kept.has(c.turn));
   }
   for (const t of sc.turns) delete t.human.raw;
+  // Which answer a highlights cut shows for a turn, when its landing is not the last reply.
+  for (const [tid, index] of Object.entries(highlight)) {
+    const t = sc.turns.find((x) => x.id === tid);
+    if (!t || !t.replies[index]) throw new Error(`highlight ${tid}:${index} names no reply`);
+    t.highlight = index;
+  }
   // Dropping turns changes what the session earned, so the spec may restate the measured close.
   if (close) sc.close = { ...(sc.close ?? {}), ...close };
   sc.title = title ?? sc.title;

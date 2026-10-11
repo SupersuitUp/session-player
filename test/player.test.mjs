@@ -119,3 +119,21 @@ test('a close card without edge or freed data leaves those lines out rather than
   assert.doesNotMatch(html, /edge points|freed/);
   assert.match(html, /of work/);
 });
+
+test('an obvious Play: a big button before the run, Play and Pause in the header', () => {
+  const html = renderToString(h(SimulatorPlayer, { scenario: sc('a', 'Theo'), speed: 3, highlights: true }));
+  assert.match(html, /class="ss-big-play"/);
+  assert.match(html, /aria-label="Play"/);
+  assert.doesNotMatch(html, /Say it out loud/);
+  const auto = renderToString(h(SimulatorPlayer, { scenario: sc('a', 'Theo'), autoplay: true }));
+  assert.doesNotMatch(auto, /class="ss-big-play"/);
+  assert.match(auto, /Pause/);
+});
+
+test('the close card lists what Freeda handled when the scenario names it', async () => {
+  const { CloseCard } = await import('../src/player.mjs');
+  const one = { ...sc('a', 'Theo'), close: { outcome: 'Phone sorted.', handled: ['Searched six inboxes', 'Grabbed a same-day slot'] } };
+  const html = renderToString(h(CloseCard, { sc: one, person: 'Theo', highlights: true, onReplay: () => {} }));
+  assert.match(html, /What Freeda handled for Theo/);
+  assert.match(html, /Grabbed a same-day slot/);
+});
