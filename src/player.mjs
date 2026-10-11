@@ -120,6 +120,21 @@ function StepLine({ step }) {
     h('span', { className: 'ss-dur' }, step.stalled ? 'timed out' : duration(step.ms)));
 }
 
+// One moment per screen (Wilson, 2026-10-11: "the scroll down ... doesn't give me the TL;DR"):
+// the person's line small, where Freeda landed large, and what is handled so far, with no log
+// to scroll. Everything shown is the recording's own text; nothing is summarised for it.
+export function Moment({ plan, turn, log, made, person, phase }) {
+  const reply = [...log].reverse().find((l) => l.kind === 'reply' && l.key.startsWith(`${turn}-`));
+  const done = made.filter((a) => a.kind === 'other');
+  const here = done.find((a) => a.turnIndex === turn) ?? null;
+  return h('div', { className: 'ss-moment', key: turn },
+    h('div', { className: 'ss-mcount' }, `${turn + 1} of ${plan.length}`),
+    h('p', { className: 'ss-mcmd' }, h('b', null, `${person}: `), plain(plan[turn].command.text).slice(0, 160)),
+    reply ? h('p', { className: 'ss-mbig', key: reply.key }, plain(reply.reply.text))
+      : h('p', { className: 'ss-mwork' }, phase === 'working' ? 'Freeda is on it\u2026' : ''),
+    done.length > 0 && h('ul', { className: 'ss-mticks' }, done.map((a) => h('li', { key: a.id, className: a.id === here?.id ? 'ss-new' : '' }, a.title))));
+}
+
 function ArtifactCard({ a, tick = false }) {
   if (tick) return h('div', { className: 'ss-artifact ss-tick' }, h('span', { className: 'ss-check', 'aria-hidden': true }, '\u2713'), h('span', { className: 'ss-atitle' }, a.title));
   return h('div', { className: 'ss-artifact' },
@@ -196,7 +211,7 @@ export function CloseCard({ sc, person, onReplay, onBack, highlights = false }) 
 // speed shortens the work between beats; highlights shows each turn's landing answer (first
 // paragraph) with reading time, and ticks off what got handled (Wilson, 2026-10-11: "make it 40
 // seconds", "I want the user to realize how much work, and how relieving it is").
-export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = false, artifacts = true, timeline = true, maxSteps = 5, device, viewer, speed = 1, highlights = false }) {
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = false, artifacts = true, timeline = true, maxSteps = 5, device, viewer, speed = 1, highlights = false, moments = false }) {
   const list = scenarios ?? (scenario ? [scenario] : []);
   // An embed may name one scenario from a list and skip the picker.
   const start = scenarioId != null ? Math.max(0, list.findIndex((s) => s.id === scenarioId)) : list.length > 1 ? null : 0;
@@ -211,7 +226,7 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
   const sc = pick == null ? null : list[pick];
   return h('div', { className: 'ss-sim', style: height ? { '--ss-height': height } : undefined },
     h('style', null, PLAYER_CSS),
-    sc ? h(Run, { key: sc.id, sc, autoplay, artifacts, timeline, maxSteps, speed, highlights, mode, setMode, viewer: viewer ?? seen, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
+    sc ? h(Run, { key: sc.id, sc, autoplay, artifacts, timeline, maxSteps, speed, highlights, moments, mode, setMode, viewer: viewer ?? seen, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
       : h(Picker, { scenarios: list, onPick: setPick }));
 }
 
@@ -265,7 +280,7 @@ function TitleBar() {
     h('span', { className: 'ss-wtitle' }, 'Claude Code'));
 }
 
-function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, speed = 1, highlights = false, onBack, mode = 'auto', setMode, viewer = 'desktop' }) {
+function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, speed = 1, highlights = false, moments = false, onBack, mode = 'auto', setMode, viewer = 'desktop' }) {
   const { frame, label } = resolveDevice({ mode, viewer, device: sc.device });
   const plan = useMemo(() => script(sc, { maxSteps, speed, leadOnly: highlights }), [sc, maxSteps, speed, highlights]);
   const totals = useMemo(() => summarize(sc), [sc]);
@@ -312,7 +327,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, speed
         setWaiting(null);
         playFrom(ti, i + 1, Math.round(500 / speed));
       };
-      if (e.kind === 'artifact') setMade((m) => [...m, e.artifact]);
+      if (e.kind === 'artifact') setMade((m) => [...m, { ...e.artifact, turnIndex: ti }]);
       if (e.kind === 'step' && !e.step.ask) setWork((w) => ({ ms: w.ms + e.step.ms, steps: w.steps + (e.step.count ?? 1) }));
       if (e.kind === 'step' && e.step.ask) { setWaiting(key); return; }
       const next = p.events[i + 1];
@@ -366,6 +381,7 @@ function Run({ sc, autoplay, artifacts: showArtifacts, timeline, maxSteps, speed
         h('span', null, work.ms ? [h('b', { key: 'd' }, duration(work.ms)), ` of work done for ${person}`] : 'No work yet'),
         h('span', null, `${work.steps} of ${totals.steps} steps`)),
       h('div', { className: 'ss-log-wrap' },
+      moments && log.length > 0 ? h(Moment, { plan, turn, log, made, person, phase }) :
       h('div', { className: 'ss-log', ref: logRef },
         log.length === 0 && !auto && h('div', { className: 'ss-start' },
           h('button', { className: 'ss-big-play', onClick: () => setAuto(true), 'aria-label': 'Play' }, '\u25B6'),

@@ -137,3 +137,15 @@ test('the close card lists what Freeda handled when the scenario names it', asyn
   assert.match(html, /What Freeda handled for Theo/);
   assert.match(html, /Grabbed a same-day slot/);
 });
+
+test('moments show one screen: the line small, where Freeda landed large, what is handled so far', async () => {
+  const { Moment } = await import('../src/player.mjs');
+  const plan = [{ command: { text: 'Is my phone covered?' }, events: [] }, { command: { text: 'Next' }, events: [] }];
+  const log = [{ kind: 'command', key: 'c0' }, { kind: 'reply', key: '0-3', reply: { text: 'Your phone is covered.' } }];
+  const made = [{ id: 'a1', kind: 'other', title: 'Coverage found', turnIndex: 0 }, { id: 'a2', kind: 'link', title: 'att.com', turnIndex: 0 }];
+  const html = renderToString(h(Moment, { plan, turn: 0, log, made, person: 'Theo', phase: 'working' }));
+  assert.match(html, /1 of 2/);
+  assert.match(html, /class="ss-mbig"[^>]*>Your phone is covered\./);
+  assert.match(html, /Coverage found/);
+  assert.doesNotMatch(html, /att\.com/);
+});

@@ -17,6 +17,15 @@ export const PLAYER_CSS = `
 .ss-sim .ss-play-toggle{flex:none;border:0;border-radius:999px;background:var(--ss-tomato);color:#fff;font-size:12px;font-weight:700;padding:6px 12px;white-space:nowrap}
 .ss-start{margin:auto;display:flex;flex-direction:column;align-items:center;gap:10px}
 .ss-sim .ss-big-play{width:76px;height:76px;border:0;border-radius:50%;background:var(--ss-tomato);color:#fff;font-size:30px;padding-left:6px;box-shadow:0 8px 24px rgba(219,55,31,.35);animation:ss-pulse 1.6s infinite}
+.ss-moment{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:16px 18px;overflow:hidden;animation:ss-in .35s ease-out}
+.ss-mcount{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.6}
+.ss-mcmd{margin:0;font-size:14px;opacity:.75;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ss-mbig{margin:auto 0;font-size:clamp(17px,3.4cqi,26px);line-height:1.3;font-weight:600;overflow:hidden;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;animation:ss-in .4s ease-out}
+.ss-mwork{margin:auto 0;opacity:.6;font-size:15px}
+.ss-mticks{list-style:none;margin:0;padding:8px 0 0;border-top:1px dashed rgba(127,127,127,.35);display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px}
+.ss-mticks li{position:relative;padding-left:20px}
+.ss-mticks li::before{content:"\\2713";position:absolute;left:0;color:#2f8f5b;font-weight:800}
+.ss-mticks li.ss-new{font-weight:700;animation:ss-in .4s ease-out}
 .ss-tick{display:flex;gap:10px;align-items:flex-start;animation:ss-in .35s ease-out}
 .ss-check{flex:none;width:22px;height:22px;border-radius:50%;background:#2f8f5b;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700}
 .ss-handled{text-align:left;margin:10px 0 4px}
