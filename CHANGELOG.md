@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0 (2026-10-11)
+
+- **The player is the 0.2.3 experience again** (Gary, 2026-10-11: "really not loving the post-Wilson-merge case study widget, revert the UX"). Wilson's 0.3.0 changes and the 0.3.1 moments fix are reverted with `git revert`, so his commits stay in history: the Start card is back as it was (title, measured line, Start demo button, Autoplay choice; nothing plays on load; `start: 'auto'` opts in), Autoplay is on by default and playing the person when off, and device framing (Auto / iPhone / MacBook, the narrow-MacBook fallback, "Simulating a MacBook" on a phone, toasts) is unchanged from 0.2.3. Gone: `speed`, `highlights`, `moments`, `steps`, the highlights close card and the "Handled for" panel. An embed, tag or prop that still passes them is ignored rather than refused, so existing embeds keep working.
+- Kept: the `session-player` name and CLI (and the `simulator` alias), and `recast`'s handling of a spec's `highlight` and `close.handled`, so scenarios recast for 0.3.x still build and their handled lines are still covered by `replace` and `forbid`. The player ignores both fields.
+
 ## 0.4.0 (2026-10-11)
 
 - **Renamed `@supersuit/session-player`** (Gary, 2026-10-11: it plays recorded sessions; case studies and the coming Helm demo are content it plays). Same code as 0.3.2. Swap the package name in your imports; the exports, the scenario format, `SimulatorPlayer` and `<supersuit-simulator>` are unchanged. The CLI is `session-player`, and `simulator` still works. The repository is SupersuitUp/session-player (GitHub redirects the old address).

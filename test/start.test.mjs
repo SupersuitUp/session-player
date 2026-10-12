@@ -47,3 +47,15 @@ test('autoplay never sends before Start is pressed', () => {
 test('the start line counts what was measured and nothing else', () => {
   assert.equal(startLine(sc(), 'Dana'), '1 command from Dana, 2 min of work by Freeda.');
 });
+
+// 0.5.0 (Gary, 2026-10-11: "revert the UX"): the 0.3.x highlights switches are gone, and an embed
+// that still passes them plays the 0.2.3 experience instead of failing.
+test('the retired highlights switches are ignored, never an error: same Start card, same player', () => {
+  const plain = markup({});
+  assert.equal(markup({ speed: 3, highlights: true, moments: true, maxSteps: 1 }), plain);
+  assert.doesNotMatch(plain, /ss-startplay|ss-moment|Handled for/);
+  const t = propsFromAttributes({ src: '/s', speed: '3', highlights: '', moments: '', steps: '1' });
+  assert.deepEqual(Object.keys(t).filter((k) => ['speed', 'highlights', 'moments', 'maxSteps'].includes(k)), []);
+  const p = page({ embed: true });
+  for (const k of ['speed', 'highlights', 'moments', 'steps']) assert.doesNotMatch(p, new RegExp(`q\\.(get|has)\\('${k}'\\)`));
+});
