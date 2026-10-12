@@ -202,7 +202,38 @@ export function CloseCard({ sc, person, onReplay, onBack }) {
         onBack && h('button', { className: 'ss-chip ss-ghost', onClick: onBack }, 'Step into someone else'))));
 }
 
-export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode }) {
+// The space around the device is transparent unless a host asks for a colour (0.6.0, Gary,
+// 2026-10-11: "render with NO background colour ... so it sits on any site"). 'theme' is the
+// player's own cream; anything else is a CSS colour. The device frame and the screen keep theirs.
+export function backgroundFor(bg) {
+  if (bg == null) return undefined;
+  const v = String(bg).trim();
+  if (!v || v === 'transparent' || v === 'none') return undefined;
+  if (v === 'theme') return 'var(--ss-cream)';
+  // A colour, never a declaration: no semicolons, braces or url().
+  return /^[#a-zA-Z0-9(),.%\s-]+$/.test(v) && !/url\(/i.test(v) ? v : undefined;
+}
+
+// Inside an iframe, tell the host page how tall the player is and when a session ends, so an
+// embed can size itself to its content (the loader does) and offer what comes next.
+export const MESSAGE = { height: 'session-player:height', done: 'session-player:done' };
+export function reportToHost(el, win = typeof window === 'undefined' ? undefined : window, RO = typeof ResizeObserver === 'undefined' ? undefined : ResizeObserver) {
+  if (!el || !win || !win.parent || win.parent === win || !RO) return () => {};
+  let last = 0;
+  const post = () => {
+    const height = Math.ceil(el.getBoundingClientRect().height);
+    if (height > 0 && height !== last) { last = height; win.parent.postMessage({ type: MESSAGE.height, height }, '*'); }
+  };
+  const ro = new RO(post);
+  ro.observe(el);
+  post();
+  return () => ro.disconnect();
+}
+const tellHost = (msg) => { if (typeof window !== 'undefined' && window.parent && window.parent !== window) window.parent.postMessage(msg, '*'); };
+
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode, background }) {
+  const root = useRef(null);
+  useEffect(() => reportToHost(root.current), []);
   const list = scenarios ?? (scenario ? [scenario] : []);
   // An embed may name one scenario from a list and skip the picker.
   const start = scenarioId != null ? Math.max(0, list.findIndex((s) => s.id === scenarioId)) : list.length > 1 ? null : 0;
@@ -215,7 +246,9 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
   const [seen, setSeen] = useState(() => viewer ?? readViewer());
   useEffect(() => (viewer ? undefined : watchViewer(setSeen)), [viewer]);
   const sc = pick == null ? null : list[pick];
-  return h('div', { className: 'ss-sim', style: height ? { '--ss-height': height } : undefined },
+  const bg = backgroundFor(background);
+  const style = height || bg ? { ...(height ? { '--ss-height': height } : {}), ...(bg ? { background: bg } : {}) } : undefined;
+  return h('div', { className: 'ss-sim', ref: root, style },
     h('style', null, PLAYER_CSS),
     sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
       : h(Picker, { scenarios: list, onPick: setPick }));
@@ -291,6 +324,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   const person = sc.persona?.name ?? 'You';
   const [turn, setTurn] = useState(0);
   const [phase, setPhase] = useState('ready'); // ready | saying | working | done
+  useEffect(() => { if (phase === 'done') tellHost({ type: MESSAGE.done, scenario: sc.id }); }, [phase, sc.id]);
   const [log, setLog] = useState([]);
   const [made, setMade] = useState([]);
   const [work, setWork] = useState({ ms: 0, steps: 0 });

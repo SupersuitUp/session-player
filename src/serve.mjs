@@ -31,7 +31,7 @@ import { SimulatorPlayer } from './src/player.mjs';
 const scenarios = await (await fetch('./scenarios.json')).json();
 const q = new URLSearchParams(location.search);
 createRoot(document.getElementById('root')).render(h(SimulatorPlayer, {
-  scenarios, scenarioId: q.get('scenario') ?? undefined, height: q.get('height') ?? undefined, autoplay: q.get('autoplay') !== 'off', artifacts: q.get('artifacts') !== 'off', timeline: q.get('timeline') !== 'off', device: q.get('device') ?? undefined, start: q.get('start') ?? undefined,
+  scenarios, scenarioId: q.get('scenario') ?? undefined, height: q.get('height') ?? undefined, autoplay: q.get('autoplay') !== 'off', artifacts: q.get('artifacts') !== 'off', timeline: q.get('timeline') !== 'off', device: q.get('device') ?? undefined, start: q.get('start') ?? undefined, background: q.get('bg') ?? undefined,
 }));
 </script></body></html>`;
 }
@@ -43,6 +43,8 @@ export function createServer({ scenarios, assetsRoot }) {
     const send = (code, type, body) => { res.writeHead(code, { 'content-type': type, 'cache-control': 'no-store' }); res.end(body); };
     if (path === '/' || path === '/index.html') return send(200, 'text/html; charset=utf-8', page({ title: scenarios.length === 1 ? scenarios[0].title : undefined }));
     if (path === '/embed') return send(200, 'text/html; charset=utf-8', page({ embed: true }));
+    // The one-tag embed: <script src=".../embed.js"></script><session-player scenario="...">.
+    if (path === '/embed.js') return send(200, 'text/javascript; charset=utf-8', readFileSync(join(SRC, 'loader.js')));
     if (path === '/scenarios.json') return send(200, 'application/json', JSON.stringify(scenarios));
     const a = assetsRoot && path.match(/^\/assets\/([\w-]+)\/([\w.-]+\.(?:png|jpe?g|webp|gif))$/i);
     if (a) {

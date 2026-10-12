@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0 (2026-10-11)
+
+- **Transparent by default** (Gary, 2026-10-11: "render with NO background colour ... so it sits on any site"). Nothing is painted outside the device frame; the frame and the screen keep their own backgrounds. A host that wants one passes `background` (prop or tag attribute) or `?bg=` on the embed URL: any CSS colour, or `theme` for the player's cream. A value that is not a colour is ignored.
+- **Embed it anywhere with one tag** (Gary: "make it easier to embed in any website"): `<script src=".../simulator/embed.js" async></script>` then `<session-player scenario="...">`. A plain script (`src/loader.js`, exported as `@supersuit/session-player/loader.js`, served at `/embed.js` by `session-player serve`) that turns each tag into an iframe of the embed page sized to its content. Defaults: Auto device, Autoplay on, waits for Start.
+- In an iframe the player posts its height (`session-player:height`) and the end of a session (`session-player:done`) to the host page; the loader uses both, and fires `session-player:done` on the iframe so a host can offer the next case study.
+- The README opens with both embed forms.
+
 ## 0.5.0 (2026-10-11)
 
 - **The player is the 0.2.3 experience again** (Gary, 2026-10-11: "really not loving the post-Wilson-merge case study widget, revert the UX"). Wilson's 0.3.0 changes and the 0.3.1 moments fix are reverted with `git revert`, so his commits stay in history: the Start card is back as it was (title, measured line, Start demo button, Autoplay choice; nothing plays on load; `start: 'auto'` opts in), Autoplay is on by default and playing the person when off, and device framing (Auto / iPhone / MacBook, the narrow-MacBook fallback, "Simulating a MacBook" on a phone, toasts) is unchanged from 0.2.3. Gone: `speed`, `highlights`, `moments`, `steps`, the highlights close card and the "Handled for" panel. An embed, tag or prop that still passes them is ignored rather than refused, so existing embeds keep working.

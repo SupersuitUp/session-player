@@ -19,6 +19,8 @@ export function propsFromAttributes(a) {
     height: a.height || undefined,
     device: a.device || undefined,
     start: a.start || undefined,
+    // 0.6.0: transparent unless the host names a colour or 'theme'.
+    background: a.background || a.bg || undefined,
   };
 }
 
