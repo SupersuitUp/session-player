@@ -70,10 +70,6 @@ A page that runs modules can use the tag instead (it brings its own React throug
 <script type="module">import { defineSimulatorElement } from '@supersuit/session-player/embed'; defineSimulatorElement();</script>
 ```
 
-## A highlights cut
-
-For a short page demo (about 40 seconds), pass `speed` (work between beats runs that many times faster), `highlights` (each turn shows only where it landed, its answer's first paragraph, with real reading time, and the panel ticks off what got handled), `moments` (one screen per moment instead of a scrolling log) and `steps` (how many steps a turn keeps). Same names as props, embed query switches (`?speed=3&highlights&moments&steps=1`) and tag attributes. A recast spec may name a turn's landing answer with `highlight: { "t6": 1 }`, and a scenario's `close.handled` lists what Freeda handled, in measured facts. The Start card still waits for the viewer.
-
 ## Device framing
 
 `device` is `auto` (the default), `iphone` or `macbook`: the `device` prop, `?device=` on the embed URL, or the `device` attribute on the tag. The viewer can also switch it on the demo (Auto / iPhone / MacBook).

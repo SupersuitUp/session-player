@@ -19,7 +19,7 @@ const markup = (props) => renderToString(h(SimulatorPlayer, { scenario: sc(), vi
 test('before it starts, the screen shows a Start demo card with the title, one line, and the Autoplay choice', () => {
   const html = markup({});
   assert.match(html, /class="ss-start"/);
-  assert.match(html, /<button[^>]*class="ss-startbtn"[^>]*>[\s\S]*?Start demo<\/button>/);
+  assert.match(html, /<button[^>]*class="ss-startbtn"[^>]*>Start demo<\/button>/);
   assert.match(html, /class="ss-start"[\s\S]*A day as Dana/);
   assert.match(html, /class="ss-start"[\s\S]*1 command from Dana, 2 min of work by Freeda/);
   assert.match(html, /class="ss-start"[\s\S]*<input type="checkbox" checked=""[^>]*\/>Autoplay/);
@@ -35,19 +35,6 @@ test('a host can opt into starting immediately; nothing else can skip the card',
   assert.equal(propsFromAttributes({ src: '/s' }).start, undefined);
   assert.equal(propsFromAttributes({ src: '/s', start: 'auto' }).start, 'auto');
   assert.match(page({ embed: true }), /start: q\.get\('start'\) \?\? undefined/);
-});
-
-test('the highlights switches reach an embed by URL and by tag', () => {
-  const p = page({ embed: true });
-  assert.match(p, /speed: Number\(q\.get\('speed'\)\)/);
-  assert.match(p, /highlights: q\.has\('highlights'\)/);
-  assert.match(p, /moments: q\.has\('moments'\)/);
-  assert.match(p, /maxSteps: Number\(q\.get\('steps'\)\)/);
-  assert.match(p, /autoplay: q\.get\('autoplay'\) !== 'off'/);
-  const t = propsFromAttributes({ src: '/s', speed: '3', highlights: '', moments: '', steps: '1' });
-  assert.deepEqual([t.speed, t.highlights, t.moments, t.maxSteps], [3, true, true, 1]);
-  const none = propsFromAttributes({ src: '/s' });
-  assert.deepEqual([none.speed, none.highlights, none.moments, none.maxSteps], [undefined, false, false, undefined]);
 });
 
 test('autoplay never sends before Start is pressed', () => {
