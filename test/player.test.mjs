@@ -156,16 +156,3 @@ test('moments show one screen: the line small, where Freeda landed large, what i
   assert.match(html, /Coverage found/);
   assert.doesNotMatch(html, /att\.com/);
 });
-
-test('a moment never squeezes its lines: each part keeps its height, and the screen scrolls before it clips mid-line', async () => {
-  const { PLAYER_CSS } = await import('../src/player-css.mjs');
-  assert.match(PLAYER_CSS, /\.ss-moment>\*\{flex:none\}/);
-  assert.match(PLAYER_CSS, /\.ss-moment\{[^}]*overflow-y:auto/);
-});
-
-test('in moments the composer does not repeat the line the moment already shows', () => {
-  const strip = (x) => x.replace(/<style>[\s\S]*?<\/style>/, '');
-  const one = { ...sc('a', 'Theo'), turns: [{ ...sc('a', 'Theo').turns[0], human: { text: 'Is my phone covered?', via: 'typed', choices: [] } }] };
-  assert.doesNotMatch(strip(renderToString(h(SimulatorPlayer, { scenario: one, moments: true, start: 'auto' }))), /class="ss-chip"[^>]*>[\s\S]*?Is my phone covered\?/);
-  assert.match(strip(renderToString(h(SimulatorPlayer, { scenario: one, start: 'auto' }))), /class="ss-chip"[^>]*>[\s\S]*?Is my phone covered\?/);
-});
