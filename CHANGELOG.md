@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0 (2026-10-11)
+
+- A recast spec may state `device` (`iphone` or `macbook`) when the source could not tell where the real session ran. A Remote Control or SDK session reads the same from a Mac and a phone, so the converter leaves `device` unset and Auto drew an iPhone for a session that really ran on a MacBook (Callum's case study). The spec wins over the source; without it the source's device is kept, as before.
+- `@supersuit/session-player/playback` exports `summarize` and `duration`, so a host page can print the measured who-did-what beside the player without importing the converter.
+
 ## 0.6.0 (2026-10-11)
 
 - **Transparent by default** (Gary, 2026-10-11: "render with NO background colour ... so it sits on any site"). Nothing is painted outside the device frame; the frame and the screen keep their own backgrounds. A host that wants one passes `background` (prop or tag attribute) or `?bg=` on the embed URL: any CSS colour, or `theme` for the player's cream. A value that is not a colour is ignored.

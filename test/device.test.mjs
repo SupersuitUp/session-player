@@ -160,6 +160,21 @@ test('a recast keeps where the real session ran', () => {
   assert.equal(out.device, 'macbook');
 });
 
+test('a recast spec can state where the session ran when the source could not tell (0.7.0)', () => {
+  const base = { id: 'b', title: 'B', persona: { name: 'Bo' }, forbid: [] };
+  assert.equal(recast(sc({}), { ...base, device: 'macbook' }).device, 'macbook');
+  assert.equal(recast(sc({ device: 'macbook' }), base).device, 'macbook', 'no spec device keeps the source');
+  assert.throws(() => recast(sc({}), { ...base, device: 'laptop' }), /iphone or macbook/);
+});
+
+test('the measured summary is importable on its own, for a host page beside the player', async () => {
+  const pkg = JSON.parse((await import('node:fs')).readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.equal(pkg.exports['./playback'], './src/playback.mjs');
+  const { summarize, duration } = await import('../src/playback.mjs');
+  assert.equal(typeof summarize, 'function');
+  assert.equal(duration(1721661), '29 min');
+});
+
 test('a MacBook in a column too narrow for a laptop keeps its window and label, and drops the lid', async () => {
   const { PLAYER_CSS } = await import('../src/player-css.mjs');
   const narrow = PLAYER_CSS.match(/@container ss-sim \(max-width:559px\)\{([\s\S]*?)\n\}/);

@@ -60,7 +60,7 @@ simulator serve album.json            # watch it at http://127.0.0.1:4460/
 | `artifacts[]` | `{ id, kind: file \| link \| other, title, path \| url, turn, at }` |
 | `cuts[]` | `{ turn, what, reason }`: every edit, so nothing is changed silently |
 
-`device` (optional) is where the real session ran: `iphone` or `macbook`. The converter sets `macbook` when the person typed into a terminal (or the desktop app) on a Mac, and leaves it out when it cannot tell (Remote Control and SDK sessions); a scenario without it is shown as an iPhone.
+`device` (optional) is where the real session ran: `iphone` or `macbook`. The converter sets `macbook` when the person typed into a terminal (or the desktop app) on a Mac, and leaves it out when it cannot tell (Remote Control and SDK sessions); a scenario without it is shown as an iPhone. Because unset can mean either, whoever ran the session should state it: `convert --device`, or `device` in a recast spec (0.7.0), which overrides the source.
 
 `intervention` is one of `null`, `redirect`, `correct`, `approve`, `decide`. The converter sets only `redirect`; the rest are set by the person reviewing the draft.
 
