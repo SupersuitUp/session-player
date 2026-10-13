@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.1 (2026-10-12)
+
+- **The accent is mulberry.** The sixth stripe of the Continental Works ribbon changed from tomato `#DB371F` to mulberry `#A12A5E` (Gary, 2026-10-12: "Update color name and update Abu and propagate across all surfaces"), and the player types its own copy of that palette. The Start button, the mic, the kickers and names, the step dots, the "other" artifact tag, the played part of the timeline and its legend, the close card's confetti, and the last stop of the MacBook wallpaper are mulberry; the unplayed agent segment and the two glows derived from tomato follow it. White on the Start button is now about 7:1 (it was 4.6:1).
+- The custom property is `--ss-mulberry`; `--ss-tomato` is gone, with no alias. These properties were never a documented way to theme the player (the documented switch is `background`), so a host page that set `--ss-tomato` on `.ss-sim` anyway should set `--ss-mulberry`.
+- On the dark terminal window mulberry text would sit near 2.4:1, so the two accents there that still used the ribbon colour ("stepped in" and the count beside "Made for") now use the terminal's own orange, as the names, the Start button and the mic there already did.
+- `test/palette.test.mjs` pins the accent, refuses tomato, deep red and raspberry by name, hex and rgb, refuses a `var()` naming a property the sheet does not define, and computes the contrast of white on mulberry.
+
 ## 0.7.0 (2026-10-11)
 
 - A recast spec may state `device` (`iphone` or `macbook`) when the source could not tell where the real session ran. A Remote Control or SDK session reads the same from a Mac and a phone, so the converter leaves `device` unset and Auto drew an iPhone for a session that really ran on a MacBook (Callum's case study). The spec wins over the source; without it the source's device is kept, as before.

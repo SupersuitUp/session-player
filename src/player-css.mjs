@@ -1,7 +1,13 @@
-// Scoped styles for the player, in the getfreedom palette. Every class is ss- prefixed so the
+// Scoped styles for the player, in the Continental Works palette (continental-works-universe
+// canon/craft/the-ascent.json). The accent is the ribbon's sixth stripe, mulberry #A12A5E. It was
+// a red-orange, hex DB371F, until 2026-10-12, when Gary changed the stripe and its name ("Update
+// color name and update Abu and propagate across all surfaces"), so the custom property is
+// --ss-mulberry and the old one is gone. These properties are internal: theming the player
+// through them was never documented, so there is no alias. On the dark terminal surfaces mulberry
+// text would sit near 2.4:1, so every accent there uses the terminal's own #d97757 instead. Every class is ss- prefixed so the
 // player can be dropped into any page (the wiki, a book reader) without colliding.
 export const PLAYER_CSS = `
-.ss-sim{--ss-ink:#1E1B19;--ss-cream:#F6E7C5;--ss-paper:#FBF5E7;--ss-tomato:#DB371F;--ss-petrol:#265E72;--ss-mustard:#E9A23B;--ss-sand:#EED79E;--ss-aqua:#69B1B5;
+.ss-sim{--ss-ink:#1E1B19;--ss-cream:#F6E7C5;--ss-paper:#FBF5E7;--ss-mulberry:#A12A5E;--ss-petrol:#265E72;--ss-mustard:#E9A23B;--ss-sand:#EED79E;--ss-aqua:#69B1B5;
   position:relative;container:ss-sim/inline-size;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:var(--ss-ink);width:100%;max-width:1040px;margin:0 auto;-webkit-text-size-adjust:100%}
 .ss-sim *{box-sizing:border-box}
 .ss-sim button{font:inherit;color:inherit;cursor:pointer}
@@ -21,13 +27,13 @@ export const PLAYER_CSS = `
 .ss-intro{color:#7a6d5a;text-align:center;margin:auto 12px}
 .ss-cmd-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-top:6px}
 .ss-cmd{max-width:84%;background:var(--ss-petrol);color:#fff;padding:9px 13px;border-radius:18px 18px 4px 18px;white-space:pre-wrap;overflow-wrap:anywhere}
-.ss-redirect{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ss-tomato)}
+.ss-redirect{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ss-mulberry)}
 .ss-reply{max-width:92%;overflow-wrap:anywhere}
 .ss-reply p{margin:2px 0 0;white-space:pre-wrap}
-.ss-who{font-size:11px;font-weight:700;color:var(--ss-tomato);letter-spacing:.04em;text-transform:uppercase}
+.ss-who{font-size:11px;font-weight:700;color:var(--ss-mulberry);letter-spacing:.04em;text-transform:uppercase}
 .ss-more{border:0;background:none;padding:0;color:var(--ss-petrol);font-size:13px;text-decoration:underline}
 .ss-step{display:flex;align-items:baseline;gap:8px;font-size:13px;color:#4a4238;animation:ss-in .25s ease-out}
-.ss-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--ss-tomato);transform:translateY(-1px)}
+.ss-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--ss-mulberry);transform:translateY(-1px)}
 .ss-group .ss-dot{background:#c9b48c}
 .ss-group .ss-label{color:#8a7d68}
 .ss-label{flex:1;min-width:0;overflow-wrap:anywhere}
@@ -79,7 +85,7 @@ export const PLAYER_CSS = `
 .ss-chip{flex:1;min-width:0;text-align:left;border:1px solid var(--ss-petrol);background:#fff;border-radius:16px;padding:8px 12px;display:flex;flex-direction:column;gap:1px;overflow-wrap:anywhere}
 .ss-chip small{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ss-petrol)}
 .ss-chip:disabled{opacity:.55;cursor:default}
-.ss-sim .ss-mic{flex:none;align-self:center;width:48px;height:48px;padding:0;border:0;border-radius:50%;background:var(--ss-tomato);color:#fff;font-size:20px;touch-action:none;-webkit-user-select:none;user-select:none}
+.ss-sim .ss-mic{flex:none;align-self:center;width:48px;height:48px;padding:0;border:0;border-radius:50%;background:var(--ss-mulberry);color:#fff;font-size:20px;touch-action:none;-webkit-user-select:none;user-select:none}
 .ss-mic:disabled{opacity:.4}
 .ss-sim .ss-send{flex:none;align-self:center;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:var(--ss-petrol);color:#fff;font-size:20px;font-weight:700}
 .ss-send:disabled{opacity:.35}
@@ -94,7 +100,7 @@ export const PLAYER_CSS = `
 .ss-artifact{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #eadcbc;border-radius:10px;padding:8px 10px;animation:ss-in .3s ease-out}
 .ss-kind{flex:none;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:var(--ss-sand)}
 .ss-kind.ss-link{background:var(--ss-aqua);color:#fff}
-.ss-kind.ss-other{background:var(--ss-tomato);color:#fff}
+.ss-kind.ss-other{background:var(--ss-mulberry);color:#fff}
 .ss-atitle{min-width:0;overflow-wrap:anywhere;font-size:14px}
 .ss-empty{color:#8a7d68;font-size:14px;margin:0}
 .ss-timeline{grid-column:1/-1;padding:4px 2px}
@@ -102,12 +108,12 @@ export const PLAYER_CSS = `
 .ss-seg{height:100%;border-radius:2px;min-width:2px}
 .ss-seg.ss-human{background:var(--ss-petrol)}
 .ss-seg.ss-ask{background:var(--ss-mustard)}
-.ss-seg.ss-agent{background:#efc2b8}
-.ss-seg.ss-agent.ss-past{background:var(--ss-tomato)}
+.ss-seg.ss-agent{background:#e0b9ca}
+.ss-seg.ss-agent.ss-past{background:var(--ss-mulberry)}
 .ss-seg.ss-now{outline:2px solid var(--ss-ink);outline-offset:1px}
 .ss-legend{display:flex;gap:14px;font-size:12px;color:#7a6d5a;margin-top:6px;flex-wrap:wrap}
 .ss-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
-.ss-legend i.ss-human{background:var(--ss-petrol)}.ss-legend i.ss-ask{background:var(--ss-mustard)}.ss-legend i.ss-agent{background:var(--ss-tomato)}
+.ss-legend i.ss-human{background:var(--ss-petrol)}.ss-legend i.ss-ask{background:var(--ss-mustard)}.ss-legend i.ss-agent{background:var(--ss-mulberry)}
 .ss-picker{display:flex;flex-direction:column;gap:10px;padding:8px}
 .ss-picker h2{font-family:Fraunces,Georgia,serif;margin:0 0 6px}
 .ss-persona{display:flex;gap:12px;align-items:center;text-align:left;border:1px solid #eadcbc;background:var(--ss-paper);border-radius:14px;padding:12px}
@@ -116,7 +122,7 @@ export const PLAYER_CSS = `
   .ss-has-panel .ss-tray-handle,.ss-has-panel .ss-tray{display:none}
   .ss-panel{display:flex;flex-direction:column;gap:10px;align-self:start;max-height:760px;overflow-y:auto;padding:16px;background:#fffaf0;border:1px solid #eadcbc;border-radius:20px}
   .ss-panel h3{display:flex;justify-content:space-between;margin:0;font-family:Fraunces,Georgia,serif}
-  .ss-panel h3 span{font-family:inherit;color:var(--ss-tomato)}
+  .ss-panel h3 span{font-family:inherit;color:var(--ss-mulberry)}
 }
 .ss-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;animation:ss-in .3s ease-out}
 .ss-strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin:0 0 8px}
@@ -134,8 +140,8 @@ export const PLAYER_CSS = `
 .ss-close{position:relative;overflow:hidden;width:100%;max-width:440px;max-height:100%;overflow-y:auto;background:#fffaf0;border-radius:24px;padding:22px 20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:ss-up .4s cubic-bezier(.2,.9,.3,1.2)}
 .ss-burst{position:absolute;left:50%;top:26px;width:0;height:0;pointer-events:none}
 .ss-burst i{position:absolute;width:7px;height:7px;border-radius:2px;background:var(--ss-mustard);transform:rotate(calc(var(--i) * 25.7deg)) translateY(0);animation:ss-pop 1.1s ease-out forwards;opacity:0}
-.ss-burst i:nth-child(3n){background:var(--ss-tomato)}.ss-burst i:nth-child(3n+1){background:var(--ss-aqua)}
-.ss-kicker{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ss-tomato);text-align:center}
+.ss-burst i:nth-child(3n){background:var(--ss-mulberry)}.ss-burst i:nth-child(3n+1){background:var(--ss-aqua)}
+.ss-kicker{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ss-mulberry);text-align:center}
 .ss-close h3{font-family:Fraunces,Georgia,serif;font-size:24px;margin:4px 0 14px;text-align:center}
 .ss-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .ss-split>div{background:#fff;border:1px solid #eadcbc;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:1px}
@@ -158,7 +164,7 @@ export const PLAYER_CSS = `
 @keyframes ss-pop{0%{opacity:1;transform:rotate(calc(var(--i) * 25.7deg)) translateY(0)}100%{opacity:0;transform:rotate(calc(var(--i) * 25.7deg)) translateY(-90px)}}
 @keyframes ss-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes ss-blink{0%,100%{opacity:.3}50%{opacity:1}}
-@keyframes ss-pulse{0%,100%{box-shadow:0 0 0 0 rgba(219,55,31,.5)}50%{box-shadow:0 0 0 10px rgba(219,55,31,0)}}
+@keyframes ss-pulse{0%,100%{box-shadow:0 0 0 0 rgba(161,42,94,.5)}50%{box-shadow:0 0 0 10px rgba(161,42,94,0)}}
 /* Device framing (device.mjs). The bar sits outside the device: what is simulated, and the switch. */
 .ss-devicebar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 2px 8px;min-height:26px;font-size:12px;color:#7a6d5a}
 .ss-simlabel{letter-spacing:.02em}
@@ -182,7 +188,7 @@ export const PLAYER_CSS = `
    reflows at the width it gets rather than shrinking text. */
 .ss-mac{--ss-dh:var(--ss-height,min(820px,calc(100svh - 110px)));width:min(92%,calc((var(--ss-dh) - 16px) * 1.54));margin:0 auto}
 .ss-mac-lid{position:relative;aspect-ratio:1.54;padding:1.6% 1.6% 2.4%;background:#0e0e10;border-radius:18px 18px 8px 8px;box-shadow:0 0 0 1.5px #3c3c40,0 24px 60px rgba(30,27,25,.25)}
-.ss-mac-screen{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;border-radius:6px;background:linear-gradient(140deg,#265E72 0%,#69B1B5 42%,#EED79E 72%,#E9A23B 88%,#DB371F 100%)}
+.ss-mac-screen{position:relative;height:100%;display:flex;flex-direction:column;overflow:hidden;border-radius:6px;background:linear-gradient(140deg,#265E72 0%,#69B1B5 42%,#EED79E 72%,#E9A23B 88%,#A12A5E 100%)}
 .ss-mac-notch{position:absolute;z-index:2;left:50%;top:0;width:11%;height:22px;transform:translateX(-50%);background:#0e0e10;border-radius:0 0 7px 7px}
 .ss-menubar{flex:none;display:flex;align-items:center;gap:14px;height:24px;padding:0 12px;overflow:hidden;white-space:nowrap;font:12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:#1e1b19;background:rgba(251,245,231,.78);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .ss-menu-mark{width:11px;height:11px;border-radius:50%;background:var(--ss-ink)}
@@ -225,7 +231,7 @@ export const PLAYER_CSS = `
 .ss-term .ss-cmd-wrap{align-items:stretch}
 .ss-term .ss-cmd{max-width:none;background:#2a2826;color:#e6e1d9;border-radius:4px;border-left:2px solid #8f887d;padding:6px 10px}
 .ss-term .ss-cmd::before{content:"> ";color:#8f887d}
-.ss-term .ss-who,.ss-term .ss-more,.ss-term .ss-asking{color:#d97757}
+.ss-term .ss-who,.ss-term .ss-more,.ss-term .ss-asking,.ss-term .ss-redirect,.ss-term .ss-panel h3 span{color:#d97757}
 .ss-term .ss-reply p{color:#e6e1d9}
 .ss-term .ss-step{color:#bdb6ab}
 .ss-term .ss-dot{background:#7fb069}
@@ -261,7 +267,7 @@ export const PLAYER_CSS = `
 .ss-starttitle{font-family:Fraunces,Georgia,serif;font-size:20px;line-height:1.25}
 .ss-startcard p{margin:0;color:#4a4238;font-size:14px}
 .ss-startcard small{color:#7a6d5a;font-size:12px}
-.ss-sim .ss-startbtn{margin-top:6px;border:0;border-radius:999px;background:var(--ss-tomato);color:#fff;font-weight:700;font-size:16px;padding:12px 26px;box-shadow:0 6px 18px rgba(219,55,31,.3)}
+.ss-sim .ss-startbtn{margin-top:6px;border:0;border-radius:999px;background:var(--ss-mulberry);color:#fff;font-weight:700;font-size:16px;padding:12px 26px;box-shadow:0 6px 18px rgba(161,42,94,.3)}
 .ss-sim .ss-startbtn:focus-visible{outline:3px solid var(--ss-petrol);outline-offset:2px}
 .ss-startauto{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
 .ss-term .ss-start{background:rgba(26,25,24,.86)}
