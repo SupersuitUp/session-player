@@ -104,7 +104,7 @@ test('the close card celebrates with measured numbers only, and never claims tim
   s.artifacts = [{ id: 'a1', kind: 'link', title: 'The album page', turn: 't1' }];
   const html = renderToString(h(CloseCard, { sc: s, person: 'Gary', onReplay: () => {} }));
   assert.match(html, /Album released\./);
-  assert.match(html, /7 min/);             // Freeda's measured work in the fixture
+  assert.match(html, /7 min/);             // the agent's measured work in the fixture
   assert.match(html, /1 command/);
   assert.match(html, /3 edge points/);
   assert.match(html, /encoded/);

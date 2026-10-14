@@ -13,7 +13,7 @@ One tag, any page, any framework or none. Paste this where the case study should
 <session-player scenario="phone-rescue"></session-player>
 ```
 
-The player sizes itself to its content (no fixed height), is transparent around the device so it sits on your page's own background, picks the device for the viewer (Auto), plays on Autoplay, and waits for the viewer to press Start. Optional attributes: `device` (`auto`, `iphone`, `macbook`), `autoplay="off"` (the viewer plays the person), `start="auto"` (start without the Start card), `background` (a CSS colour, or `theme` for the player's cream), `artifacts="off"`, `timeline="off"`, `height` (the device's height, e.g. `640px`), `title`.
+The player sizes itself to its content (no fixed height), is transparent around the device so it sits on your page's own background, picks the device for the viewer (Auto), plays on Autoplay, and waits for the viewer to press Start. Optional attributes: `device` (`auto`, `iphone`, `macbook`), `autoplay="off"` (the viewer plays the person), `start="auto"` (start without the Start card), `background` (a CSS colour, or `theme` for the player's cream), `artifacts="off"`, `timeline="off"`, `height` (the device's height, e.g. `640px`), `title`. On the React component and the `<supersuit-simulator>` tag, `agent` names the agent in the player's own lines (default `Pluma`).
 
 No scripts allowed? Use the iframe on its own, with a fixed height:
 
