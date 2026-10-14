@@ -21,7 +21,7 @@ test('before it starts, the screen shows a Start demo card with the title, one l
   assert.match(html, /class="ss-start"/);
   assert.match(html, /<button[^>]*class="ss-startbtn"[^>]*>Start demo<\/button>/);
   assert.match(html, /class="ss-start"[\s\S]*A day as Dana/);
-  assert.match(html, /class="ss-start"[\s\S]*1 command from Dana, 2 min of work by Freeda/);
+  assert.match(html, /class="ss-start"[\s\S]*1 command from Dana, 2 min of work by Pluma/);
   assert.match(html, /class="ss-start"[\s\S]*<input type="checkbox" checked=""[^>]*\/>Autoplay/);
   // It sits inside the device's screen, not beside it.
   assert.ok(html.indexOf('class="ss-start"') > html.indexOf('class="ss-phone"'));
@@ -45,7 +45,20 @@ test('autoplay never sends before Start is pressed', () => {
 });
 
 test('the start line counts what was measured and nothing else', () => {
-  assert.equal(startLine(sc(), 'Dana'), '1 command from Dana, 2 min of work by Freeda.');
+  assert.equal(startLine(sc(), 'Dana'), '1 command from Dana, 2 min of work by Pluma.');
+  assert.equal(startLine(sc(), 'Dana', 'Juno'), '1 command from Dana, 2 min of work by Juno.');
+});
+
+// Gary (2026-10-14): the agent is Pluma. The player's own lines name it from the `agent` prop,
+// default Pluma, and never hard-code a name; recorded scenario text is left as it was.
+test('the agent is named by the agent prop, Pluma by default, never hard-coded', async () => {
+  const { readFileSync } = await import('node:fs');
+  assert.doesNotMatch(readFileSync(new URL('../src/player.mjs', import.meta.url), 'utf8'), /Freeda/);
+  const timeline = (props) => markup({ start: 'auto', ...props });
+  assert.match(timeline({}), /Pluma working/);
+  assert.match(timeline({ agent: 'Juno' }), /Juno working/);
+  assert.doesNotMatch(timeline({ agent: 'Juno' }), /Pluma/);
+  assert.equal(propsFromAttributes({ src: '/s', agent: 'Juno' }).agent, 'Juno');
 });
 
 // 0.5.0 (Gary, 2026-10-11: "revert the UX"): the 0.3.x highlights switches are gone, and an embed

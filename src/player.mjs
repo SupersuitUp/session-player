@@ -6,13 +6,19 @@
 // `scenarios` (more than one shows the persona picker). Mobile first; the side panel appears
 // when the container is wide enough. On a desktop the demo is drawn inside a device (device.mjs).
 
-import { createElement as h, useEffect, useMemo, useRef, useState, Fragment } from 'react';
+import { createElement as h, createContext, useContext, useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import { script, summarize, duration, realPick, compare, dictate } from './playback.mjs';
 import { PLAYER_CSS } from './player-css.mjs';
 import { resolveDevice, normalizeMode, readViewer, watchViewer, autoHint, deviceToast, autoplayToast, choiceToast } from './device.mjs';
 
 const plain = (s) => String(s).replace(/\*\*([^*]+)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^#+\s*/gm, '');
 const initial = (name = '?') => name.trim().charAt(0).toUpperCase();
+
+// The agent's name in every line the player writes itself. A prop (`agent`) so a host can name
+// its own agent; recorded scenario text is never rewritten, since it is a record of a real session.
+export const DEFAULT_AGENT = 'Pluma';
+const AgentName = createContext(DEFAULT_AGENT);
+const useAgent = () => useContext(AgentName);
 
 // Images the person saw. Tap one to see it full screen; tap again to close.
 function Gallery({ images, strip = false }) {
@@ -28,11 +34,12 @@ function Gallery({ images, strip = false }) {
 }
 
 function Reply({ text }) {
+  const agent = useAgent();
   const [open, setOpen] = useState(false);
   const t = plain(text);
   const long = t.length > 360;
   return h('div', { className: 'ss-reply' },
-    h('span', { className: 'ss-who' }, 'Freeda'),
+    h('span', { className: 'ss-who' }, agent),
     h('p', null, long && !open ? `${t.slice(0, 320).trimEnd()}…` : t),
     long && h('button', { className: 'ss-more', onClick: () => setOpen(!open) }, open ? 'less' : 'more'));
 }
@@ -42,6 +49,7 @@ function Reply({ text }) {
 // answered with what the person really chose, then the next question, then the replay goes
 // on along the real path (a recording has one path, so no branch is ever invented).
 export function Board({ ask, person, auto = false, onPick, images, onToast }) {
+  const agent = useAgent();
   const [idx, setIdx] = useState(0);
   const [picks, setPicks] = useState({});
   const q = ask.questions[idx];
@@ -77,7 +85,7 @@ export function Board({ ask, person, auto = false, onPick, images, onToast }) {
       image && h('img', { className: 'ss-oimg', src: image.src, alt: '' }),
       h('span', null, h('b', null, label), description && h('small', null, description)));
   };
-  return h('div', { className: 'ss-sheet', role: 'dialog', 'aria-label': 'Freeda is asking' },
+  return h('div', { className: 'ss-sheet', role: 'dialog', 'aria-label': `${agent} is asking` },
     ask.questions.length > 1 && h('div', { className: 'ss-tabs' }, ask.questions.map((qq, qi) => h('span', {
       key: qi, className: `ss-tab${qi === idx ? ' ss-tab-now' : ''}${picks[qi] ? ' ss-tab-done' : ''}`,
     }, qq.header || `Question ${qi + 1}`))),
@@ -112,7 +120,8 @@ export function Asked({ ask, person, ms, picks = {} }) {
 }
 
 function Step({ step, person, picks, live }) {
-  if (step.ask) return live ? h('div', { className: 'ss-asking' }, 'Freeda is asking you\u2026') : h(Fragment, null, h(Gallery, { images: step.images }), h(Asked, { ask: step.ask, person, ms: step.ms, picks }));
+  const agent = useAgent();
+  if (step.ask) return live ? h('div', { className: 'ss-asking' }, `${agent} is asking you\u2026`) : h(Fragment, null, h(Gallery, { images: step.images }), h(Asked, { ask: step.ask, person, ms: step.ms, picks }));
   if (step.images?.length) return h(Fragment, null, h(StepLine, { step }), h(Gallery, { images: step.images }));
   return h(StepLine, { step });
 }
@@ -131,6 +140,7 @@ function ArtifactCard({ a }) {
 }
 
 function Timeline({ sc, turnIndex, person }) {
+  const agent = useAgent();
   const rows = sc.turns.map((t) => {
     const work = t.steps.filter((s) => !s.ask).reduce((n, s) => n + s.ms, 0);
     const ask = t.steps.filter((s) => s.ask).reduce((n, s) => n + s.ms, 0);
@@ -143,11 +153,11 @@ function Timeline({ sc, turnIndex, person }) {
     h('div', { className: 'ss-track' }, rows.map((r, i) => h(Fragment, { key: r.id },
       h('span', { className: `ss-seg ss-human${i === turnIndex ? ' ss-now' : ''}`, style: { width: `${(2 / total) * 100}%` }, title: `${person}: command ${i + 1}` }),
       r.ask > 0 && h('span', { className: 'ss-seg ss-ask', style: { width: `${(w(r.ask) / total) * 100}%` }, title: `${person} deciding, ${duration(r.ask)}` }),
-      h('span', { className: `ss-seg ss-agent${i < turnIndex ? ' ss-past' : ''}`, style: { width: `${(w(r.work) / total) * 100}%` }, title: `Freeda working, ${duration(r.work)}` })))),
+      h('span', { className: `ss-seg ss-agent${i < turnIndex ? ' ss-past' : ''}`, style: { width: `${(w(r.work) / total) * 100}%` }, title: `${agent} working, ${duration(r.work)}` })))),
     h('div', { className: 'ss-legend' },
       h('span', null, h('i', { className: 'ss-human' }), person),
       h('span', null, h('i', { className: 'ss-ask' }), 'deciding'),
-      h('span', null, h('i', { className: 'ss-agent' }), 'Freeda working')));
+      h('span', null, h('i', { className: 'ss-agent' }), `${agent} working`)));
 }
 
 function Picker({ scenarios, onPick }) {
@@ -161,9 +171,9 @@ function Picker({ scenarios, onPick }) {
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 // The one line under the title on the Start card: measured counts only.
-export function startLine(sc, person) {
+export function startLine(sc, person, agent = DEFAULT_AGENT) {
   const t = summarize(sc);
-  return `${plural(t.commands, 'command')} from ${person}, ${duration(t.agentMs)} of work by Freeda.`;
+  return `${plural(t.commands, 'command')} from ${person}, ${duration(t.agentMs)} of work by ${agent}.`;
 }
 
 // Autoplay sends the next command only once the viewer has pressed Start.
@@ -172,10 +182,11 @@ export function autoSendReady({ auto, phase, started }) {
 }
 
 // The celebration at the close: what the session took off the person, in numbers that were
-// measured. Freeda's work against the person's own attention, the things made, the edge
+// measured. The agent's work against the person's own attention, the things made, the edge
 // points the counter printed, and any chore the workflow catalog says is now off their hands.
 // Never "time saved": nobody measured the version where they did it by hand.
 export function CloseCard({ sc, person, onReplay, onBack }) {
+  const agent = useAgent();
   const t = summarize(sc);
   const close = sc.close ?? {};
   const edge = close.edge;
@@ -186,7 +197,7 @@ export function CloseCard({ sc, person, onReplay, onBack }) {
       h('span', { className: 'ss-kicker' }, 'Session closed'),
       h('h3', null, close.outcome ?? sc.title),
       h('div', { className: 'ss-split' },
-        h('div', null, h('b', null, duration(t.agentMs)), h('small', null, 'of work by Freeda'), h('small', null, plural(t.steps, 'step'))),
+        h('div', null, h('b', null, duration(t.agentMs)), h('small', null, `of work by ${agent}`), h('small', null, plural(t.steps, 'step'))),
         h('div', null, h('b', null, plural(t.commands, 'command')), h('small', null, `from ${person === 'You' ? 'you' : person}`),
           h('small', null, t.decisions ? `${plural(t.decisions, 'decision')}, ${duration(t.decisionMs)} deciding` : 'no decisions needed'))),
       (close.freed ?? []).map((f, i) => h('p', { key: i, className: 'ss-freed' }, `You permanently freed yourself from ${f.task}: ${f.cadence}.`)),
@@ -231,7 +242,7 @@ export function reportToHost(el, win = typeof window === 'undefined' ? undefined
 }
 const tellHost = (msg) => { if (typeof window !== 'undefined' && window.parent && window.parent !== window) window.parent.postMessage(msg, '*'); };
 
-export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode, background }) {
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode, background, agent = DEFAULT_AGENT }) {
   const root = useRef(null);
   useEffect(() => reportToHost(root.current), []);
   const list = scenarios ?? (scenario ? [scenario] : []);
@@ -248,10 +259,10 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
   const sc = pick == null ? null : list[pick];
   const bg = backgroundFor(background);
   const style = height || bg ? { ...(height ? { '--ss-height': height } : {}), ...(bg ? { background: bg } : {}) } : undefined;
-  return h('div', { className: 'ss-sim', ref: root, style },
+  return h(AgentName.Provider, { value: agent || DEFAULT_AGENT }, h('div', { className: 'ss-sim', ref: root, style },
     h('style', null, PLAYER_CSS),
     sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
-      : h(Picker, { scenarios: list, onPick: setPick }));
+      : h(Picker, { scenarios: list, onPick: setPick })));
 }
 
 const MODE_NAMES = { auto: 'Auto', iphone: 'iPhone', macbook: 'MacBook' };
@@ -322,6 +333,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   const plan = useMemo(() => script(sc, { maxSteps }), [sc, maxSteps]);
   const totals = useMemo(() => summarize(sc), [sc]);
   const person = sc.persona?.name ?? 'You';
+  const agent = useAgent();
   const [turn, setTurn] = useState(0);
   const [phase, setPhase] = useState('ready'); // ready | saying | working | done
   useEffect(() => { if (phase === 'done') tellHost({ type: MESSAGE.done, scenario: sc.id }); }, [phase, sc.id]);
@@ -409,7 +421,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
 
   const next = plan[turn]?.command;
   const artifactList = h('div', { className: 'ss-artifact-list' },
-    made.length ? made.map((a) => h(ArtifactCard, { key: a.id, a })) : h('p', { className: 'ss-empty' }, 'What Freeda makes will collect here.'));
+    made.length ? made.map((a) => h(ArtifactCard, { key: a.id, a })) : h('p', { className: 'ss-empty' }, `What ${agent} makes will collect here.`));
 
   const phone = h('div', { className: 'ss-phone' },
       frame === 'iphone' && h(StatusBar),
@@ -441,7 +453,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
       !started && h('div', { className: 'ss-start', role: 'dialog', 'aria-label': 'Start the demo' },
         h('div', { className: 'ss-startcard' },
           h('b', { className: 'ss-starttitle' }, sc.title),
-          h('p', null, startLine(sc, person)),
+          h('p', null, startLine(sc, person, agent)),
           h('button', { type: 'button', className: 'ss-startbtn', onClick: () => setStarted(true) }, 'Start demo'),
           h('label', { className: 'ss-startauto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => toggleAuto(e.target.checked) }), 'Autoplay'),
           h('small', null, auto ? 'It plays itself. Untick Autoplay to play the human.' : `You play ${person}: tap to send each message and make each call.`))),
@@ -453,7 +465,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
             h('button', { className: 'ss-chip', onClick: restart }, 'Play again'))
           : h(Fragment, null,
             h('button', { className: 'ss-chip', disabled: phase !== 'ready', onClick: send },
-              h('small', null, phase === 'working' ? 'Freeda is working…' : phase === 'saying' ? 'listening…' : auto ? 'sending on autoplay…' : `you are ${person}: tap to send, or tap the mic`),
+              h('small', null, phase === 'working' ? `${agent} is working…` : phase === 'saying' ? 'listening…' : auto ? 'sending on autoplay…' : `you are ${person}: tap to send, or tap the mic`),
               phase === 'saying' ? spoken : next && plain(next.text).slice(0, 140)),
             h('button', { className: 'ss-send', disabled: phase !== 'ready', 'aria-label': 'Send', onClick: send }, '\u2191'),
             h('button', {

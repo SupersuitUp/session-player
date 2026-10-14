@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0 (2026-10-14)
+
+- **The agent is Pluma** (Gary, 2026-10-14, the Supersuit rebrand). Every line the player writes itself names the agent: the reply label, "is asking", "is working", the timeline's "working" segment and legend, the Start card's line, the close card and the empty artifacts panel. They read Pluma now, and none hard-codes a name.
+- New `agent` prop on `SimulatorPlayer` (and `agent` attribute on the `<supersuit-simulator>` tag), default `Pluma`, so a host can name its own agent. `startLine(sc, person, agent)` takes it as a third argument.
+- Recorded scenario text is untouched: it is a record of a real session.
+
 ## 0.7.1 (2026-10-12)
 
 - **The accent is mulberry.** The sixth stripe of the Continental Works ribbon changed from tomato `#DB371F` to mulberry `#A12A5E` (Gary, 2026-10-12: "Update color name and update Abu and propagate across all surfaces"), and the player types its own copy of that palette. The Start button, the mic, the kickers and names, the step dots, the "other" artifact tag, the played part of the timeline and its legend, the close card's confetti, and the last stop of the MacBook wallpaper are mulberry; the unplayed agent segment and the two glows derived from tomato follow it. White on the Start button is now about 7:1 (it was 4.6:1).
