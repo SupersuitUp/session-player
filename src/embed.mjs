@@ -23,6 +23,8 @@ export function propsFromAttributes(a) {
     background: a.background || a.bg || undefined,
     // 0.8.0: the agent's name in the player's own lines (default Pluma).
     agent: a.agent || undefined,
+    // The devices' clocks keep the session's time; clock="wall" shows the viewer's own.
+    clock: a.clock || undefined,
   };
 }
 

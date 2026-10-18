@@ -22,6 +22,8 @@ export function validate(s) {
   for (const k of ['id', 'title']) if (!isStr(s[k])) p.push(`${k} is required`);
   if (!isObj(s.persona) || !isStr(s.persona.name)) p.push('persona.name is required');
   if (!isObj(s.source) || !SOURCE_KINDS.includes(s.source.kind)) p.push(`source.kind must be one of ${SOURCE_KINDS.join(', ')}`);
+  // When the session started: the devices' clocks start here. Optional, and never invented.
+  if (isObj(s.source) && s.source.startedAt != null && !(isStr(s.source.startedAt) && Number.isFinite(Date.parse(s.source.startedAt)))) p.push(`source.startedAt must be a date and time, got ${JSON.stringify(s.source.startedAt)}`);
   if (s.device != null && !SCENARIO_DEVICES.includes(s.device)) p.push(`device must be one of ${SCENARIO_DEVICES.join(', ')}, got ${JSON.stringify(s.device)}`);
 
   const artifactIds = new Set();

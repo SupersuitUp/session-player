@@ -2,7 +2,8 @@
 // (tap it, or hold the mic to "say" it), watches the work play out, and sees what got made
 // collect beside the conversation. Plain React.createElement so it needs no build step.
 //
-// Switches: autoplay, artifacts, timeline, maxSteps, device (auto, iphone, macbook), and
+// Switches: autoplay, artifacts, timeline, maxSteps, device (auto, iphone, macbook), clock
+// (session, the default, or wall), and
 // `scenarios` (more than one shows the persona picker). Mobile first; the side panel appears
 // when the container is wide enough. On a desktop the demo is drawn inside a device (device.mjs).
 
@@ -10,6 +11,12 @@ import { createElement as h, createContext, useContext, useEffect, useMemo, useR
 import { script, summarize, duration, realPick, compare, dictate } from './playback.mjs';
 import { PLAYER_CSS } from './player-css.mjs';
 import { resolveDevice, normalizeMode, readViewer, watchViewer, autoHint, deviceToast, autoplayToast, choiceToast } from './device.mjs';
+import { normalizeClock, sessionTime, menuBarText, statusText } from './clock.mjs';
+
+// What this player does itself, for a host page that used to do it from outside and should stop
+// once the copy it serves has it: the session clock on every device, the phone's time
+// pill, and the MacBook window's tighter text.
+export const FEATURES = Object.freeze({ sessionClock: true, phoneClock: true, macbookText: true });
 
 const plain = (s) => String(s).replace(/\*\*([^*]+)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^#+\s*/gm, '');
 const initial = (name = '?') => name.trim().charAt(0).toUpperCase();
@@ -242,7 +249,7 @@ export function reportToHost(el, win = typeof window === 'undefined' ? undefined
 }
 const tellHost = (msg) => { if (typeof window !== 'undefined' && window.parent && window.parent !== window) window.parent.postMessage(msg, '*'); };
 
-export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode, background, agent = DEFAULT_AGENT }) {
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode, background, agent = DEFAULT_AGENT, clock }) {
   const root = useRef(null);
   useEffect(() => reportToHost(root.current), []);
   const list = scenarios ?? (scenario ? [scenario] : []);
@@ -261,7 +268,7 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
   const style = height || bg ? { ...(height ? { '--ss-height': height } : {}), ...(bg ? { background: bg } : {}) } : undefined;
   return h(AgentName.Provider, { value: agent || DEFAULT_AGENT }, h('div', { className: 'ss-sim', ref: root, style },
     h('style', null, PLAYER_CSS),
-    sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
+    sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, clock: normalizeClock(clock), onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
       : h(Picker, { scenarios: list, onPick: setPick })));
 }
 
@@ -288,18 +295,16 @@ function useToast() {
   return [toast, show];
 }
 
-// A clock that keeps real time, for the status bar and the menu bar.
-function useNow() {
+// The viewer's own time, for a host that asks for clock: 'wall' (what the player always showed before the session clock).
+function useNow(on) {
   const [now, setNow] = useState(() => new Date());
-  useEffect(() => { const id = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(id); }, []);
+  useEffect(() => { if (!on) return undefined; const id = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(id); }, [on]);
   return now;
 }
-const hm = (d) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
-function StatusBar() {
-  const now = useNow();
+function StatusBar({ now }) {
   return h('div', { className: 'ss-status', 'aria-hidden': true },
-    h('span', { className: 'ss-status-time' }, hm(now).replace(/\s?[AP]M$/, '')),
+    h('span', { className: 'ss-status-time' }, statusText(now)),
     h('span', { className: 'ss-island', 'aria-hidden': true }),
     h('span', { className: 'ss-status-icons' },
       h('svg', { viewBox: '0 0 18 12', width: 18, height: 12 }, [0, 1, 2, 3].map((i) => h('rect', { key: i, x: i * 4.6, y: 9 - i * 3, width: 3.2, height: 3 + i * 3, rx: 0.8 }))),
@@ -310,16 +315,14 @@ function StatusBar() {
         h('rect', { x: 24.6, y: 4, width: 1.6, height: 4, rx: 0.8, opacity: 0.45 }))));
 }
 
-function MenuBar() {
-  const now = useNow();
-  const day = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', '');
+function MenuBar({ now }) {
   return h('div', { className: 'ss-menubar' },
     h('span', { className: 'ss-menu-mark', 'aria-hidden': true }),
     h('b', null, 'Claude'),
     ['File', 'Edit', 'View', 'Window', 'Help'].map((m) => h('span', { key: m, className: 'ss-menu-item', 'aria-hidden': true }, m)),
     h('span', { className: 'ss-menu-right' },
       h('svg', { viewBox: '0 0 16 12', width: 15, height: 11, 'aria-hidden': true }, h('path', { d: 'M8 11.2 5.6 8.6a3.4 3.4 0 0 1 4.8 0L8 11.2Zm-4.3-4.6L2 4.8a8.5 8.5 0 0 1 12 0l-1.7 1.8a6 6 0 0 0-8.6 0Z' })),
-      h('span', { className: 'ss-clock' }, `${day}  ${hm(now)}`)));
+      h('span', { className: 'ss-clock' }, menuBarText(now))));
 }
 
 function TitleBar() {
@@ -328,7 +331,7 @@ function TitleBar() {
     h('span', { className: 'ss-wtitle' }, 'Claude Code'));
 }
 
-function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps, onBack, mode = 'auto', setMode, viewer = 'desktop' }) {
+function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps, onBack, mode = 'auto', setMode, viewer = 'desktop', clock = 'session' }) {
   const { frame, label } = resolveDevice({ mode, viewer, device: sc.device });
   const plan = useMemo(() => script(sc, { maxSteps }), [sc, maxSteps]);
   const totals = useMemo(() => summarize(sc), [sc]);
@@ -342,6 +345,10 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   const [work, setWork] = useState({ ms: 0, steps: 0 });
   const [auto, setAuto] = useState(autoplay);
   const [toast, showToast] = useToast();
+  // The devices' clocks: the session's time (its start plus the work the counter shows), unless
+  // the host asked for the viewer's own.
+  const wall = useNow(clock === 'wall');
+  const now = clock === 'wall' ? wall : sessionTime(sc, work.ms);
   // Nothing plays on load: the viewer presses Start (a host may opt in with start: 'auto').
   const [started, setStarted] = useState(start === 'auto');
   const toggleAuto = (on) => { setAuto(on); showToast(autoplayToast(on)); };
@@ -424,11 +431,15 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
     made.length ? made.map((a) => h(ArtifactCard, { key: a.id, a })) : h('p', { className: 'ss-empty' }, `What ${agent} makes will collect here.`));
 
   const phone = h('div', { className: 'ss-phone' },
-      frame === 'iphone' && h(StatusBar),
+      frame === 'iphone' && h(StatusBar, { now }),
       h('header', { className: 'ss-head' },
         onBack && h('button', { className: 'ss-back', onClick: onBack, 'aria-label': 'Choose another person' }, '‹'),
         h('span', { className: 'ss-avatar' }, initial(person)),
         h('div', { className: 'ss-titles' }, h('b', null, sc.title), h('small', null, sc.source?.illustrative ? 'Illustrative: recast from a real session' : chapter ?? `as ${person}`)),
+        // A real phone has no drawn status bar, and a window at phone width or a lidless MacBook
+        // has no menu bar, so the session's time sits in the header as a small pill.
+        // Inside a whole laptop the menu bar shows it and the sheet hides the pill.
+        frame !== 'iphone' && h('span', { className: 'ss-timepill', title: 'Session time' }, statusText(now)),
         h('label', { className: 'ss-auto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => toggleAuto(e.target.checked) }), 'Autoplay')),
       h('div', { className: 'ss-counter', 'aria-live': 'polite' },
         h('span', null, work.ms ? [h('b', { key: 'd' }, duration(work.ms)), ` of work done for ${person}`] : 'No work yet'),
@@ -490,7 +501,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
       h('div', { className: 'ss-mac-lid' },
         h('div', { className: 'ss-mac-screen' },
           h('span', { className: 'ss-mac-notch', 'aria-hidden': true }),
-          h(MenuBar),
+          h(MenuBar, { now }),
           h('div', { className: 'ss-window ss-term' }, h(TitleBar),
             h('div', { className: `ss-stage ss-in-window${showArtifacts ? ' ss-has-panel' : ''}` }, phone, panel)))),
       h('div', { className: 'ss-mac-base', 'aria-hidden': true }));

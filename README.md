@@ -54,7 +54,7 @@ simulator serve album.json            # watch it at http://127.0.0.1:4460/
 | Field | What it holds |
 |---|---|
 | `persona` | `{ name, role, blurb }` |
-| `source` | `{ kind: session \| persona, sessionId, date, illustrative }` |
+| `source` | `{ kind: session \| persona, sessionId, date, startedAt, illustrative }` |
 | `chapters[]` | `{ title, turn }`, from the session's name changes |
 | `turns[]` | `{ id, at, human { text, via, choices[] }, intervention, steps[] { label, tool, ms, count }, replies[] { text, at }, artifacts[] }` |
 | `artifacts[]` | `{ id, kind: file \| link \| other, title, path \| url, turn, at }` |
@@ -101,6 +101,14 @@ A page that runs modules can use the tag instead (it brings its own React throug
 | `macbook` | a desktop-style window at phone width, labelled "Simulating a MacBook"; never a laptop shrunk into a phone | a MacBook: lid, menu bar clock, a Claude Code window, base |
 
 Whenever a device is drawn, a quiet label outside its screen says what is simulated. Phone or desktop is read from capability signals (coarse pointer, no hover, touch points) and the viewport's shorter side, again on every resize and rotation; a narrow desktop window is still a desktop and an iPad is a desktop unless it is in a narrow split view. Frames are CSS and SVG, sized from the height the player is given, so the same iframe height keeps fitting.
+
+## The clock
+
+Every simulated device shows the session's time, never the viewer's: the MacBook's menu bar, the drawn iPhone's status bar, and, on a real phone or any frame without a bar of its own, a small time pill in the header. It starts when the session started and moves with the work the counter shows, so it runs fast while the work runs and stands still while the session waits on a decision, is paused or has ended. The start is `source.startedAt` when the scenario records it (write the session's own wall time with no offset, `2026-10-12T14:03:00`, to show that time to every viewer); otherwise nine in the morning on `source.date`. Pass `clock: 'wall'` (`?clock=wall`, or the `clock` attribute) for the viewer's own time.
+
+Inside a whole laptop (the player 560px wide or more) the Claude Code window's text follows the window's width, 10.5 to 12px, and its chrome is drawn tighter, so more of the session fits; the phone, the drawn iPhone and the narrow windows keep their sizes.
+
+`FEATURES` (exported from `@supersuit/session-player/player`) says what the player does itself, so a host page that used to do any of it from outside can stop once the copy it serves has it.
 
 Nothing in the player is fixed to the viewport: the close card and the enlarged image stay inside the player's own box.
 

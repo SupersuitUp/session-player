@@ -8,7 +8,7 @@
 // player's content (the player posts its height; no fixed 720px), transparent around the device.
 // Defaults: Auto device, Autoplay on, waits for Start. Attributes, all optional: scenario, device
 // (auto|iphone|macbook), autoplay ("off"), start ("auto"), background or bg (a CSS colour or
-// "theme"), artifacts ("off"), timeline ("off"), height (the device's height, e.g. "640px"),
+// "theme"), artifacts ("off"), timeline ("off"), clock ("wall" for the viewer's own time), height (the device's height, e.g. "640px"),
 // title, and src (another embed page). A plain <iframe> of the embed page on the same page is
 // resized too. Each iframe also fires `session-player:done` (bubbling) when its session ends.
 (function () {
@@ -19,7 +19,7 @@
 
   var me = document.currentScript;
   var base = (me && me.getAttribute('data-embed')) || (me && me.src ? new URL('embed', me.src).href : '/simulator/embed');
-  var PASS = { scenario: 'scenario', device: 'device', autoplay: 'autoplay', start: 'start', background: 'bg', bg: 'bg', artifacts: 'artifacts', timeline: 'timeline' };
+  var PASS = { scenario: 'scenario', device: 'device', autoplay: 'autoplay', start: 'start', background: 'bg', bg: 'bg', artifacts: 'artifacts', timeline: 'timeline', clock: 'clock' };
 
   // The device's height, from the HOST's window: inside the iframe 100svh would be the iframe's
   // own height, which this script sets from the content, so it would chase itself.
