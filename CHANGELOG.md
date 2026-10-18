@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.0 (2026-10-18)
+
 - **The devices keep the session's time** (Gary, 2026-10-12: "the clock on the top right of the MacBook should be syncing with the speed of the work"). The MacBook's menu bar and the drawn iPhone's status bar showed the viewer's own time, so a replay packing half an hour of work into minutes ran beside a clock standing still. They now start when the session started and move with the work the counter shows. The start is `source.startedAt` when recorded (validated when present), else nine in the morning on `source.date`, never the viewer's now. `clock: 'wall'` (prop, `?clock=`, tag attribute, loader attribute) keeps the old behaviour. Moved here from the continentalworks.ai embed page, which wrote over the player's clocks from outside.
 - **A real phone shows the time too.** On a phone the player draws no device and so had no clock; the header now carries a small time pill with the session's time, also shown in the phone-width MacBook window and the lidless MacBook, and hidden inside a whole laptop where the menu bar has it.
 - **The MacBook window reads as a screen.** Inside a whole laptop (the player 560px or wider) the Claude Code window's text follows the window's width (10.5 to 12px, was 13px) and its header, counter, transcript, composer, title bar and menu bar are drawn tighter. Moved here from the continentalworks.ai embed page. Scoped by a second container name on the player's root, `ss-player`, so the rules never reach the phone, the drawn iPhone or the narrow windows.
