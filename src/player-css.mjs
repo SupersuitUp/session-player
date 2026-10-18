@@ -8,7 +8,7 @@
 // player can be dropped into any page (the wiki, a book reader) without colliding.
 export const PLAYER_CSS = `
 .ss-sim{--ss-ink:#1E1B19;--ss-cream:#F6E7C5;--ss-paper:#FBF5E7;--ss-mulberry:#A12A5E;--ss-petrol:#265E72;--ss-mustard:#E9A23B;--ss-sand:#EED79E;--ss-aqua:#69B1B5;
-  position:relative;container:ss-sim/inline-size;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:var(--ss-ink);width:100%;max-width:1040px;margin:0 auto;-webkit-text-size-adjust:100%}
+  position:relative;container:ss-sim ss-player/inline-size;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;color:var(--ss-ink);width:100%;max-width:1040px;margin:0 auto;-webkit-text-size-adjust:100%}
 .ss-sim *{box-sizing:border-box}
 .ss-sim button{font:inherit;color:inherit;cursor:pointer}
 .ss-stage{display:grid;grid-template-columns:1fr;gap:16px}
@@ -20,6 +20,7 @@ export const PLAYER_CSS = `
 .ss-titles b{font-family:Fraunces,Georgia,serif;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ss-titles small{color:#7a6d5a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ss-auto{display:flex;align-items:center;gap:4px;font-size:12px;color:#7a6d5a}
+.ss-timepill{flex:none;font-weight:600;font-size:12px;line-height:1;padding:4px 8px;border-radius:999px;background:var(--ss-sand);color:var(--ss-ink);font-variant-numeric:tabular-nums}
 .ss-counter{display:flex;justify-content:space-between;gap:8px;padding:8px 14px;background:var(--ss-ink);color:var(--ss-cream);font-size:13px;font-variant-numeric:tabular-nums}
 .ss-counter b{color:var(--ss-mustard)}
 .ss-log-wrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
@@ -278,5 +279,49 @@ export const PLAYER_CSS = `
 .ss-toast{position:absolute;z-index:60;left:50%;top:40px;transform:translateX(-50%);width:max-content;max-width:min(92%,420px);pointer-events:none}
 .ss-toast span{display:block;background:var(--ss-ink);color:var(--ss-cream);font-size:13px;line-height:1.35;border-radius:12px;padding:8px 12px;box-shadow:0 8px 24px rgba(0,0,0,.25);text-align:center;animation:ss-toast 3.2s ease forwards}
 @keyframes ss-toast{0%{opacity:0;transform:translateY(-4px)}8%,85%{opacity:1;transform:none}100%{opacity:0}}
+.ss-term .ss-timepill{background:#2a2826;color:#e6e1d9}
+/* A whole laptop (moved here from the continentalworks.ai embed page): the Claude Code
+   window reads as a screen, not a poster. Its text follows the window's width (10.5 to 12px,
+   was 13px) and everything in it is drawn tighter, so more of the session fits. ss-player names
+   the player's own root, so these hold only where the player draws the lid (560px and up,
+   its own breakpoint), never inside the window's narrower container: the phone, the drawn
+   iPhone, the phone-width window and the lidless MacBook keep their sizes. The menu bar
+   shows the session's time there, so the header's time pill is hidden. */
+@container ss-player (min-width:560px){
+.ss-mac .ss-timepill{display:none}
+.ss-mac .ss-term .ss-phone,.ss-mac .ss-term .ss-panel{font-size:clamp(10.5px,1.3cqw,12px);line-height:1.45}
+.ss-mac .ss-menubar{height:20px;font-size:11px;gap:12px}
+.ss-mac .ss-mac-notch{height:18px}
+.ss-mac .ss-titlebar{height:22px;font-size:11px}
+.ss-mac .ss-traffic{gap:6px}
+.ss-mac .ss-traffic i{width:9px;height:9px}
+.ss-mac .ss-head{padding:7px 12px 6px;gap:8px}
+.ss-mac .ss-avatar{width:22px;height:22px;font-size:11px}
+.ss-mac .ss-back{font-size:20px}
+.ss-mac .ss-term .ss-titles b{font-size:1em}
+.ss-mac .ss-titles small{font-size:.86em}
+.ss-mac .ss-auto{font-size:.9em}
+.ss-mac .ss-counter{padding:4px 12px;font-size:.92em}
+.ss-mac .ss-log{padding:9px 12px;gap:5px}
+.ss-mac .ss-term .ss-cmd{padding:4px 9px}
+.ss-mac .ss-step,.ss-mac .ss-more,.ss-mac .ss-asking,.ss-mac .ss-asked,.ss-mac .ss-decision,.ss-mac .ss-made,.ss-mac .ss-board,.ss-mac .ss-sheet,.ss-mac .ss-verdict{font-size:.95em}
+.ss-mac .ss-dur,.ss-mac .ss-mine{font-size:.88em}
+.ss-mac .ss-who,.ss-mac .ss-redirect,.ss-mac .ss-tag,.ss-mac .ss-tab,.ss-mac .ss-bhead,.ss-mac .ss-chip small{font-size:.8em}
+.ss-mac .ss-board .ss-q,.ss-mac .ss-sheet .ss-q{font-size:1.05em}
+.ss-mac .ss-opt{padding:4px 8px}
+.ss-mac .ss-composer{padding:6px 10px;gap:6px}
+.ss-mac .ss-chip{padding:5px 10px}
+.ss-sim .ss-mac .ss-term .ss-mic{width:30px;height:30px;font-size:14px}
+.ss-sim .ss-mac .ss-term .ss-send{width:26px;height:26px;font-size:14px}
+.ss-mac .ss-end p,.ss-mac .ss-atitle,.ss-mac .ss-empty{font-size:1em}
+.ss-mac .ss-panel{padding:10px 12px;gap:8px}
+.ss-mac .ss-term .ss-panel h3{font-size:1.05em}
+.ss-mac .ss-artifact{padding:5px 8px}
+.ss-mac .ss-starttitle{font-size:1.5em}
+.ss-mac .ss-startcard p,.ss-mac .ss-startauto{font-size:1.05em}
+.ss-mac .ss-startcard small{font-size:.92em}
+.ss-sim .ss-mac .ss-term .ss-startbtn{font-size:1.15em;padding:8px 20px}
+.ss-sim .ss-mac .ss-term .ss-tray-handle{font-size:.95em;padding:4px 10px;right:10px;bottom:8px}
+}
 @media (prefers-reduced-motion:reduce){.ss-sim *{animation:none!important;transition:none!important}}
 `;
