@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.10.0 (2026-10-19)
+
+- **The Maison theme** (Gary, 2026-10-19: "case study player needs refinement of beauty"). Continental Works moved its house from the Ascent (cream, the ribbon, mulberry) to the Maison (night, marble, bronze; continental-works-universe `canon/craft/the-maison.json`) on 2026-10-15, and the player still wore the Ascent on every Maison page that framed it. `theme: 'maison'` (prop, `theme="maison"` on the tag and the loader, `?theme=maison` on the embed page) adds `.ss-maison` to the root: a marble screen with ink type and bronze hairlines, DM Serif Display titles over DM Sans, one night Start button, the house's lifted-night handset and laptop with a bronze hairline, and the house night with a bronze glow for the MacBook wallpaper in place of the ribbon gradient. Every text pair is measured at 4.5:1 or better (`test/maison.test.mjs`). Claude Code's terminal keeps its own colours: every `.ss-term` rule of the default sheet is re-emitted under `.ss-maison`, derived rather than listed, so a new terminal rule is covered without being named. The default sheet is unchanged for every host that does not ask. The embed page loads DM Serif Display and DM Sans beside Fraunces.
+- **The mic is inside the text field** (Gary, 2026-10-19: "The microphone icon should be within the text area"), at its bottom right where Messages puts it, drawn as a glyph in the accent instead of an emoji filling a coloured circle beside the send button. The composer is now `.ss-field` (the message chip with the mic laid over it) and the send button.
+
 ## 0.9.0 (2026-10-18)
 
 - **The devices keep the session's time** (Gary, 2026-10-12: "the clock on the top right of the MacBook should be syncing with the speed of the work"). The MacBook's menu bar and the drawn iPhone's status bar showed the viewer's own time, so a replay packing half an hour of work into minutes ran beside a clock standing still. They now start when the session started and move with the work the counter shows. The start is `source.startedAt` when recorded (validated when present), else nine in the morning on `source.date`, never the viewer's now. `clock: 'wall'` (prop, `?clock=`, tag attribute, loader attribute) keeps the old behaviour. Moved here from the continentalworks.ai embed page, which wrote over the player's clocks from outside.

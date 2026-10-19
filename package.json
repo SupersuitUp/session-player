@@ -1,6 +1,6 @@
 {
   "name": "@supersuit/session-player",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Plays recorded agent sessions (case studies) on a simulated phone or MacBook: a scenario format, a converter from Claude Code transcripts, and a React player anyone can step into.",
   "type": "module",
   "bin": {

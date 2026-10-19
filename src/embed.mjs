@@ -21,6 +21,8 @@ export function propsFromAttributes(a) {
     start: a.start || undefined,
     // 0.6.0: transparent unless the host names a colour or 'theme'.
     background: a.background || a.bg || undefined,
+    // 0.10.0: theme="maison" dresses the player in the Continental Works house (night, marble, bronze).
+    theme: a.theme || undefined,
     // 0.8.0: the agent's name in the player's own lines (default Pluma).
     agent: a.agent || undefined,
     // The devices' clocks keep the session's time; clock="wall" shows the viewer's own.
