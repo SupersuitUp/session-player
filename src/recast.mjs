@@ -77,8 +77,12 @@ export function recast(source, { id, title, persona, keep, replace = [], forbid 
   }
   for (const word of forbid) {
     // Anchored at a word start: "Eden" must not fire on "credentials", while "Christ" still
-    // catches "Christofuturist".
-    const re = new RegExp(`(^|[^\\p{L}\\p{N}])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'iu');
+    // catches "Christofuturist". A short name that starts common words ("Tim" in "time",
+    // "Desi" in "design") is written as a regex, "re:\\bTim\\b", like a replace's "from";
+    // otherwise the only way to pass would be to delete the name from the list.
+    const re = word instanceof RegExp ? new RegExp(word.source, 'iu')
+      : word.startsWith('re:') ? new RegExp(word.slice(3), 'iu')
+      : new RegExp(`(^|[^\\p{L}\\p{N}])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'iu');
     for (const [obj, key] of TEXT_FIELDS(sc)) {
       if (typeof obj[key] === 'string' && re.test(obj[key])) throw new Error(`forbidden "${word}" survives in ${where(sc, obj)}: "${obj[key].slice(0, 120)}"`);
     }
