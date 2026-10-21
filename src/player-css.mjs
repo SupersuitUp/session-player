@@ -86,7 +86,11 @@ export const PLAYER_CSS = `
 .ss-chip{flex:1;min-width:0;text-align:left;border:1px solid var(--ss-petrol);background:#fff;border-radius:16px;padding:8px 12px;display:flex;flex-direction:column;gap:1px;overflow-wrap:anywhere}
 .ss-chip small{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ss-petrol)}
 .ss-chip:disabled{opacity:.55;cursor:default}
-.ss-sim .ss-mic{flex:none;align-self:center;width:48px;height:48px;padding:0;border:0;border-radius:50%;background:var(--ss-mulberry);color:#fff;font-size:20px;touch-action:none;-webkit-user-select:none;user-select:none}
+.ss-field{position:relative;flex:1;min-width:0;display:flex}
+.ss-field>.ss-chip{padding-right:46px}
+.ss-sim .ss-mic{position:absolute;right:6px;bottom:6px;display:grid;place-items:center;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--ss-mulberry);touch-action:none;-webkit-user-select:none;user-select:none}
+.ss-sim .ss-mic:not(:disabled):hover{background:color-mix(in srgb,var(--ss-mulberry) 12%,transparent)}
+.ss-mic svg{width:12px;height:18px}
 .ss-mic:disabled{opacity:.4}
 .ss-sim .ss-send{flex:none;align-self:center;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:var(--ss-petrol);color:#fff;font-size:20px;font-weight:700}
 .ss-send:disabled{opacity:.35}
@@ -248,7 +252,7 @@ export const PLAYER_CSS = `
 .ss-term .ss-composer{background:#1a1918;border-top-color:#33302d}
 .ss-term .ss-chip{background:#1a1918;border-color:#5c5751;border-radius:8px;color:#e6e1d9}
 .ss-term .ss-chip small{color:#d97757}
-.ss-term .ss-mic{background:#d97757}
+.ss-term .ss-mic{color:#d97757}
 .ss-term .ss-sheet{background:#232120;border-top-color:#3a3633;color:#e6e1d9}
 .ss-term .ss-tab{border-color:#3a3633;color:#8f887d}
 .ss-term .ss-tab.ss-tab-done{background:#24343a;border-color:#3e5a63;color:#9cc7d3}
@@ -311,7 +315,7 @@ export const PLAYER_CSS = `
 .ss-mac .ss-opt{padding:4px 8px}
 .ss-mac .ss-composer{padding:6px 10px;gap:6px}
 .ss-mac .ss-chip{padding:5px 10px}
-.ss-sim .ss-mac .ss-term .ss-mic{width:30px;height:30px;font-size:14px}
+.ss-sim .ss-mac .ss-term .ss-mic{width:28px;height:28px}
 .ss-sim .ss-mac .ss-term .ss-send{width:26px;height:26px;font-size:14px}
 .ss-mac .ss-end p,.ss-mac .ss-atitle,.ss-mac .ss-empty{font-size:1em}
 .ss-mac .ss-panel{padding:10px 12px;gap:8px}
@@ -325,3 +329,119 @@ export const PLAYER_CSS = `
 }
 @media (prefers-reduced-motion:reduce){.ss-sim *{animation:none!important;transition:none!important}}
 `;
+
+// THE MAISON THEME (0.10.0, Gary Sheng 2026-10-19: "case study player needs refinement of beauty"). The
+// Continental Works house moved from the Ascent (cream, the ribbon, mulberry) to the Maison (the
+// house's night, marble and bronze; continental-works-universe canon/craft/the-maison.json) on
+// 2026-10-15, and the player still wore the Ascent on every Maison page that framed it. `theme:
+// 'maison'` (the prop, theme="maison" on the tag, ?theme=maison on the embed URL) adds .ss-maison to
+// the root and these rules win over the default sheet, which is untouched for every other host.
+//
+// The seven tokens are the canon's own hexes. Every text pair was measured (test/maison.test.mjs):
+// bronze text is bronze mixed 62% into ink, 5.67:1 on marble (bronze itself is 3.09:1, so it is only
+// ever a hairline, a fill or a glow there); muted text is ink mixed 70% into marble, 6.01:1. The
+// devices' surrounds (the device bar, the switch) sit on the host's night, so they read in mist.
+// Claude Code's terminal keeps its own colours, because it is the record of a real session; only
+// the player's chrome over it (the Start card) wears the house.
+const MAISON_SCREEN_CSS = `
+.ss-sim.ss-maison{--ss-ink:#1c1a17;--ss-cream:#f4f1ec;--ss-paper:#f4f1ec;--ss-mulberry:#735b3a;--ss-petrol:#17171a;--ss-mustard:#a8834f;--ss-sand:#e8e0d2;--ss-aqua:#d8d1c4;
+  --ss-night:#17171a;--ss-marble:#f4f1ec;--ss-bronze:#a8834f;--ss-mist:#d8d1c4;--ss-travertine:#e8e0d2;--ss-bronze-text:#735b3a;--ss-muted:#5d5b57;--ss-line:color-mix(in srgb,#a8834f 30%,#f4f1ec);
+  --ss-display:"DM Serif Display",Georgia,serif;font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+.ss-maison .ss-titles b,.ss-maison .ss-starttitle,.ss-maison .ss-close h3,.ss-maison .ss-split b,.ss-maison .ss-picker h2,.ss-maison .ss-panel h3{font-family:var(--ss-display);font-weight:400}
+.ss-maison .ss-term .ss-titles b,.ss-maison .ss-term .ss-panel h3{font-family:inherit}
+/* The surrounds, on the host's night. */
+.ss-maison .ss-devicebar{color:var(--ss-mist)}
+.ss-maison .ss-simpill{background:transparent;color:var(--ss-mist);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ss-bronze) 55%,transparent);font-weight:500;letter-spacing:.04em}
+.ss-maison .ss-devswitch{background:transparent;border-color:color-mix(in srgb,var(--ss-bronze) 55%,transparent)}
+.ss-sim.ss-maison .ss-devopt{color:var(--ss-mist)}
+.ss-sim.ss-maison .ss-devopt[aria-checked="true"]{background:var(--ss-bronze);color:var(--ss-night)}
+.ss-sim.ss-maison .ss-devopt:focus-visible{outline-color:var(--ss-bronze)}
+/* The devices: the house's handset and laptop, a lifted night with a bronze hairline. */
+.ss-maison .ss-iphone{background:color-mix(in oklab,var(--ss-night) 82%,var(--ss-marble));box-shadow:0 0 0 1px color-mix(in srgb,var(--ss-bronze) 55%,transparent),0 24px 64px rgba(0,0,0,.45)}
+.ss-maison .ss-btn{background:color-mix(in oklab,var(--ss-night) 70%,var(--ss-bronze))}
+.ss-maison .ss-island{background:#000}
+.ss-maison .ss-mac-lid{background:color-mix(in oklab,var(--ss-night) 82%,var(--ss-marble));box-shadow:0 0 0 1px color-mix(in srgb,var(--ss-bronze) 55%,transparent),0 24px 64px rgba(0,0,0,.45)}
+.ss-maison .ss-mac-notch{background:color-mix(in oklab,var(--ss-night) 82%,var(--ss-marble))}
+.ss-maison .ss-mac-screen{background:radial-gradient(70% 60% at 50% 38%,color-mix(in oklab,var(--ss-bronze) 22%,transparent),transparent 72%),var(--ss-night)}
+.ss-maison .ss-menubar{color:var(--ss-mist);background:color-mix(in srgb,var(--ss-night) 72%,transparent)}
+.ss-maison .ss-menu-mark{background:var(--ss-bronze)}
+.ss-maison .ss-mac-base{background:linear-gradient(var(--ss-travertine),color-mix(in oklab,var(--ss-mist) 70%,var(--ss-night)) 75%,color-mix(in oklab,var(--ss-mist) 45%,var(--ss-night)))}
+.ss-maison .ss-mac-base::before{background:color-mix(in oklab,var(--ss-mist) 55%,var(--ss-night))}
+@container ss-sim (max-width:559px){.ss-maison .ss-mac-lid{background:none;box-shadow:none}.ss-maison .ss-mac-screen{background:none}}
+/* The screen: marble, ink, bronze hairlines. */
+.ss-maison .ss-phone{border-color:var(--ss-line);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.ss-maison .ss-head,.ss-maison .ss-status,.ss-maison .ss-composer,.ss-maison .ss-sheet,.ss-maison .ss-tray,.ss-maison .ss-close{background:var(--ss-marble);border-color:var(--ss-line)}
+.ss-maison .ss-avatar{background:var(--ss-night);color:var(--ss-marble)}
+.ss-maison .ss-titles small,.ss-maison .ss-auto,.ss-maison .ss-intro,.ss-maison .ss-legend,.ss-maison .ss-dur,.ss-maison .ss-group .ss-label,.ss-maison .ss-opt small,.ss-maison .ss-empty,.ss-maison .ss-idle,.ss-maison .ss-close-made small,.ss-maison .ss-startcard small{color:var(--ss-muted)}
+.ss-maison .ss-step,.ss-maison .ss-asked .ss-q,.ss-maison .ss-startcard p,.ss-maison .ss-opt{color:var(--ss-ink)}
+.ss-maison .ss-timepill{background:var(--ss-travertine)}
+.ss-maison .ss-counter{background:var(--ss-night);color:var(--ss-marble)}
+.ss-maison .ss-counter b{color:var(--ss-bronze)}
+.ss-maison .ss-cmd{background:var(--ss-night);color:var(--ss-marble)}
+.ss-maison .ss-more,.ss-maison .ss-asking,.ss-maison .ss-made span,.ss-maison .ss-chip small,.ss-maison .ss-verdict.ss-same{color:var(--ss-bronze-text)}
+.ss-maison .ss-group .ss-dot,.ss-maison .ss-typing i{background:color-mix(in srgb,var(--ss-bronze) 55%,var(--ss-marble))}
+.ss-maison .ss-tab{border-color:var(--ss-line);color:var(--ss-muted)}
+.ss-maison .ss-tab.ss-tab-done{background:var(--ss-travertine);border-color:var(--ss-line);color:var(--ss-ink)}
+.ss-maison .ss-tab.ss-tab-now{background:var(--ss-night);border-color:var(--ss-night);color:var(--ss-marble)}
+.ss-maison .ss-asked,.ss-maison .ss-decision{border-left-color:var(--ss-bronze);background:var(--ss-travertine)}
+.ss-maison .ss-mine,.ss-maison .ss-tag,.ss-maison .ss-verdict,.ss-maison .ss-edge b{color:var(--ss-bronze-text)}
+.ss-maison .ss-board,.ss-maison .ss-artifact,.ss-maison .ss-split>div,.ss-maison .ss-persona{background:#fff;border-color:var(--ss-line);box-shadow:none}
+.ss-maison .ss-board .ss-bq+.ss-bq{border-top-color:var(--ss-line)}
+.ss-maison .ss-opt{border-color:var(--ss-line)}
+.ss-maison .ss-onum{background:var(--ss-travertine)}
+.ss-sim.ss-maison button.ss-opt:hover,.ss-sim.ss-maison button.ss-opt:focus-visible{border-color:var(--ss-bronze);background:var(--ss-marble)}
+.ss-maison .ss-live-board{border-color:var(--ss-bronze);box-shadow:0 0 0 3px color-mix(in srgb,var(--ss-bronze) 22%,transparent)}
+.ss-sim.ss-maison .ss-opt.ss-yours,.ss-sim.ss-maison button.ss-opt.ss-yours{border-color:var(--ss-bronze);background:var(--ss-travertine)}
+.ss-sim.ss-maison .ss-opt.ss-chosen,.ss-sim.ss-maison button.ss-opt.ss-chosen{border-color:var(--ss-night);background:var(--ss-travertine)}
+.ss-maison .ss-opt.ss-chosen .ss-onum{background:var(--ss-night);color:var(--ss-marble)}
+.ss-maison .ss-made{background:var(--ss-travertine)}
+.ss-maison .ss-chip{border-color:var(--ss-night)}
+.ss-sim.ss-maison .ss-mic{color:var(--ss-night)}
+.ss-sim.ss-maison .ss-send{background:var(--ss-night);color:var(--ss-marble)}
+.ss-maison .ss-mic.ss-live{animation:ss-maison-pulse 1s infinite}
+@keyframes ss-maison-pulse{0%,100%{box-shadow:0 0 0 0 rgba(168,131,79,.55)}50%{box-shadow:0 0 0 10px rgba(168,131,79,0)}}
+.ss-sim.ss-maison .ss-tray-handle{background:var(--ss-night);color:var(--ss-marble)}
+.ss-maison .ss-kind{background:var(--ss-travertine);color:var(--ss-ink)}
+.ss-maison .ss-kind.ss-link,.ss-maison .ss-kind.ss-other{background:var(--ss-night);color:var(--ss-marble)}
+.ss-maison .ss-seg.ss-human{background:var(--ss-night)}
+.ss-maison .ss-seg.ss-agent{background:color-mix(in srgb,var(--ss-bronze) 35%,var(--ss-marble))}
+.ss-maison .ss-seg.ss-agent.ss-past,.ss-maison .ss-legend i.ss-agent{background:var(--ss-bronze)}
+.ss-maison .ss-legend i.ss-human{background:var(--ss-night)}
+@container ss-sim (min-width:760px){.ss-maison .ss-panel{background:var(--ss-marble);border-color:var(--ss-line)}.ss-maison .ss-panel h3 span{color:var(--ss-bronze-text)}}
+.ss-sim.ss-maison .ss-thumb{background:var(--ss-travertine)}
+.ss-maison .ss-lightbox span{color:var(--ss-marble)}
+.ss-maison .ss-close-wrap{background:color-mix(in srgb,var(--ss-night) 55%,transparent)}
+.ss-maison .ss-split>div:first-child{background:var(--ss-night);border-color:var(--ss-night);color:var(--ss-marble)}
+.ss-maison .ss-split>div:first-child b{color:var(--ss-bronze)}
+.ss-maison .ss-freed{background:var(--ss-travertine);color:var(--ss-ink)}
+.ss-maison .ss-edge{background:var(--ss-travertine);border-color:var(--ss-line)}
+.ss-maison .ss-layers span{border-color:var(--ss-line)}
+.ss-sim.ss-maison .ss-ghost{border-color:var(--ss-line)}
+.ss-maison .ss-toast span{background:var(--ss-night);color:var(--ss-marble);box-shadow:0 0 0 1px color-mix(in srgb,var(--ss-bronze) 45%,transparent),0 8px 24px rgba(0,0,0,.3)}
+`;
+
+// Claude Code's terminal keeps its own colours inside .ss-maison: every top-level .ss-term rule of the
+// default sheet, re-emitted under .ss-maison so it outranks the Maison's screen rules (same selector
+// plus one class). Derived from PLAYER_CSS, so a new terminal rule is restored without being listed.
+const TERMINAL_RULES = PLAYER_CSS.split('\n').filter((l) => /^(\.ss-sim )?\.ss-term[ .]/.test(l) && !/ss-start/.test(l));
+const TERMINAL_RESTORE = TERMINAL_RULES.map((l) => l.replace(/(^|,)(\.ss-sim )?\.ss-term/g, (_, sep, sim) => `${sep}${sim ? '.ss-sim' : ''}.ss-maison .ss-term`)).join('\n')
+  + '\n@container ss-sim (min-width:760px){.ss-maison .ss-in-window .ss-panel{background:#201e1c;border-color:#33302d;color:#e6e1d9}}';
+
+const MAISON_START_CSS = `
+/* The Start card: marble glass over the screen, one night button with marble type. */
+.ss-maison .ss-start{background:color-mix(in srgb,var(--ss-marble) 84%,transparent)}
+.ss-maison .ss-starttitle{font-size:22px;color:var(--ss-ink)}
+.ss-sim.ss-maison .ss-startbtn{background:var(--ss-night);color:var(--ss-marble);font-weight:500;letter-spacing:.14em;text-transform:uppercase;font-size:13px;padding:13px 28px;box-shadow:0 0 0 1px color-mix(in srgb,var(--ss-bronze) 60%,transparent),0 8px 22px rgba(0,0,0,.18)}
+.ss-sim.ss-maison .ss-startbtn:focus-visible{outline-color:var(--ss-bronze)}
+.ss-maison .ss-startauto{color:var(--ss-ink);font-weight:500}
+.ss-maison .ss-startauto input,.ss-maison .ss-auto input{accent-color:var(--ss-night)}
+/* Over Claude Code's terminal the card is night glass and the button bronze. */
+.ss-maison .ss-term .ss-start{background:color-mix(in srgb,var(--ss-night) 88%,transparent)}
+.ss-maison .ss-term .ss-starttitle,.ss-maison .ss-term .ss-startauto{color:var(--ss-marble)}
+.ss-maison .ss-term .ss-startcard p{color:var(--ss-mist)}
+.ss-maison .ss-term .ss-startcard small{color:color-mix(in srgb,var(--ss-mist) 80%,var(--ss-night))}
+.ss-sim.ss-maison .ss-term .ss-startbtn,.ss-sim.ss-maison .ss-mac .ss-term .ss-startbtn{background:var(--ss-bronze);color:var(--ss-night)}
+.ss-maison .ss-term .ss-startauto input{accent-color:var(--ss-bronze)}
+`;
+
+export const MAISON_CSS = MAISON_SCREEN_CSS + TERMINAL_RESTORE + MAISON_START_CSS;

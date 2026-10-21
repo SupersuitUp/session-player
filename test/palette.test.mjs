@@ -21,7 +21,8 @@ test('the accent is mulberry, defined once on .ss-sim and used by name', () => {
   assert.equal(PLAYER_CSS.match(/--ss-mulberry:/g).length, 1, 'defined once');
   assert.ok(PLAYER_CSS.match(/var\(--ss-mulberry\)/g).length >= 10, 'the rules that drew in the accent still do');
   assert.match(PLAYER_CSS, /\.ss-sim \.ss-startbtn\{[^}]*background:var\(--ss-mulberry\);color:#fff/, 'the Start button');
-  assert.match(PLAYER_CSS, /\.ss-sim \.ss-mic\{[^}]*background:var\(--ss-mulberry\);color:#fff/, 'the mic');
+  // The mic is a glyph inside the text field since 0.10.0, so mulberry is its colour, not a fill.
+  assert.match(PLAYER_CSS, /\.ss-sim \.ss-mic\{[^}]*color:var\(--ss-mulberry\)/, 'the mic');
   assert.match(PLAYER_CSS, /\.ss-kicker\{[^}]*color:var\(--ss-mulberry\)/, 'kickers');
   assert.match(PLAYER_CSS, /\.ss-dot\{[^}]*background:var\(--ss-mulberry\)/, 'dots');
 });
@@ -43,7 +44,7 @@ test('the MacBook wallpaper ends on the sixth stripe', () => {
 });
 
 test('white on mulberry reads as body text, and mulberry reads on the cream surfaces', () => {
-  assert.ok(contrast('#FFFFFF', '#A12A5E') >= 4.5, 'white on the Start button and the mic');
+  assert.ok(contrast('#FFFFFF', '#A12A5E') >= 4.5, 'white on the Start button');
   assert.ok(contrast('#A12A5E', '#FBF5E7') >= 4.5, 'kickers and names on paper');
   assert.ok(contrast('#A12A5E', '#FFFAF0') >= 4.5, 'kickers on the close card');
 });
@@ -54,5 +55,5 @@ test('on the dark terminal no accent text is mulberry, which would sit near 2.4:
   assert.ok(term, 'the terminal accent rule');
   for (const sel of ['.ss-term .ss-who', '.ss-term .ss-redirect', '.ss-term .ss-panel h3 span']) assert.ok(term[0].includes(sel), `${sel} uses the terminal accent`);
   assert.match(PLAYER_CSS, /\.ss-term \.ss-startbtn\{background:#d97757\}/);
-  assert.match(PLAYER_CSS, /\.ss-term \.ss-mic\{background:#d97757\}/);
+  assert.match(PLAYER_CSS, /\.ss-term \.ss-mic\{color:#d97757\}/);
 });

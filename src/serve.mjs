@@ -20,7 +20,7 @@ export function page({ title = 'Supersuit Session demo', embed = false, react = 
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="Step into someone's day and watch the work get done.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="importmap">{"imports":{"react":"${react}","react-dom/client":"${reactDom}"}}</script>
 <style>${body}</style>
 </head><body><div id="root"></div>
@@ -31,7 +31,7 @@ import { SimulatorPlayer } from './src/player.mjs';
 const scenarios = await (await fetch('./scenarios.json')).json();
 const q = new URLSearchParams(location.search);
 createRoot(document.getElementById('root')).render(h(SimulatorPlayer, {
-  scenarios, scenarioId: q.get('scenario') ?? undefined, height: q.get('height') ?? undefined, autoplay: q.get('autoplay') !== 'off', artifacts: q.get('artifacts') !== 'off', timeline: q.get('timeline') !== 'off', device: q.get('device') ?? undefined, start: q.get('start') ?? undefined, background: q.get('bg') ?? undefined, clock: q.get('clock') ?? undefined,
+  scenarios, scenarioId: q.get('scenario') ?? undefined, height: q.get('height') ?? undefined, autoplay: q.get('autoplay') !== 'off', artifacts: q.get('artifacts') !== 'off', timeline: q.get('timeline') !== 'off', device: q.get('device') ?? undefined, start: q.get('start') ?? undefined, background: q.get('bg') ?? undefined, clock: q.get('clock') ?? undefined, theme: q.get('theme') ?? undefined,
 }));
 </script></body></html>`;
 }

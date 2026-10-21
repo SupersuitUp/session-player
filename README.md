@@ -13,7 +13,7 @@ One tag, any page, any framework or none. Paste this where the case study should
 <session-player scenario="phone-rescue"></session-player>
 ```
 
-The player sizes itself to its content (no fixed height), is transparent around the device so it sits on your page's own background, picks the device for the viewer (Auto), plays on Autoplay, and waits for the viewer to press Start. Optional attributes: `device` (`auto`, `iphone`, `macbook`), `autoplay="off"` (the viewer plays the person), `start="auto"` (start without the Start card), `background` (a CSS colour, or `theme` for the player's cream), `artifacts="off"`, `timeline="off"`, `height` (the device's height, e.g. `640px`), `title`. On the React component and the `<supersuit-simulator>` tag, `agent` names the agent in the player's own lines (default `Pluma`).
+The player sizes itself to its content (no fixed height), is transparent around the device so it sits on your page's own background, picks the device for the viewer (Auto), plays on Autoplay, and waits for the viewer to press Start. Optional attributes: `device` (`auto`, `iphone`, `macbook`), `autoplay="off"` (the viewer plays the person), `start="auto"` (start without the Start card), `background` (a CSS colour, or `theme` for the player's cream), `artifacts="off"`, `timeline="off"`, `height` (the device's height, e.g. `640px`), `title`, `theme="maison"` (the Continental Works house: night, marble and bronze; 0.10.0). On the React component and the `<supersuit-simulator>` tag, `agent` names the agent in the player's own lines (default `Pluma`).
 
 No scripts allowed? Use the iframe on its own, with a fixed height:
 
@@ -22,7 +22,7 @@ No scripts allowed? Use the iframe on its own, with a fixed height:
         style="width:100%;height:860px;border:0;background:transparent" loading="lazy"></iframe>
 ```
 
-The same query switches work on the URL (`device`, `autoplay=off`, `start=auto`, `bg`, `artifacts=off`, `timeline=off`, `height`). Inside an iframe the player posts `{ type: 'session-player:height', height }` to its parent whenever its height changes, and `{ type: 'session-player:done', scenario }` when a session ends, so the script above (or your own listener) can size the frame and offer what comes next. Any host serving the player can serve the loader: it is `src/loader.js` (export `@supersuit/session-player/loader.js`), and `session-player serve` serves it at `/embed.js`.
+The same query switches work on the URL (`device`, `autoplay=off`, `start=auto`, `bg`, `artifacts=off`, `timeline=off`, `height`, `theme=maison`). Inside an iframe the player posts `{ type: 'session-player:height', height }` to its parent whenever its height changes, and `{ type: 'session-player:done', scenario }` when a session ends, so the script above (or your own listener) can size the frame and offer what comes next. Any host serving the player can serve the loader: it is `src/loader.js` (export `@supersuit/session-player/loader.js`), and `session-player serve` serves it at `/embed.js`.
 
 This package holds the **scenario format**, the **converter** that drafts a scenario from a Claude Code session transcript, and the **player**, a React component that plays scenarios on a simulated phone.
 

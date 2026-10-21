@@ -9,7 +9,7 @@
 
 import { createElement as h, createContext, useContext, useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import { script, summarize, duration, realPick, compare, dictate } from './playback.mjs';
-import { PLAYER_CSS } from './player-css.mjs';
+import { PLAYER_CSS, MAISON_CSS } from './player-css.mjs';
 import { resolveDevice, normalizeMode, readViewer, watchViewer, autoHint, deviceToast, autoplayToast, choiceToast } from './device.mjs';
 import { normalizeClock, sessionTime, menuBarText, statusText } from './clock.mjs';
 
@@ -249,7 +249,7 @@ export function reportToHost(el, win = typeof window === 'undefined' ? undefined
 }
 const tellHost = (msg) => { if (typeof window !== 'undefined' && window.parent && window.parent !== window) window.parent.postMessage(msg, '*'); };
 
-export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode, background, agent = DEFAULT_AGENT, clock }) {
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode, background, theme, agent = DEFAULT_AGENT, clock }) {
   const root = useRef(null);
   useEffect(() => reportToHost(root.current), []);
   const list = scenarios ?? (scenario ? [scenario] : []);
@@ -266,11 +266,17 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
   const sc = pick == null ? null : list[pick];
   const bg = backgroundFor(background);
   const style = height || bg ? { ...(height ? { '--ss-height': height } : {}), ...(bg ? { background: bg } : {}) } : undefined;
-  return h(AgentName.Provider, { value: agent || DEFAULT_AGENT }, h('div', { className: 'ss-sim', ref: root, style },
-    h('style', null, PLAYER_CSS),
+  return h(AgentName.Provider, { value: agent || DEFAULT_AGENT }, h('div', { className: theme === 'maison' ? 'ss-sim ss-maison' : 'ss-sim', ref: root, style },
+    h('style', null, theme === 'maison' ? PLAYER_CSS + MAISON_CSS : PLAYER_CSS),
     sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, clock: normalizeClock(clock), onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
       : h(Picker, { scenarios: list, onPick: setPick })));
 }
+
+// The mic in the composer: a drawn glyph in the field's own colour, not an emoji, which arrives in
+// whatever colour and size the viewer's platform paints it.
+const MIC_GLYPH = h('svg', { viewBox: '0 0 12 18', width: 12, height: 18, 'aria-hidden': true },
+  h('rect', { x: 3, y: 0.5, width: 6, height: 11, rx: 3, fill: 'currentColor' }),
+  h('path', { d: 'M1 8a5 5 0 0 0 10 0M6 13v4', fill: 'none', stroke: 'currentColor', strokeWidth: 1.4, strokeLinecap: 'round' }));
 
 const MODE_NAMES = { auto: 'Auto', iphone: 'iPhone', macbook: 'MacBook' };
 
@@ -475,13 +481,17 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
             h('p', null, h('b', null, duration(totals.agentMs)), ` of work, ${totals.steps} steps, ${totals.artifacts} things made. ${person} sent ${totals.commands} commands and made ${totals.decisions} decisions.${totals.idleMs > 60000 ? ` ${duration(totals.idleMs)} of idle time (hangs, timeouts, nobody at the keyboard) is left out.` : ''}`),
             h('button', { className: 'ss-chip', onClick: restart }, 'Play again'))
           : h(Fragment, null,
-            h('button', { className: 'ss-chip', disabled: phase !== 'ready', onClick: send },
-              h('small', null, phase === 'working' ? `${agent} is working…` : phase === 'saying' ? 'listening…' : auto ? 'sending on autoplay…' : `you are ${person}: tap to send, or tap the mic`),
-              phase === 'saying' ? spoken : next && plain(next.text).slice(0, 140)),
-            h('button', { className: 'ss-send', disabled: phase !== 'ready', 'aria-label': 'Send', onClick: send }, '\u2191'),
-            h('button', {
-              className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
-            }, '\u{1F3A4}'))));
+            // The mic sits inside the text field, where Messages and every chat app put it (Gary,
+            // 2026-10-19: "The microphone icon should be within the text area"). A button cannot hold
+            // a button, so the field is a wrapper and the mic is laid over its right end.
+            h('div', { className: 'ss-field' },
+              h('button', { className: 'ss-chip', disabled: phase !== 'ready', onClick: send },
+                h('small', null, phase === 'working' ? `${agent} is working…` : phase === 'saying' ? 'listening…' : auto ? 'sending on autoplay…' : `you are ${person}: tap to send, or tap the mic`),
+                phase === 'saying' ? spoken : next && plain(next.text).slice(0, 140)),
+              h('button', {
+                className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
+              }, MIC_GLYPH)),
+            h('button', { className: 'ss-send', disabled: phase !== 'ready', 'aria-label': 'Send', onClick: send }, '\u2191'))));
   const panel = showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList);
   const bar = h('div', { className: 'ss-devicebar' },
     label ? h('span', { className: frame === 'macbook-compact' ? 'ss-simpill' : 'ss-simlabel' }, label) : h('span'),
