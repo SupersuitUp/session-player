@@ -74,15 +74,15 @@ test('a forbidden word matches where a word starts, not inside another word', ()
   assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, 'Christ'] }), /forbidden "Christ"/);
 });
 
-test('a forbidden name that starts common words is a whole-word regex, so it neither blocks "time" nor lets "Tim" through', () => {
+test('a forbidden name that starts common words is a whole-word regex, so it neither blocks "also" nor lets "Al" through', () => {
   const s = sc();
-  s.turns[0].steps[0].label = 'Time the design pass';
-  // As a plain word, "Tim" fires on "Time": the list could only pass by losing the name.
-  assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, 'Tim'] }), /forbidden "Tim"/);
-  assert.doesNotThrow(() => recast(s, { ...spec, forbid: [...spec.forbid, 're:\\bTim\\b', 're:\\bDesi\\b'] }));
-  s.turns[0].steps[0].label = 'Time the design pass with Tim';
-  assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, 're:\\bTim\\b'] }), /forbidden "re:\\bTim\\b" survives in t1/);
-  assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, /\btim\b/] }), /forbidden/);
+  s.turns[0].steps[0].label = 'Also the editing pass';
+  // As a plain word, "Al" fires on "Also": the list could only pass by losing the name.
+  assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, 'Al'] }), /forbidden "Al"/);
+  assert.doesNotThrow(() => recast(s, { ...spec, forbid: [...spec.forbid, 're:\\bAl\\b', 're:\\bEd\\b'] }));
+  s.turns[0].steps[0].label = 'Also the editing pass with Al';
+  assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, 're:\\bAl\\b'] }), /forbidden "re:\\bAl\\b" survives in t1/);
+  assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, /\bal\b/] }), /forbidden/);
 });
 
 test('a recast carries the close block, with its words recast too', () => {
