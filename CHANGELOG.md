@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **The timeline outlines whoever is acting** (Gary, 2026-10-21: "Why is the human part highlighted still when it's the agents turn"). The outline sat on the person's block for the whole turn. It now follows the actor: the person while they give the command, the decision while a board waits on them, the agent while it works, nobody at the close (`timelineActor`).
 - **The timeline moves with every step** (Gary, 2026-10-21: "the steps should move every time as well, in the bottom timeline thing"). The bar at the bottom used to change only when a turn handed back to the person, so a turn of a hundred steps sat still the whole time it played. Now the agent's block for the turn in progress fills with the work already played, each step sliding it forward, and a decision's block fills when it is answered; earlier turns are full, later ones empty, and the whole bar is full at the close. `timelineFill(sc, {turnIndex, turnWorkMs, turnAskMs, done})` is exported and tested (`test/timeline.test.mjs`).
 - **A forbid entry can be a regex** (`"re:\\bAl\\b"`, the same `re:` prefix a replace's `from` takes). A forbidden word matches where a word starts, which is right for "Christ" in "Christofuturist" and wrong for a short name that starts common words: "Al" fired on every "also" and "Ed" on every "editing", so a recast whose story used those words could pass only by deleting the name from the list, which is the one move the list exists to prevent.
 ## 0.10.0 (2026-10-19)

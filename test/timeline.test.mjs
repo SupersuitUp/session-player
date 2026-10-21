@@ -38,3 +38,23 @@ test('the rendered bar shows the partial fill of the turn in progress', () => {
   const html = renderToString(h(Timeline, { sc, turnIndex: 0, turnWorkMs: 4000, turnAskMs: 0, person: 'Maya' }));
   assert.match(html, /ss-fill[^>]*width:50%/);
 });
+
+const outlined = (html) => [...html.matchAll(/class="ss-seg ([a-z-]+)[^"]*ss-now/g)].map((m) => m[1]);
+
+test('the outline marks whoever is acting: the person while they give the command, the agent while it works', () => {
+  const at = (actor) => outlined(renderToString(h(Timeline, { sc, turnIndex: 0, actor, person: 'Maya' })));
+  assert.deepEqual(at('human'), ['ss-human']);
+  assert.deepEqual(at('agent'), ['ss-agent']);
+  assert.deepEqual(at('ask'), ['ss-ask']);
+  assert.deepEqual(at(null), []);
+  assert.deepEqual(outlined(renderToString(h(Timeline, { sc, turnIndex: 1, actor: 'agent', done: true, person: 'Maya' }))), []);
+});
+
+test('the actor comes from the phase: ready and saying are the person, a waiting board is the decision, working is the agent', async () => {
+  const { timelineActor } = await import('../src/player.mjs');
+  assert.equal(timelineActor({ phase: 'ready' }), 'human');
+  assert.equal(timelineActor({ phase: 'saying' }), 'human');
+  assert.equal(timelineActor({ phase: 'working', waiting: null }), 'agent');
+  assert.equal(timelineActor({ phase: 'working', waiting: '0-2' }), 'ask');
+  assert.equal(timelineActor({ phase: 'done' }), null);
+});

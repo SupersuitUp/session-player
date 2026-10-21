@@ -160,9 +160,19 @@ export function timelineFill(sc, { turnIndex = 0, turnWorkMs = 0, turnAskMs = 0,
   });
 }
 
+// Who the timeline outlines: the person while they give the command, the decision while a board
+// waits on them, the agent while it works, nobody once it is over. The outline used to stay on the
+// person's block for the whole turn, agent's work included.
+export function timelineActor({ phase, waiting = null }) {
+  if (phase === 'ready' || phase === 'saying') return 'human';
+  if (phase === 'working') return waiting ? 'ask' : 'agent';
+  return null;
+}
+
 const fillBar = (f) => f > 0 && h('span', { className: 'ss-fill', style: { width: `${Math.round(f * 1000) / 10}%` } });
 
-export function Timeline({ sc, turnIndex, turnWorkMs = 0, turnAskMs = 0, done = false, person }) {
+export function Timeline({ sc, turnIndex, turnWorkMs = 0, turnAskMs = 0, done = false, actor = null, person }) {
+  const now = (i, who) => (!done && i === turnIndex && actor === who ? ' ss-now' : '');
   const agent = useAgent();
   const fill = timelineFill(sc, { turnIndex, turnWorkMs, turnAskMs, done });
   const rows = sc.turns.map((t) => {
@@ -175,9 +185,9 @@ export function Timeline({ sc, turnIndex, turnWorkMs = 0, turnAskMs = 0, done = 
   const total = rows.reduce((n, r) => n + w(r.work) + w(r.ask) + 2, 0) || 1;
   return h('div', { className: 'ss-timeline', 'aria-label': 'Who did what, in time' },
     h('div', { className: 'ss-track' }, rows.map((r, i) => h(Fragment, { key: r.id },
-      h('span', { className: `ss-seg ss-human${i === turnIndex && !done ? ' ss-now' : ''}`, style: { width: `${(2 / total) * 100}%` }, title: `${person}: command ${i + 1}` }),
-      r.ask > 0 && h('span', { className: 'ss-seg ss-ask', style: { width: `${(w(r.ask) / total) * 100}%` }, title: `${person} deciding, ${duration(r.ask)}` }, fillBar(fill[i].ask)),
-      h('span', { className: 'ss-seg ss-agent', style: { width: `${(w(r.work) / total) * 100}%` }, title: `${agent} working, ${duration(r.work)}` }, fillBar(fill[i].agent))))),
+      h('span', { className: `ss-seg ss-human${now(i, 'human')}`, style: { width: `${(2 / total) * 100}%` }, title: `${person}: command ${i + 1}` }),
+      r.ask > 0 && h('span', { className: `ss-seg ss-ask${now(i, 'ask')}`, style: { width: `${(w(r.ask) / total) * 100}%` }, title: `${person} deciding, ${duration(r.ask)}` }, fillBar(fill[i].ask)),
+      h('span', { className: `ss-seg ss-agent${now(i, 'agent')}`, style: { width: `${(w(r.work) / total) * 100}%` }, title: `${agent} working, ${duration(r.work)}` }, fillBar(fill[i].agent))))),
     h('div', { className: 'ss-legend' },
       h('span', null, h('i', { className: 'ss-human' }), person),
       h('span', null, h('i', { className: 'ss-ask' }), 'deciding'),
@@ -546,6 +556,6 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
     h('div', { className: `ss-stage ss-frame-${frame}${inGrid && showArtifacts ? ' ss-has-panel' : ''}` },
       device,
       inGrid && panel,
-      timeline && h(Timeline, { sc, turnIndex: turn, turnWorkMs: turnPlayed.work, turnAskMs: turnPlayed.ask, done: phase === 'done', person }),
+      timeline && h(Timeline, { sc, turnIndex: turn, turnWorkMs: turnPlayed.work, turnAskMs: turnPlayed.ask, done: phase === 'done', actor: timelineActor({ phase, waiting }), person }),
       phase === 'done' && !closed && h(CloseCard, { sc, person, onReplay: restart, onBack })));
 }
