@@ -114,7 +114,11 @@ export const PLAYER_CSS = `
 .ss-seg.ss-human{background:var(--ss-petrol)}
 .ss-seg.ss-ask{background:var(--ss-mustard)}
 .ss-seg.ss-agent{background:#e0b9ca}
-.ss-seg.ss-agent.ss-past{background:var(--ss-mulberry)}
+.ss-seg{position:relative;overflow:hidden}
+.ss-seg .ss-fill{position:absolute;left:0;top:0;bottom:0;transition:width .4s ease-out}
+.ss-seg.ss-agent .ss-fill{background:var(--ss-mulberry)}
+.ss-seg.ss-ask{background:#f3dfa8}
+.ss-seg.ss-ask .ss-fill{background:var(--ss-mustard)}
 .ss-seg.ss-now{outline:2px solid var(--ss-ink);outline-offset:1px}
 .ss-legend{display:flex;gap:14px;font-size:12px;color:#7a6d5a;margin-top:6px;flex-wrap:wrap}
 .ss-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}

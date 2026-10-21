@@ -146,8 +146,25 @@ function ArtifactCard({ a }) {
     h('span', { className: 'ss-atitle' }, a.title));
 }
 
-function Timeline({ sc, turnIndex, person }) {
+// How full each turn's two blocks are: turns before the current one are full, turns after it
+// empty, and the current one fills step by step with the work (and decisions) already played.
+// A session with a hundred steps in one turn used to sit still until the next command.
+export function timelineFill(sc, { turnIndex = 0, turnWorkMs = 0, turnAskMs = 0, done = false } = {}) {
+  const frac = (n, d) => (d > 0 ? Math.min(1, Math.max(0, n / d)) : 0);
+  return sc.turns.map((t, i) => {
+    if (done || i < turnIndex) return { agent: 1, ask: 1 };
+    if (i > turnIndex) return { agent: 0, ask: 0 };
+    const work = t.steps.filter((s) => !s.ask).reduce((n, s) => n + s.ms, 0);
+    const ask = t.steps.filter((s) => s.ask).reduce((n, s) => n + s.ms, 0);
+    return { agent: frac(turnWorkMs, work), ask: frac(turnAskMs, ask) };
+  });
+}
+
+const fillBar = (f) => f > 0 && h('span', { className: 'ss-fill', style: { width: `${Math.round(f * 1000) / 10}%` } });
+
+export function Timeline({ sc, turnIndex, turnWorkMs = 0, turnAskMs = 0, done = false, person }) {
   const agent = useAgent();
+  const fill = timelineFill(sc, { turnIndex, turnWorkMs, turnAskMs, done });
   const rows = sc.turns.map((t) => {
     const work = t.steps.filter((s) => !s.ask).reduce((n, s) => n + s.ms, 0);
     const ask = t.steps.filter((s) => s.ask).reduce((n, s) => n + s.ms, 0);
@@ -158,9 +175,9 @@ function Timeline({ sc, turnIndex, person }) {
   const total = rows.reduce((n, r) => n + w(r.work) + w(r.ask) + 2, 0) || 1;
   return h('div', { className: 'ss-timeline', 'aria-label': 'Who did what, in time' },
     h('div', { className: 'ss-track' }, rows.map((r, i) => h(Fragment, { key: r.id },
-      h('span', { className: `ss-seg ss-human${i === turnIndex ? ' ss-now' : ''}`, style: { width: `${(2 / total) * 100}%` }, title: `${person}: command ${i + 1}` }),
-      r.ask > 0 && h('span', { className: 'ss-seg ss-ask', style: { width: `${(w(r.ask) / total) * 100}%` }, title: `${person} deciding, ${duration(r.ask)}` }),
-      h('span', { className: `ss-seg ss-agent${i < turnIndex ? ' ss-past' : ''}`, style: { width: `${(w(r.work) / total) * 100}%` }, title: `${agent} working, ${duration(r.work)}` })))),
+      h('span', { className: `ss-seg ss-human${i === turnIndex && !done ? ' ss-now' : ''}`, style: { width: `${(2 / total) * 100}%` }, title: `${person}: command ${i + 1}` }),
+      r.ask > 0 && h('span', { className: 'ss-seg ss-ask', style: { width: `${(w(r.ask) / total) * 100}%` }, title: `${person} deciding, ${duration(r.ask)}` }, fillBar(fill[i].ask)),
+      h('span', { className: 'ss-seg ss-agent', style: { width: `${(w(r.work) / total) * 100}%` }, title: `${agent} working, ${duration(r.work)}` }, fillBar(fill[i].agent))))),
     h('div', { className: 'ss-legend' },
       h('span', null, h('i', { className: 'ss-human' }), person),
       h('span', null, h('i', { className: 'ss-ask' }), 'deciding'),
@@ -349,6 +366,8 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   const [log, setLog] = useState([]);
   const [made, setMade] = useState([]);
   const [work, setWork] = useState({ ms: 0, steps: 0 });
+  // What of the current turn has played, for the timeline to fill as it goes.
+  const [turnPlayed, setTurnPlayed] = useState({ work: 0, ask: 0 });
   const [auto, setAuto] = useState(autoplay);
   const [toast, showToast] = useToast();
   // The devices' clocks: the session's time (its start plus the work the counter shows), unless
@@ -381,7 +400,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
     const p = plan[ti];
     if (i >= p.events.length) {
       timers.current.push(setTimeout(() => {
-        if (ti + 1 < plan.length) { setTurn(ti + 1); setPhase('ready'); } else setPhase('done');
+        if (ti + 1 < plan.length) { setTurn(ti + 1); setTurnPlayed({ work: 0, ask: 0 }); setPhase('ready'); } else setPhase('done');
       }, 300));
       return;
     }
@@ -391,11 +410,15 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
       setLog((l) => [...l, { ...e, key }]);
       if (e.kind === 'step' && e.step.ask) resumeRef.current = (picks) => {
         setAnswers((a) => ({ ...a, [key]: picks }));
+        setTurnPlayed((p) => ({ ...p, ask: p.ask + e.step.ms }));
         setWaiting(null);
         playFrom(ti, i + 1, 500);
       };
       if (e.kind === 'artifact') setMade((m) => [...m, e.artifact]);
-      if (e.kind === 'step' && !e.step.ask) setWork((w) => ({ ms: w.ms + e.step.ms, steps: w.steps + (e.step.count ?? 1) }));
+      if (e.kind === 'step' && !e.step.ask) {
+        setWork((w) => ({ ms: w.ms + e.step.ms, steps: w.steps + (e.step.count ?? 1) }));
+        setTurnPlayed((p) => ({ ...p, work: p.work + e.step.ms }));
+      }
       if (e.kind === 'step' && e.step.ask) { setWaiting(key); return; }
       const next = p.events[i + 1];
       playFrom(ti, i + 1, next ? next.t - e.t : 0);
@@ -429,7 +452,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   const restart = () => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
-    setTurn(0); setPhase('ready'); setLog([]); setMade([]); setWork({ ms: 0, steps: 0 }); setWaiting(null); setAnswers({}); setClosed(false);
+    setTurn(0); setTurnPlayed({ work: 0, ask: 0 }); setPhase('ready'); setLog([]); setMade([]); setWork({ ms: 0, steps: 0 }); setWaiting(null); setAnswers({}); setClosed(false);
   };
 
   const next = plan[turn]?.command;
@@ -523,6 +546,6 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
     h('div', { className: `ss-stage ss-frame-${frame}${inGrid && showArtifacts ? ' ss-has-panel' : ''}` },
       device,
       inGrid && panel,
-      timeline && h(Timeline, { sc, turnIndex: turn, person }),
+      timeline && h(Timeline, { sc, turnIndex: turn, turnWorkMs: turnPlayed.work, turnAskMs: turnPlayed.ask, done: phase === 'done', person }),
       phase === 'done' && !closed && h(CloseCard, { sc, person, onReplay: restart, onBack })));
 }
