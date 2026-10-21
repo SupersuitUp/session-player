@@ -74,6 +74,17 @@ test('a forbidden word matches where a word starts, not inside another word', ()
   assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, 'Christ'] }), /forbidden "Christ"/);
 });
 
+test('a forbidden name that starts common words is a whole-word regex, so it neither blocks "time" nor lets "Tim" through', () => {
+  const s = sc();
+  s.turns[0].steps[0].label = 'Time the design pass';
+  // As a plain word, "Tim" fires on "Time": the list could only pass by losing the name.
+  assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, 'Tim'] }), /forbidden "Tim"/);
+  assert.doesNotThrow(() => recast(s, { ...spec, forbid: [...spec.forbid, 're:\\bTim\\b', 're:\\bDesi\\b'] }));
+  s.turns[0].steps[0].label = 'Time the design pass with Tim';
+  assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, 're:\\bTim\\b'] }), /forbidden "re:\\bTim\\b" survives in t1/);
+  assert.throws(() => recast(s, { ...spec, forbid: [...spec.forbid, /\btim\b/] }), /forbidden/);
+});
+
 test('a recast carries the close block, with its words recast too', () => {
   const s = sc();
   s.close = { outcome: 'Kingdom Free released.', edge: { total: 3, layers: { fueled: 0, encoded: 3, built: 0, retired: 0 } }, freed: [{ task: 'releasing Kingdom Free by hand', cadence: 'monthly' }] };

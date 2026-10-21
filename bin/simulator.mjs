@@ -26,7 +26,8 @@ Usage:
   simulator recast <scenario.json> --spec <spec.json> [--out <file>]
       Tell a different story from the same run: spec is { id, title, persona, keep: [turn ids],
       replace: [[from, to]], forbid: [words] }. A "from" starting with re: is a regex (global,
-      case-insensitive). Refuses while any forbidden word survives. Marked illustrative.
+      case-insensitive). Refuses while any forbidden word survives (matched where a word starts;
+      a forbid entry starting with re: is a regex, so "re:\\bTim\\b" spares "time"). Marked illustrative.
   simulator bundle <scenario.json> [--out <file>]
       Copy every image into assets/<scenario id>/ beside the scenario, shrunk for the phone,
       and point the scenario at the copies. Refuses if an image source is missing.
