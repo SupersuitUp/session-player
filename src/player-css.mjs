@@ -473,4 +473,161 @@ const MAISON_START_CSS = `
 .ss-maison .ss-term .ss-startauto input{accent-color:var(--ss-bronze)}
 `;
 
-export const MAISON_CSS = MAISON_SCREEN_CSS + TERMINAL_RESTORE + MAISON_START_CSS;
+// The player's own controls moved outside the device with the Claude app skin (2026-10-28): on the
+// host's night they read in mist, like the device bar they sit in.
+const MAISON_OUTSIDE_CSS = `
+.ss-sim.ss-maison .ss-counter.ss-out,.ss-sim.ss-maison .ss-devicebar .ss-auto{color:var(--ss-mist)}
+.ss-sim.ss-maison .ss-devicebar .ss-auto input{accent-color:var(--ss-bronze)}
+`;
+export const MAISON_CSS = MAISON_SCREEN_CSS + TERMINAL_RESTORE + MAISON_START_CSS + MAISON_OUTSIDE_CSS;
+
+// THE CLAUDE APP SKIN (Gary Sheng, 2026-10-28, watching a case study: "it doesn't look enough like
+// Claude Code. It should look a lot more like Claude Code. Right now, it looks like we're misleading
+// people into thinking that we have a separate app."). The device's screen (.ss-phone[data-cc]) draws
+// the Claude app's Code session: on a phone the iOS app (data-cc="phone"), in a MacBook window the
+// desktop app (data-cc="desk"). Every colour was sampled from a screenshot of the iOS app's Code
+// screen: the night #151515, the card #20201f with its #363635 hairline, body text #f9f9f7, the
+// card's own text #c3c2b7, the answer #f0efec, tool rows #97958d, the running line #6da7ec, the
+// spinner's arc #2a78d6, the stop button #313131 and the send orange #c6613f.
+//
+// It is appended after the base sheet and after any theme, and every rule carries the screen's
+// selector (three classes' weight) in front of the tail the theme uses, so it wins over both
+// without !important. Sizes are in the app's own points: --pt is one point, which is 1px on a real
+// phone, a fraction of the drawn iPhone's width inside it (its screen is 440pt across), and a little
+// under 1px in the MacBook's window.
+const CC = (css) => css.replace(/@P/g, '.ss-sim .ss-phone[data-cc]').replace(/@M/g, '.ss-sim .ss-phone[data-cc="phone"]').replace(/@D/g, '.ss-sim .ss-phone[data-cc="desk"]');
+export const CLAUDE_CSS = CC(`
+@P{--pt:1px;background:#151515;color:#f9f9f7;border:0;font:calc(17 * var(--pt))/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;letter-spacing:-.01em;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.ss-sim .ss-iphone>.ss-phone[data-cc]{--pt:.214cqw;box-shadow:none}
+@D{--pt:.82px;box-shadow:none}
+.ss-sim .ss-mac .ss-phone[data-cc="desk"]{--pt:clamp(.66px,.085cqw,.78px)}
+@P .ss-status{background:#151515;color:#fff}
+@P .ss-island{background:#000}
+@P .ss-head{position:relative;display:flex;align-items:center;gap:calc(14 * var(--pt));min-height:calc(56 * var(--pt));padding:calc(4 * var(--pt)) calc(18 * var(--pt)) calc(10 * var(--pt));background:#151515;border-bottom:1px solid #2e2e2d;color:#c3c2b7}
+@P .ss-cc-back{display:flex;align-items:center;gap:calc(8 * var(--pt));border:0;background:none;padding:0;color:#c3c2b7;font-size:calc(20 * var(--pt));line-height:1;letter-spacing:-.01em;white-space:nowrap}
+@P .ss-cc-back svg{width:calc(11 * var(--pt));height:calc(19 * var(--pt))}
+@P .ss-titles{position:absolute;left:50%;top:calc(4 * var(--pt));bottom:calc(10 * var(--pt));transform:translateX(-50%);max-width:46%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+@P .ss-titles b{font:600 calc(17 * var(--pt))/1.25 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:#f0efec;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@P .ss-titles small{font-size:calc(14 * var(--pt));line-height:1.3;color:#c3c2b7;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@P .ss-timepill{margin-left:auto;background:#262625;color:#c3c2b7;font-size:calc(12 * var(--pt));padding:calc(3 * var(--pt)) calc(8 * var(--pt))}
+@P .ss-cc-back+.ss-titles+.ss-cc-spin,@P .ss-titles:first-child+.ss-cc-spin{margin-left:auto}
+@P .ss-cc-spin{flex:none;width:calc(26 * var(--pt));height:calc(26 * var(--pt));border-radius:50%;border:calc(2.4 * var(--pt)) solid #2a78d6;border-left-color:#434343;margin-right:calc(16 * var(--pt));visibility:hidden}
+@P .ss-cc-spin.ss-cc-spin-on{visibility:visible;animation:ss-cc-spin 1s linear infinite}
+@keyframes ss-cc-spin{to{transform:rotate(360deg)}}
+@P .ss-cc-more{flex:none;display:grid;place-items:center;color:#c3c2b7}
+@P .ss-cc-more svg{width:calc(28 * var(--pt));height:calc(28 * var(--pt))}
+@P .ss-log{padding:calc(18 * var(--pt)) calc(16 * var(--pt)) calc(10 * var(--pt));gap:calc(16 * var(--pt))}
+@P .ss-intro{color:#97958d;font-size:calc(15 * var(--pt))}
+@P .ss-reply{max-width:none}
+@P .ss-who{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@P .ss-reply p{margin:0;color:#f9f9f7}
+@P .ss-more{color:#c3c2b7;font-size:calc(15 * var(--pt))}
+@P .ss-cmd-wrap{align-items:flex-end;margin-top:calc(4 * var(--pt))}
+@P .ss-cmd{max-width:82%;background:#262625;color:#f9f9f7;border:0;border-radius:calc(20 * var(--pt));padding:calc(10 * var(--pt)) calc(16 * var(--pt))}
+@P .ss-cmd::before{content:none}
+@P .ss-redirect{color:#97958d;font-size:calc(12 * var(--pt));text-transform:none;letter-spacing:0;font-weight:500}
+@P .ss-step{display:flex;align-items:center;gap:calc(12 * var(--pt));padding:0 calc(10 * var(--pt));color:#97958d;font-size:calc(16 * var(--pt));line-height:1.35;animation:ss-in .25s ease-out}
+@P .ss-group .ss-label{color:#97958d}
+@P .ss-step .ss-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@P .ss-cc-glyph,@P .ss-chev{flex:none;display:grid;place-items:center;color:#97958d}
+@P .ss-cc-glyph svg{width:calc(15 * var(--pt));height:calc(15 * var(--pt))}
+@P .ss-chev svg{width:calc(9 * var(--pt));height:calc(16 * var(--pt))}
+@M .ss-step .ss-dur{display:none}
+@D .ss-step .ss-dur{color:#6f6e69;font-size:.85em}
+@P .ss-running{color:#6da7ec;font-size:calc(17 * var(--pt));margin-top:calc(10 * var(--pt))}
+@P .ss-qcard{background:#20201f;border:1px solid #363635;border-radius:calc(24 * var(--pt));padding:calc(22 * var(--pt)) calc(24 * var(--pt)) calc(20 * var(--pt));color:#c3c2b7;font-size:calc(16 * var(--pt));line-height:1.55;box-shadow:none}
+@P .ss-qlabel{display:block;color:#c3c2b7;font-size:calc(16 * var(--pt));margin:0 0 calc(18 * var(--pt))}
+@P .ss-qcard .ss-q{margin:0 0 calc(8 * var(--pt));color:#c3c2b7;font-size:calc(16 * var(--pt));white-space:pre-wrap;display:block;-webkit-line-clamp:none;overflow:visible}
+@P .ss-asked .ss-a{margin:0;color:#f0efec;font-weight:400;font-size:calc(17 * var(--pt))}
+@P .ss-aq+.ss-aq{margin-top:calc(16 * var(--pt));padding-top:calc(14 * var(--pt));border-top:1px solid #2e2e2d}
+@P .ss-aimg{width:calc(32 * var(--pt));height:calc(32 * var(--pt));border-radius:calc(6 * var(--pt))}
+@P .ss-mine{color:#c6613f;font-size:calc(13 * var(--pt))}
+@P .ss-bfoot{margin-top:calc(12 * var(--pt))}
+@P .ss-tag{color:#97958d;font-size:calc(12 * var(--pt));font-weight:500;letter-spacing:0;text-transform:none}
+@P .ss-qcard .ss-dur{color:#6f6e69;font-size:calc(12 * var(--pt))}
+@P .ss-sheet{flex:none;max-height:74%;margin:calc(6 * var(--pt)) calc(16 * var(--pt)) calc(10 * var(--pt));overflow-y:auto;animation:ss-in .25s ease-out}
+@P .ss-tabs{gap:calc(6 * var(--pt));margin:calc(-6 * var(--pt)) 0 calc(14 * var(--pt))}
+@P .ss-tab{border:1px solid #363635;color:#97958d;background:none;font-size:calc(11 * var(--pt));letter-spacing:.02em;font-weight:600;text-transform:none;padding:calc(2 * var(--pt)) calc(10 * var(--pt))}
+@P .ss-tab.ss-tab-done{background:#2a2a28;border-color:#363635;color:#c3c2b7}
+@P .ss-tab.ss-tab-now{background:#f0efec;border-color:#f0efec;color:#151515}
+@P .ss-sheet .ss-q{margin:0 0 calc(14 * var(--pt))}
+@P .ss-sheet .ss-opts{gap:calc(8 * var(--pt))}
+.ss-sim .ss-phone[data-cc] button.ss-opt{display:flex;align-items:flex-start;gap:calc(12 * var(--pt));width:100%;background:transparent;border:1px solid #363635;border-radius:calc(16 * var(--pt));padding:calc(10 * var(--pt)) calc(14 * var(--pt));color:#c3c2b7;font-size:calc(16 * var(--pt));line-height:1.4}
+.ss-sim .ss-phone[data-cc] button.ss-opt:hover,.ss-sim .ss-phone[data-cc] button.ss-opt:focus-visible{background:#2a2a28;border-color:#4a4a48;outline:none}
+.ss-sim .ss-phone[data-cc] button.ss-opt.ss-chosen{background:#2a2a28;border-color:#c3c2b7}
+.ss-sim .ss-phone[data-cc] button.ss-opt.ss-yours{background:#2a201b;border-color:#c6613f}
+@P .ss-opt b{color:#f0efec;font-weight:400;font-size:calc(17 * var(--pt))}
+@P .ss-opt small{color:#97958d;font-size:calc(14 * var(--pt))}
+@P .ss-onum{width:calc(24 * var(--pt));height:calc(24 * var(--pt));margin-top:calc(1 * var(--pt));background:#313131;color:#c3c2b7;font-size:calc(12 * var(--pt))}
+@P .ss-opt.ss-chosen .ss-onum{background:#f0efec;color:#151515}
+@P .ss-oimg{width:calc(52 * var(--pt));height:calc(52 * var(--pt));border-radius:calc(8 * var(--pt))}
+@P .ss-verdict{margin:calc(12 * var(--pt)) 0 0;color:#97958d;font-size:calc(13 * var(--pt))}
+@P .ss-verdict.ss-same{color:#6da7ec;font-weight:500}
+@P .ss-otherfield{background:#151515;border:1px solid #4a4a48;border-radius:calc(18 * var(--pt));padding:calc(10 * var(--pt)) calc(10 * var(--pt)) calc(10 * var(--pt)) calc(14 * var(--pt));gap:calc(6 * var(--pt))}
+@P .ss-otherfield>small{color:#97958d;font-size:calc(12 * var(--pt))}
+@P .ss-otherbox{gap:calc(10 * var(--pt))}
+@P .ss-othertext{color:#f9f9f7;font-size:calc(17 * var(--pt));line-height:1.45}
+@P .ss-caret{background:#c6613f;width:calc(2 * var(--pt))}
+@P .ss-othersend{width:calc(36 * var(--pt));height:calc(36 * var(--pt));background:#c6613f;color:#fff;font-size:calc(17 * var(--pt))}
+@P .ss-made{background:#20201f;border:1px solid #363635;color:#c3c2b7;font-size:calc(14 * var(--pt));padding:calc(4 * var(--pt)) calc(12 * var(--pt))}
+@P .ss-made span{color:#f0efec;font-weight:500}
+@P .ss-composer{display:block;background:#151515;border:0;padding:calc(8 * var(--pt)) calc(16 * var(--pt)) calc(10 * var(--pt) + env(safe-area-inset-bottom))}
+@P .ss-field{display:flex;flex-direction:column;gap:calc(10 * var(--pt));background:#20201f;border:1px solid #3d3d3b;border-radius:calc(26 * var(--pt));padding:calc(14 * var(--pt)) calc(14 * var(--pt)) calc(12 * var(--pt)) calc(18 * var(--pt))}
+.ss-sim .ss-phone[data-cc] .ss-field>.ss-chip{flex:none;padding:0;border:0;background:none;border-radius:0;color:#f9f9f7;font-size:calc(17 * var(--pt));line-height:1.45;display:flex;flex-direction:column;gap:calc(2 * var(--pt));max-height:calc(17 * var(--pt) * 1.45 * 4 + 20 * var(--pt));overflow:hidden;opacity:1}
+@P .ss-chip small{color:#8b8a84;font-size:calc(11 * var(--pt));font-weight:500;letter-spacing:.01em;text-transform:none}
+@P .ss-ph{color:#8b8a84}
+@P .ss-chip small.ss-hint-auto,@P .ss-chip small:empty{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@P .ss-chip{position:relative}
+@P .ss-ctrls{display:flex;align-items:center;gap:calc(10 * var(--pt))}
+@P .ss-gap{flex:1}
+.ss-sim .ss-phone[data-cc] .ss-mic{position:static;flex:none;width:calc(38 * var(--pt));height:calc(38 * var(--pt));border-radius:50%;background:#313131;color:#c3c2b7}
+.ss-sim .ss-phone[data-cc] .ss-mic:not(:disabled):hover{background:#3a3a39}
+@P .ss-mic svg{width:calc(11 * var(--pt));height:calc(17 * var(--pt))}
+@P .ss-mic:disabled{opacity:.55}
+@P .ss-stop{flex:none;display:grid;place-items:center;width:calc(38 * var(--pt));height:calc(38 * var(--pt));border-radius:50%;background:#313131}
+@P .ss-stop i{width:calc(13 * var(--pt));height:calc(13 * var(--pt));border-radius:calc(2 * var(--pt));background:#f9f9f7}
+.ss-sim .ss-phone[data-cc] .ss-send{flex:none;display:grid;place-items:center;width:calc(38 * var(--pt));height:calc(38 * var(--pt));border-radius:50%;background:#c6613f;color:#fff;font-size:0;opacity:1}
+@P .ss-send svg{width:calc(17 * var(--pt));height:calc(17 * var(--pt))}
+@P .ss-send:disabled{cursor:default}
+@P .ss-end p{color:#c3c2b7;font-size:calc(15 * var(--pt))}
+@P .ss-end .ss-chip{background:#20201f;border:1px solid #3d3d3b;border-radius:calc(20 * var(--pt));color:#f0efec;text-align:center;align-items:center;padding:calc(10 * var(--pt))}
+@P .ss-homebar{flex:none;align-self:center;width:36%;height:calc(5 * var(--pt));margin:calc(4 * var(--pt)) 0 calc(9 * var(--pt));border-radius:999px;background:#f9f9f7}
+.ss-sim .ss-phone[data-cc] .ss-tray-handle{background:#20201f;color:#c3c2b7;border:1px solid #363635;box-shadow:none;font-size:calc(13 * var(--pt));bottom:calc(10 * var(--pt))}
+@P .ss-tray{background:#20201f;border-top:1px solid #363635;color:#f0efec}
+@P .ss-artifact{background:#151515;border-color:#363635;color:#f0efec}
+@P .ss-kind{background:#313131;color:#c3c2b7}
+@P .ss-empty{color:#97958d}
+@P .ss-start{background:rgba(21,21,21,.86)}
+@P .ss-starttitle{font:600 calc(22 * var(--pt))/1.25 -apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif;color:#f9f9f7}
+@P .ss-startcard p{color:#c3c2b7;font-size:calc(15 * var(--pt))}
+@P .ss-startcard small{color:#97958d;font-size:calc(13 * var(--pt))}
+@P .ss-startauto{color:#f0efec;font-weight:500;font-size:calc(15 * var(--pt))}
+@P .ss-startauto input{accent-color:#c6613f}
+@P .ss-startbtn,.ss-sim .ss-mac .ss-phone[data-cc] .ss-startbtn{background:#c6613f;color:#fff;font-weight:600;letter-spacing:0;text-transform:none;font-size:calc(17 * var(--pt));padding:calc(12 * var(--pt)) calc(28 * var(--pt));box-shadow:none}
+@P .ss-startbtn:focus-visible{outline:2px solid #f0efec}
+@P .ss-pointer .ss-touch,@P .ss-pointer .ss-ripple{border-color:rgba(240,239,236,.7);background:rgba(240,239,236,.14)}
+@P .ss-pointer .ss-ripple{background:none}
+/* The desktop app, inside the MacBook's window: the title at the left, the same conversation. */
+@D .ss-head{min-height:0;padding:calc(10 * var(--pt)) calc(16 * var(--pt))}
+@D .ss-titles{position:static;transform:none;max-width:none;flex:1;min-width:0;align-items:flex-start;text-align:left;pointer-events:auto}
+@D .ss-titles b{font-size:calc(15 * var(--pt))}
+@D .ss-titles small{font-size:calc(12.5 * var(--pt))}
+@D .ss-timepill{margin-left:0}
+@D .ss-cc-spin{width:calc(18 * var(--pt));height:calc(18 * var(--pt));margin-right:calc(4 * var(--pt))}
+@D .ss-cc-more svg{width:calc(22 * var(--pt));height:calc(22 * var(--pt))}
+@D .ss-log{padding:calc(18 * var(--pt)) max(calc(24 * var(--pt)),calc(50% - 360px)) calc(10 * var(--pt))}
+@D .ss-composer{padding:calc(8 * var(--pt)) max(calc(24 * var(--pt)),calc(50% - 360px)) calc(14 * var(--pt))}
+@D .ss-sheet{margin:calc(6 * var(--pt)) max(calc(24 * var(--pt)),calc(50% - 360px)) calc(12 * var(--pt))}
+.ss-sim .ss-window{background:#151515;border-color:#000}
+.ss-sim .ss-window .ss-titlebar{background:#1d1d1c;border-bottom-color:#000;color:#c3c2b7}
+.ss-sim .ss-mac .ss-mac-screen{background:radial-gradient(90% 70% at 30% 20%,#3b4452 0%,transparent 70%),linear-gradient(160deg,#2a2f38 0%,#1a1c21 60%,#22201f 100%)}
+.ss-sim .ss-mac .ss-menubar{background:rgba(28,28,30,.72);color:#e9e8e4}
+.ss-sim .ss-mac .ss-menu-mark{background:#e9e8e4}
+@container ss-sim (min-width:760px){.ss-sim .ss-in-window .ss-panel{background:#1a1a19;border-color:#2e2e2d;color:#f0efec}}
+@container ss-sim (max-width:559px){.ss-sim .ss-mac .ss-mac-screen{background:none}}
+/* Outside the device: the player's own controls and its count of the work, on the host's page. */
+.ss-sim .ss-barright{display:flex;align-items:center;gap:10px}
+.ss-sim .ss-devicebar .ss-auto{font-size:12px;color:#7a6d5a}
+.ss-sim .ss-counter.ss-out{background:none;color:#7a6d5a;padding:0 2px;margin:-2px 0 10px;font-size:12px;flex-wrap:wrap}
+.ss-sim .ss-counter.ss-out b{color:inherit;font-weight:700}
+`);
