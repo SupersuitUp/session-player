@@ -75,6 +75,8 @@ import { SimulatorPlayer } from '@supersuit/session-player/player';
 
 Nothing plays until the viewer presses Start demo (a host may pass `start: 'auto'` or `?start=auto`). By default the session then plays itself (Autoplay). Untick Autoplay and the viewer plays the person, tapping each command (or the mic to say it), and watches the steps play, sped up from their real durations, with a running count of the work done for the persona. Decisions the person made show as their own cards; things made collect in a side panel on wide screens and a slide-up tray on phones. Needs React 18 or newer; no build step and no stylesheet to import.
 
+The device's screen is the Claude app's Code session (the iOS app on a phone, the desktop app in the MacBook's window), so a viewer sees the app the session really ran in; the player's own controls, Autoplay and the work counter, sit outside the device.
+
 On Autoplay a hand does the person's tapping where you can see it: a fingertip on a phone, the pointer on a MacBook, travelling to each control and pressing it before the choice lands. A board answer the person typed (the question's Other) is typed out in the field at a human pace, then sent. `prefers-reduced-motion` drops the travel and shows the answer whole (`reducedMotion` on the component forces either way).
 
 ## Embedding it in a page or a book

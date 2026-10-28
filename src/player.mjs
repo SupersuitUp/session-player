@@ -9,7 +9,7 @@
 
 import { createElement as h, createContext, useContext, useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import { script, summarize, duration, realPick, compare, dictate } from './playback.mjs';
-import { PLAYER_CSS, MAISON_CSS } from './player-css.mjs';
+import { PLAYER_CSS, MAISON_CSS, CLAUDE_CSS } from './player-css.mjs';
 import { resolveDevice, normalizeMode, readViewer, watchViewer, autoHint, deviceToast, autoplayToast, choiceToast } from './device.mjs';
 import { normalizeClock, sessionTime, menuBarText, statusText } from './clock.mjs';
 import { tap, answerScript, run, pointerFor, prefersReducedMotion } from './gesture.mjs';
@@ -186,11 +186,11 @@ export function Board({ ask, person, auto = false, onPick, images, onToast }) {
       image && h('img', { className: 'ss-oimg', src: image.src, alt: '' }),
       h('span', null, h('b', null, label), description && h('small', null, description)));
   };
-  return h('div', { className: 'ss-sheet', role: 'dialog', 'aria-label': `${agent} is asking` },
+  return h('div', { className: 'ss-sheet ss-qcard', role: 'dialog', 'aria-label': `${agent} is asking` },
+    h('span', { className: 'ss-qlabel' }, 'Question'),
     ask.questions.length > 1 && h('div', { className: 'ss-tabs' }, ask.questions.map((qq, qi) => h('span', {
       key: qi, className: `ss-tab${qi === idx ? ' ss-tab-now' : ''}${picks[qi] ? ' ss-tab-done' : ''}`,
     }, qq.header || `Question ${qi + 1}`))),
-    ask.questions.length === 1 && q.header && h('span', { className: 'ss-bhead' }, q.header),
     h('p', { className: 'ss-q' }, plain(q.question)),
     idx === 0 && h(Gallery, { images, strip: true }),
     h('div', { className: 'ss-opts' },
@@ -204,15 +204,16 @@ export function Board({ ask, person, auto = false, onPick, images, onToast }) {
 // The record a board leaves in the conversation once it is answered: each question and what
 // was chosen, compact, the way the native transcript shows an answered question.
 export function Asked({ ask, person, ms, picks = {} }) {
-  return h('div', { className: 'ss-asked' },
+  return h('div', { className: 'ss-asked ss-qcard' },
     ask.questions.map((q, qi) => {
       const real = realPick(q, ask.dismissed);
       const mine = picks[qi];
       const v = mine && compare(q, ask.dismissed, mine);
       const mineLabel = mine && (mine.kind === 'option' ? q.options[mine.index]?.label : mine.kind === 'other' ? 'Other' : 'to type something else');
       return h('div', { key: qi, className: 'ss-aq' },
-        h('p', { className: 'ss-q' }, q.header && h('span', { className: 'ss-bhead' }, q.header), ' ', plain(q.question)),
-        h('p', { className: 'ss-a' }, real.index != null && q.options[real.index]?.image && h('img', { className: 'ss-aimg', src: q.options[real.index].image.src, alt: '' }), real.kind === 'dismissed' ? '\u21b3 closed it' : `\u21b3 ${plain(real.label)}`),
+        qi === 0 && h('span', { className: 'ss-qlabel' }, 'Question'),
+        h('p', { className: 'ss-q' }, plain(q.question)),
+        h('p', { className: 'ss-a' }, real.index != null && q.options[real.index]?.image && h('img', { className: 'ss-aimg', src: q.options[real.index].image.src, alt: '' }), real.kind === 'dismissed' ? 'Closed it' : plain(real.label)),
         v && !v.same && h('p', { className: 'ss-mine' }, `You picked ${mineLabel}`));
     }),
     h('div', { className: 'ss-bfoot' },
@@ -221,17 +222,24 @@ export function Asked({ ask, person, ms, picks = {} }) {
 }
 
 function Step({ step, person, picks, live }) {
-  const agent = useAgent();
-  if (step.ask) return live ? h('div', { className: 'ss-asking' }, `${agent} is asking you\u2026`) : h(Fragment, null, h(Gallery, { images: step.images }), h(Asked, { ask: step.ask, person, ms: step.ms, picks }));
+  if (step.ask) return live ? null : h(Fragment, null, h(Gallery, { images: step.images }), h(Asked, { ask: step.ask, person, ms: step.ms, picks }));
   if (step.images?.length) return h(Fragment, null, h(StepLine, { step }), h(Gallery, { images: step.images }));
   return h(StepLine, { step });
 }
 
-function StepLine({ step }) {
-  return h('div', { className: `ss-step${step.group ? ' ss-group' : ''}` },
-    h('span', { className: 'ss-dot' }),
+// A tool call, the way the Claude app lists one: a diamond, the step, a chevron. The real duration
+// stays in the row (its title, and visible where the skin has room) since the replay is timed by it.
+const DIAMOND = h('svg', { viewBox: '0 0 14 14', width: 14, height: 14, 'aria-hidden': true },
+  h('path', { d: 'M7 1.2 12.8 7 7 12.8 1.2 7Z', fill: 'none', stroke: 'currentColor', strokeWidth: 1.4, strokeLinejoin: 'round' }));
+const CHEVRON = h('svg', { viewBox: '0 0 8 14', width: 8, height: 14, 'aria-hidden': true },
+  h('path', { d: 'M1.5 1.5 6.5 7l-5 5.5', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }));
+export function StepLine({ step }) {
+  const took = step.stalled ? 'timed out' : duration(step.ms);
+  return h('div', { className: `ss-step ss-tool${step.group ? ' ss-group' : ''}`, title: took },
+    h('span', { className: 'ss-cc-glyph' }, DIAMOND),
     h('span', { className: 'ss-label' }, step.label),
-    h('span', { className: 'ss-dur' }, step.stalled ? 'timed out' : duration(step.ms)));
+    h('span', { className: 'ss-dur' }, took),
+    h('span', { className: 'ss-chev' }, CHEVRON));
 }
 
 function ArtifactCard({ a }) {
@@ -388,7 +396,8 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
   const bg = backgroundFor(background);
   const style = height || bg ? { ...(height ? { '--ss-height': height } : {}), ...(bg ? { background: bg } : {}) } : undefined;
   return h(AgentName.Provider, { value: agent || DEFAULT_AGENT }, h('div', { className: theme === 'maison' ? 'ss-sim ss-maison' : 'ss-sim', ref: root, style },
-    h('style', null, theme === 'maison' ? PLAYER_CSS + MAISON_CSS : PLAYER_CSS),
+    // The Claude app skin comes last, so it wins over the base sheet and any theme on the screen.
+    h('style', null, (theme === 'maison' ? PLAYER_CSS + MAISON_CSS : PLAYER_CSS) + CLAUDE_CSS),
     sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, clock: normalizeClock(clock), reducedMotion, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
       : h(Picker, { scenarios: list, onPick: setPick })));
 }
@@ -398,6 +407,18 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
 const MIC_GLYPH = h('svg', { viewBox: '0 0 12 18', width: 12, height: 18, 'aria-hidden': true },
   h('rect', { x: 3, y: 0.5, width: 6, height: 11, rx: 3, fill: 'currentColor' }),
   h('path', { d: 'M1 8a5 5 0 0 0 10 0M6 13v4', fill: 'none', stroke: 'currentColor', strokeWidth: 1.4, strokeLinecap: 'round' }));
+
+// The Claude app's own marks, drawn: the back chevron, the more button, the send arrow.
+const BACK_GLYPH = h('svg', { className: 'ss-cc-chev', viewBox: '0 0 12 20', width: 12, height: 20, 'aria-hidden': true },
+  h('path', { d: 'M10 2 2 10l8 8', fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round' }));
+const MORE_GLYPH = h('svg', { viewBox: '0 0 24 24', width: 24, height: 24, 'aria-hidden': true },
+  h('circle', { cx: 12, cy: 12, r: 10.5, fill: 'none', stroke: 'currentColor', strokeWidth: 1.6 }),
+  [7.5, 12, 16.5].map((x) => h('circle', { key: x, cx: x, cy: 12, r: 1.5, fill: 'currentColor' })));
+const SEND_GLYPH = h('svg', { viewBox: '0 0 16 16', width: 16, height: 16, 'aria-hidden': true },
+  h('path', { d: 'M8 13.5V2.5M3 7.5l5-5 5 5', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' }));
+// The machine the session's Code tab names under its title. Never the real Mac's name, which is
+// private; every MacBook Pro reads as one.
+const DEVICE_NAME = 'MacBook Pro';
 
 const MODE_NAMES = { auto: 'Auto', iphone: 'iPhone', macbook: 'MacBook' };
 
@@ -570,20 +591,25 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   const artifactList = h('div', { className: 'ss-artifact-list' },
     made.length ? made.map((a) => h(ArtifactCard, { key: a.id, a })) : h('p', { className: 'ss-empty' }, `What ${agent} makes will collect here.`));
 
-  const phone = h('div', { className: 'ss-phone', ref: phoneRef },
+  // The screen is the Claude app's Code session (Gary, 2026-10-28: "It should look a lot more like
+  // Claude Code"): on a phone the iOS app, in a MacBook window the desktop app. The player's own
+  // controls (Autoplay, the work counter) sit outside the device, in the bar above it.
+  const skin = frame === 'macbook' || frame === 'macbook-compact' ? 'desk' : 'phone';
+  const busy = phase === 'working' || phase === 'saying';
+  const phone = h('div', { className: 'ss-phone', 'data-cc': skin, ref: phoneRef },
       frame === 'iphone' && h(StatusBar, { now }),
       h('header', { className: 'ss-head' },
-        onBack && h('button', { className: 'ss-back', onClick: onBack, 'aria-label': 'Choose another person' }, '‹'),
-        h('span', { className: 'ss-avatar' }, initial(person)),
-        h('div', { className: 'ss-titles' }, h('b', null, sc.title), h('small', null, sc.source?.illustrative ? 'Illustrative: recast from a real session' : chapter ?? `as ${person}`)),
+        skin === 'phone' && (onBack
+          ? h('button', { className: 'ss-cc-back', onClick: onBack, 'aria-label': 'Choose another person' }, BACK_GLYPH, 'Code')
+          : h('span', { className: 'ss-cc-back', 'aria-hidden': true }, BACK_GLYPH, 'Code')),
+        skin === 'desk' && onBack && h('button', { className: 'ss-back', onClick: onBack, 'aria-label': 'Choose another person' }, '‹'),
+        h('div', { className: 'ss-titles' }, h('b', null, sc.title), h('small', null, skin === 'phone' ? DEVICE_NAME : chapter ?? DEVICE_NAME)),
         // A real phone has no drawn status bar, and a window at phone width or a lidless MacBook
         // has no menu bar, so the session's time sits in the header as a small pill.
         // Inside a whole laptop the menu bar shows it and the sheet hides the pill.
         frame !== 'iphone' && h('span', { className: 'ss-timepill', title: 'Session time' }, statusText(now)),
-        h('label', { className: 'ss-auto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => toggleAuto(e.target.checked) }), 'Autoplay')),
-      h('div', { className: 'ss-counter', 'aria-live': 'polite' },
-        h('span', null, work.ms ? [h('b', { key: 'd' }, duration(work.ms)), ` of work done for ${person}`] : 'No work yet'),
-        h('span', null, `${work.steps} of ${totals.steps} steps`)),
+        h('span', { className: `ss-cc-spin${busy ? ' ss-cc-spin-on' : ''}`, 'aria-hidden': true }),
+        h('span', { className: 'ss-cc-more', role: 'img', 'aria-label': 'More' }, MORE_GLYPH)),
       h('div', { className: 'ss-log-wrap' },
       h('div', { className: 'ss-log', ref: logRef },
         log.length === 0 && h('p', { className: 'ss-intro' }, `You are ${person}. Send the first command and watch what gets done.`),
@@ -598,7 +624,8 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
           if (item.kind === 'reply') return h(Reply, { key: item.key, text: item.reply.text });
           return h('div', { key: item.key, className: 'ss-made' }, h('span', null, 'made'), ' ', item.artifact.title);
         }),
-        phase === 'working' && !waiting && h('div', { className: 'ss-typing' }, h('i'), h('i'), h('i'))),
+        // Work in flight, the way the app shows it: one blue line under the conversation.
+        phase === 'working' && !waiting && h('div', { className: 'ss-running', 'aria-live': 'polite' }, '1 running task')),
       showArtifacts && !waiting && h('button', { className: 'ss-tray-handle', onClick: () => setTray(!tray) }, `${made.length} made`, h('span', null, tray ? '⌄' : '⌃')),
       showArtifacts && tray && !waiting && h('div', { className: 'ss-tray' }, artifactList)),
       !started && h('div', { className: 'ss-start', role: 'dialog', 'aria-label': 'Start the demo' },
@@ -614,23 +641,35 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
           ? h('div', { className: 'ss-end' },
             h('p', null, h('b', null, duration(totals.agentMs)), ` of work, ${totals.steps} steps, ${totals.artifacts} things made. ${person} sent ${totals.commands} commands and made ${totals.decisions} decisions.${totals.idleMs > 60000 ? ` ${duration(totals.idleMs)} of idle time (hangs, timeouts, nobody at the keyboard) is left out.` : ''}`),
             h('button', { className: 'ss-chip', onClick: restart }, 'Play again'))
-          : h(Fragment, null,
-            // The mic sits inside the text field, where Messages and every chat app put it (Gary,
-            // 2026-10-19: "The microphone icon should be within the text area"). A button cannot hold
-            // a button, so the field is a wrapper and the mic is laid over its right end.
-            h('div', { className: 'ss-field' },
-              h('button', { className: 'ss-chip', disabled: phase !== 'ready', onClick: send },
-                h('small', null, phase === 'working' ? `${agent} is working…` : phase === 'saying' ? 'listening…' : auto ? 'sending on autoplay…' : `you are ${person}: tap to send, or tap the mic`),
-                phase === 'saying' ? spoken : next && plain(next.text).slice(0, 140)),
+          // The app's field: the message on top, the controls under it, the mic at the left and the
+          // stop square (while work runs) and the round orange send at the right. The mic stays
+          // inside the field (Gary, 2026-10-19: "The microphone icon should be within the text area").
+          : h('div', { className: 'ss-field' },
+            h('button', { className: 'ss-chip', disabled: phase !== 'ready', onClick: send },
+              // The hint names who is acting; on Autoplay it is for screen readers only, since the app's field carries no such line.
+              h('small', { className: (!auto && phase === 'ready') || phase === 'saying' ? undefined : 'ss-hint-auto' }, phase === 'working' ? 'working…' : phase === 'saying' ? 'listening…' : auto ? 'sending on autoplay…' : `you are ${person}: tap to send, or tap the mic`),
+              phase === 'saying' ? spoken : phase === 'ready' && next ? plain(next.text).slice(0, 140) : h('span', { className: 'ss-ph' }, 'Reply to Claude')),
+            h('div', { className: 'ss-ctrls' },
               h('button', {
                 className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
-              }, MIC_GLYPH)),
-            h('button', { className: 'ss-send', disabled: phase !== 'ready', 'aria-label': 'Send', 'data-ss-target': 'send', onClick: send }, '\u2191'))),
+              }, MIC_GLYPH),
+              h('span', { className: 'ss-gap' }),
+              busy && h('span', { className: 'ss-stop', 'aria-hidden': true }, h('i')),
+              h('button', { className: 'ss-send', disabled: phase !== 'ready', 'aria-label': 'Send', 'data-ss-target': 'send', onClick: send }, SEND_GLYPH)))),
+      frame === 'iphone' && h('span', { className: 'ss-homebar', 'aria-hidden': true }),
       h(Pointer, { kind: pointerKind, state: pointer }));
   const panel = showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList);
   const bar = h('div', { className: 'ss-devicebar' },
     label ? h('span', { className: frame === 'macbook-compact' ? 'ss-simpill' : 'ss-simlabel' }, label) : h('span'),
-    setMode && h(DeviceSwitch, { mode, setMode, hint: autoHint({ viewer, device: sc.device }), onToast: (m) => showToast(deviceToast({ mode: m, viewer, device: sc.device })) }));
+    h('span', { className: 'ss-barright' },
+      h('label', { className: 'ss-auto' }, h('input', { type: 'checkbox', checked: auto, onChange: (e) => toggleAuto(e.target.checked) }), 'Autoplay'),
+      setMode && h(DeviceSwitch, { mode, setMode, hint: autoHint({ viewer, device: sc.device }), onToast: (m) => showToast(deviceToast({ mode: m, viewer, device: sc.device })) })));
+  // What the replay has done for the person, and whether the story is a recast: the player's own
+  // lines, so they sit above the device rather than in the Claude app's screen.
+  const counter = h('div', { className: 'ss-counter ss-out', 'aria-live': 'polite' },
+    h('span', null, work.ms ? [h('b', { key: 'd' }, duration(work.ms)), ` of work done for ${person}`] : 'No work yet'),
+    sc.source?.illustrative && h('span', { className: 'ss-illus' }, 'Illustrative: recast from a real session'),
+    h('span', null, `${work.steps} of ${totals.steps} steps`));
   // The device around the conversation. On a phone nothing is drawn: the demo is the phone.
   let device = phone;
   if (frame === 'iphone') {
@@ -655,6 +694,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   return h(Gesture.Provider, { value: gesture },
     h('div', { className: `ss-toast${toast ? ' ss-toast-on' : ''}`, role: 'status', 'aria-live': 'polite' }, toast ? h('span', { key: toast.id }, toast.text) : null),
     bar,
+    counter,
     h('div', { className: `ss-stage ss-frame-${frame}${inGrid && showArtifacts ? ' ss-has-panel' : ''}` },
       device,
       inGrid && panel,
