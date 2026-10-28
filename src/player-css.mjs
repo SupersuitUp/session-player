@@ -331,6 +331,31 @@ export const PLAYER_CSS = `
 .ss-sim .ss-mac .ss-term .ss-startbtn{font-size:1.15em;padding:8px 20px}
 .ss-sim .ss-mac .ss-term .ss-tray-handle{font-size:.95em;padding:4px 10px;right:10px;bottom:8px}
 }
+.ss-pointer{position:absolute;left:0;top:0;width:0;height:0;z-index:40;pointer-events:none;opacity:0;transition-property:transform,opacity;transition-timing-function:cubic-bezier(.45,.05,.25,1),ease}
+.ss-pointer.ss-on{opacity:1}
+.ss-pointer .ss-touch{position:absolute;left:-17px;top:-17px;width:34px;height:34px;border-radius:50%;background:rgba(38,94,114,.18);border:2px solid rgba(38,94,114,.55);opacity:0;transform:scale(.7);transition:opacity .1s,transform .1s}
+.ss-pointer.ss-pressed .ss-touch{opacity:1;transform:scale(1)}
+.ss-pointer .ss-ripple{position:absolute;left:-17px;top:-17px;width:34px;height:34px;border-radius:50%;border:2px solid rgba(38,94,114,.6);animation:ss-ripple .5s ease-out forwards}
+@keyframes ss-ripple{from{opacity:.75;transform:scale(.5)}to{opacity:0;transform:scale(2.3)}}
+.ss-finger-art{position:absolute;left:-20px;top:-11px;transform-origin:20px 11px;transform:rotate(-14deg);filter:drop-shadow(0 6px 10px rgba(30,27,25,.28));transition:transform .12s ease-out}
+.ss-finger.ss-pressed .ss-finger-art{transform:rotate(-14deg) scale(.93) translateY(2px);filter:drop-shadow(0 2px 4px rgba(30,27,25,.3))}
+.ss-cursor-art{position:absolute;left:-1px;top:-1px;transform-origin:1px 1px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45));transition:transform .08s}
+.ss-cursor.ss-pressed .ss-cursor-art{transform:scale(.88)}
+.ss-cursor .ss-touch{left:-13px;top:-13px;width:26px;height:26px}
+.ss-cursor .ss-ripple{left:-13px;top:-13px;width:26px;height:26px}
+.ss-term .ss-pointer .ss-touch,.ss-term .ss-pointer .ss-ripple{border-color:rgba(217,119,87,.75);background:rgba(217,119,87,.16)}
+.ss-term .ss-pointer .ss-ripple{background:none}
+.ss-otherfield{display:flex;flex-direction:column;gap:4px;border:1px solid var(--ss-petrol);border-radius:10px;padding:7px 8px;background:#fff;animation:ss-in .2s ease-out}
+.ss-otherfield>small{color:#8a7d68;font-size:11px}
+.ss-otherbox{display:flex;align-items:flex-end;gap:8px}
+.ss-othertext{flex:1;min-width:0;max-height:7.5em;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ss-ink);font-size:14px;line-height:1.4;min-height:1.4em}
+.ss-caret{display:inline-block;width:2px;height:1.05em;margin-left:1px;vertical-align:-2px;background:var(--ss-petrol);animation:ss-blink 1s steps(1) infinite}
+@keyframes ss-blink{50%{opacity:0}}
+.ss-othersend{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--ss-petrol);color:#fff;font-weight:700;font-size:16px}
+.ss-term .ss-otherfield{background:#1a1918;border-color:#5c5751}
+.ss-term .ss-othertext{color:#e6e1d9;font-size:inherit}
+.ss-term .ss-caret{background:#d97757}
+.ss-term .ss-othersend{background:#5c5751}
 @media (prefers-reduced-motion:reduce){.ss-sim *{animation:none!important;transition:none!important}}
 `;
 
