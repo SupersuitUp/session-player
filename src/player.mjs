@@ -12,6 +12,7 @@ import { script, summarize, duration, realPick, compare, dictate } from './playb
 import { PLAYER_CSS, MAISON_CSS } from './player-css.mjs';
 import { resolveDevice, normalizeMode, readViewer, watchViewer, autoHint, deviceToast, autoplayToast, choiceToast } from './device.mjs';
 import { normalizeClock, sessionTime, menuBarText, statusText } from './clock.mjs';
+import { tap, answerScript, run, pointerFor, prefersReducedMotion } from './gesture.mjs';
 
 // What this player does itself, for a host page that used to do it from outside and should stop
 // once the copy it serves has it: the session clock on every device, the phone's time
@@ -26,6 +27,79 @@ const initial = (name = '?') => name.trim().charAt(0).toUpperCase();
 export const DEFAULT_AGENT = 'Pluma';
 const AgentName = createContext(DEFAULT_AGENT);
 const useAgent = () => useContext(AgentName);
+
+// The hand the replay uses when it answers for the person (gesture.mjs): `step` moves the pointer,
+// `speed` scales it, `reduced` drops the travel. Without a provider (a board rendered on its own)
+// nothing is drawn and the choices still land.
+const Gesture = createContext({ step: null, speed: 1, reduced: false });
+
+// The pointer itself: a fingertip on a phone, the arrow on a MacBook, pinned to the control it is
+// pressing, with a ripple on each press. Positions come from the controls' own boxes.
+const FINGER = h('svg', { className: 'ss-finger-art', viewBox: '0 0 40 112', width: 40, height: 112, 'aria-hidden': true },
+  h('path', { d: 'M7 24C7 8 33 8 33 24L34.5 112H5.5Z', fill: '#e8b796', stroke: 'rgba(60,35,20,.35)', strokeWidth: 1.2 }),
+  h('path', { d: 'M12.5 21C12.5 12 27.5 12 27.5 21L27 33C23.5 36 16.5 36 13 33Z', fill: '#f6dccb', stroke: 'rgba(60,35,20,.25)', strokeWidth: 1 }),
+  h('path', { d: 'M11 64Q20 67 29 64M12 70Q20 72.5 28 70', fill: 'none', stroke: 'rgba(60,35,20,.28)', strokeWidth: 1.2, strokeLinecap: 'round' }));
+const CURSOR = h('svg', { className: 'ss-cursor-art', viewBox: '0 0 16 24', width: 18, height: 27, 'aria-hidden': true },
+  h('path', { d: 'M1 1V18.5L5.4 14.3L8.5 21.6L11.5 20.3L8.5 13.2H14.6Z', fill: '#111', stroke: '#fff', strokeWidth: 1.3, strokeLinejoin: 'round' }));
+
+export function Pointer({ kind = 'finger', state }) {
+  if (!state) return null;
+  const { x = 0, y = 0, ms = 0, visible = false, pressed = false, ripple = 0 } = state;
+  return h('div', {
+    className: `ss-pointer ss-${kind}${visible ? ' ss-on' : ''}${pressed ? ' ss-pressed' : ''}`, 'aria-hidden': true,
+    style: { transform: `translate3d(${Math.round(x)}px,${Math.round(y)}px,0)`, transitionDuration: `${ms}ms, 180ms` },
+  },
+  h('span', { className: 'ss-touch' }),
+  ripple > 0 && h('span', { key: ripple, className: 'ss-ripple' }),
+  kind === 'cursor' ? CURSOR : FINGER);
+}
+
+function usePointer(hostRef, kind) {
+  const [state, setState] = useState({ x: 0, y: 0, ms: 0, visible: false, pressed: false, ripple: 0 });
+  const cur = useRef(state);
+  const set = (patch) => { cur.current = { ...cur.current, ...patch }; setState(cur.current); };
+  const locate = (target) => {
+    const host = hostRef.current;
+    const el = host?.querySelector(`[data-ss-target="${target}"]`);
+    if (!el) return null;
+    const a = host.getBoundingClientRect();
+    const b = el.getBoundingClientRect();
+    // A wide row is pressed toward its start, where a thumb lands; a button at its centre.
+    const x = b.width > 120 ? b.left - a.left + Math.min(b.width * 0.3, 90) : b.left - a.left + b.width / 2;
+    return { x, y: b.top - a.top + b.height / 2 };
+  };
+  const enter = () => {
+    const r = hostRef.current?.getBoundingClientRect();
+    return r ? (kind === 'cursor' ? { x: r.width * 0.62, y: r.height * 0.55 } : { x: r.width * 0.78, y: r.height + 30 }) : { x: 0, y: 0 };
+  };
+  const step = (s) => {
+    const p = s.target ? locate(s.target) : null;
+    if (s.kind === 'travel') {
+      if (!p) return;
+      if (!cur.current.visible) {
+        set({ ...enter(), ms: 0, visible: true });
+        const go = typeof requestAnimationFrame === 'function' ? (f) => requestAnimationFrame(() => requestAnimationFrame(f)) : (f) => setTimeout(f, 16);
+        go(() => set({ ...p, ms: Math.max(0, s.ms - 32) }));
+      } else set({ ...p, ms: s.ms });
+    } else if (s.kind === 'press') {
+      set({ ...(!cur.current.visible && p ? { ...p, ms: 0 } : {}), visible: true, pressed: true, ripple: cur.current.ripple + 1 });
+    } else if (s.kind === 'release') set({ pressed: false });
+    else if (s.kind === 'lift') { if (kind !== 'cursor') set({ visible: false, pressed: false }); }
+    else if (s.kind === 'hide') set({ visible: false, pressed: false });
+  };
+  return [state, step];
+}
+
+// What the person typed into the board's Other field, as they type it.
+export function OtherField({ text = '', person }) {
+  const box = useRef(null);
+  useEffect(() => { if (box.current) box.current.scrollTop = box.current.scrollHeight; }, [text]);
+  return h('div', { className: 'ss-otherfield', 'data-ss-target': 'other-field' },
+    h('small', null, `${person} is typing their own answer`),
+    h('div', { className: 'ss-otherbox' },
+      h('div', { className: 'ss-othertext', ref: box }, text, h('span', { className: 'ss-caret' })),
+      h('span', { className: 'ss-othersend', 'data-ss-target': 'other-send', 'aria-hidden': true }, '\u2191')));
+}
 
 // Images the person saw. Tap one to see it full screen; tap again to close.
 function Gallery({ images, strip = false }) {
@@ -57,8 +131,13 @@ function Reply({ text }) {
 // on along the real path (a recording has one path, so no branch is ever invented).
 export function Board({ ask, person, auto = false, onPick, images, onToast }) {
   const agent = useAgent();
+  const gesture = useContext(Gesture);
   const [idx, setIdx] = useState(0);
   const [picks, setPicks] = useState({});
+  // The Other field while an answer is being typed into it: { text }.
+  const [typing, setTyping] = useState(null);
+  const cancel = useRef(null);
+  useEffect(() => () => cancel.current?.(), []);
   const q = ask.questions[idx];
   const mine = picks[idx];
   const real = realPick(q, ask.dismissed);
@@ -71,23 +150,38 @@ export function Board({ ask, person, auto = false, onPick, images, onToast }) {
     }, 1300);
     return () => clearTimeout(id);
   }, [mine, idx]);
+  // Play an answer script: the pointer moves for every tap, the Other field opens and fills, and
+  // the pick lands only at the end.
+  const play = (steps, pick) => run(steps, (s) => {
+    if (s.kind === 'open') setTyping({ text: '' });
+    else if (s.kind === 'type') setTyping({ text: s.text });
+    else if (s.kind === 'action') { if (s.action === 'pick') { setTyping(null); setPicks((p) => (p[idx] ? p : { ...p, [idx]: pick })); } }
+    else gesture.step?.(s);
+  });
   useEffect(() => {
     if (!auto || mine) return undefined;
-    const id = setTimeout(() => setPicks((p) => ({ ...p, [idx]: real })), 1200);
-    return () => clearTimeout(id);
+    const stop = play(answerScript(q, ask.dismissed, { speed: gesture.speed, reduced: gesture.reduced, lead: 1200 }), real);
+    return () => { stop(); gesture.step?.({ kind: 'hide' }); };
   }, [auto, idx, mine]);
 
   const choose = (pick) => {
-    if (picks[idx]) return;
+    if (picks[idx] || typing) return;
     onToast?.(choiceToast(person, compare(q, ask.dismissed, pick)));
+    // The viewer tapped Other: the field opens and the real answer types itself, then it is sent.
+    if (pick.kind === 'other' && real.kind === 'other') {
+      cancel.current = play(answerScript(q, ask.dismissed, { speed: gesture.speed, reduced: gesture.reduced, lead: 0, finger: false }), pick);
+      return;
+    }
     setPicks((p) => (p[idx] ? p : { ...p, [idx]: pick }));
   };
   const same = (a, b) => a.kind === b.kind && (a.kind !== 'option' || a.index === b.index);
   const row = (key, pick, label, description, image) => {
+    if (key === 'other' && typing) return h(OtherField, { key, text: typing.text, person });
     const isReal = mine && same(pick, real);
     const isMine = mine && same(pick, mine);
     const cls = `ss-opt${isReal ? ' ss-chosen' : ''}${isMine && !isReal ? ' ss-yours' : ''}`;
-    return h('button', { key, className: cls, disabled: Boolean(mine), onClick: () => choose(pick) },
+    const target = typeof key === 'number' ? `opt-${key}` : key === 'other' ? 'opt-other' : 'dismiss';
+    return h('button', { key, className: cls, disabled: Boolean(mine), 'data-ss-target': target, onClick: () => choose(pick) },
       h('span', { className: 'ss-onum' }, isReal ? '\u2713' : typeof key === 'number' ? key + 1 : '\u2026'),
       image && h('img', { className: 'ss-oimg', src: image.src, alt: '' }),
       h('span', null, h('b', null, label), description && h('small', null, description)));
@@ -276,7 +370,7 @@ export function reportToHost(el, win = typeof window === 'undefined' ? undefined
 }
 const tellHost = (msg) => { if (typeof window !== 'undefined' && window.parent && window.parent !== window) window.parent.postMessage(msg, '*'); };
 
-export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode, background, theme, agent = DEFAULT_AGENT, clock }) {
+export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autoplay = true, artifacts = true, timeline = true, maxSteps = 5, device, viewer, start: startMode, background, theme, agent = DEFAULT_AGENT, clock, reducedMotion }) {
   const root = useRef(null);
   useEffect(() => reportToHost(root.current), []);
   const list = scenarios ?? (scenario ? [scenario] : []);
@@ -295,7 +389,7 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
   const style = height || bg ? { ...(height ? { '--ss-height': height } : {}), ...(bg ? { background: bg } : {}) } : undefined;
   return h(AgentName.Provider, { value: agent || DEFAULT_AGENT }, h('div', { className: theme === 'maison' ? 'ss-sim ss-maison' : 'ss-sim', ref: root, style },
     h('style', null, theme === 'maison' ? PLAYER_CSS + MAISON_CSS : PLAYER_CSS),
-    sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, clock: normalizeClock(clock), onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
+    sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, clock: normalizeClock(clock), reducedMotion, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
       : h(Picker, { scenarios: list, onPick: setPick })));
 }
 
@@ -364,8 +458,14 @@ function TitleBar() {
     h('span', { className: 'ss-wtitle' }, 'Claude Code'));
 }
 
-function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps, onBack, mode = 'auto', setMode, viewer = 'desktop', clock = 'session' }) {
+function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps, onBack, mode = 'auto', setMode, viewer = 'desktop', clock = 'session', speed = 1, reducedMotion }) {
   const { frame, label } = resolveDevice({ mode, viewer, device: sc.device });
+  // The hand that taps for the person on Autoplay: a finger, or a pointer on a MacBook.
+  const phoneRef = useRef(null);
+  const pointerKind = pointerFor(frame);
+  const [pointer, pointerStep] = usePointer(phoneRef, pointerKind);
+  const [reduced] = useState(() => prefersReducedMotion(reducedMotion));
+  const gesture = useMemo(() => ({ step: pointerStep, speed, reduced }), [speed, reduced, pointerKind]);
   const plan = useMemo(() => script(sc, { maxSteps }), [sc, maxSteps]);
   const totals = useMemo(() => summarize(sc), [sc]);
   const person = sc.persona?.name ?? 'You';
@@ -453,11 +553,12 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
     playFrom(turn, 0, 450);
   };
 
+  // Autoplay sends the command the way a person would: the finger goes to send and presses it.
   useEffect(() => {
     if (!autoSendReady({ auto, phase, started })) return undefined;
-    const id = setTimeout(send, 1400);
-    return () => clearTimeout(id);
-  });
+    const stop = run(tap('send', { at: 1400, speed, reduced }), (s) => (s.kind === 'action' ? send() : pointerStep(s)));
+    return () => { stop(); pointerStep({ kind: 'hide' }); };
+  }, [auto, phase, started, turn]);
 
   const restart = () => {
     timers.current.forEach(clearTimeout);
@@ -469,7 +570,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   const artifactList = h('div', { className: 'ss-artifact-list' },
     made.length ? made.map((a) => h(ArtifactCard, { key: a.id, a })) : h('p', { className: 'ss-empty' }, `What ${agent} makes will collect here.`));
 
-  const phone = h('div', { className: 'ss-phone' },
+  const phone = h('div', { className: 'ss-phone', ref: phoneRef },
       frame === 'iphone' && h(StatusBar, { now }),
       h('header', { className: 'ss-head' },
         onBack && h('button', { className: 'ss-back', onClick: onBack, 'aria-label': 'Choose another person' }, '‹'),
@@ -524,7 +625,8 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
               h('button', {
                 className: `ss-mic${phase === 'saying' ? ' ss-live' : ''}`, disabled: phase !== 'ready', 'aria-label': 'Say it out loud', onClick: say,
               }, MIC_GLYPH)),
-            h('button', { className: 'ss-send', disabled: phase !== 'ready', 'aria-label': 'Send', onClick: send }, '\u2191'))));
+            h('button', { className: 'ss-send', disabled: phase !== 'ready', 'aria-label': 'Send', 'data-ss-target': 'send', onClick: send }, '\u2191'))),
+      h(Pointer, { kind: pointerKind, state: pointer }));
   const panel = showArtifacts && h('aside', { className: 'ss-panel' }, h('h3', null, `Made for ${person}`, h('span', null, made.length)), artifactList);
   const bar = h('div', { className: 'ss-devicebar' },
     label ? h('span', { className: frame === 'macbook-compact' ? 'ss-simpill' : 'ss-simlabel' }, label) : h('span'),
@@ -550,7 +652,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
       h('div', { className: 'ss-mac-base', 'aria-hidden': true }));
   }
   const inGrid = frame !== 'macbook';
-  return h(Fragment, null,
+  return h(Gesture.Provider, { value: gesture },
     h('div', { className: `ss-toast${toast ? ' ss-toast-on' : ''}`, role: 'status', 'aria-live': 'polite' }, toast ? h('span', { key: toast.id }, toast.text) : null),
     bar,
     h('div', { className: `ss-stage ss-frame-${frame}${inGrid && showArtifacts ? ' ss-has-panel' : ''}` },

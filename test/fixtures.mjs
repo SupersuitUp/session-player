@@ -58,3 +58,26 @@ export function session(start = '2026-09-14T05:00:00.000Z') {
   };
   return api;
 }
+
+// A scenario with a board: one question answered by picking an option, one answered by typing
+// (the AskUserQuestion "Other" answer: `chosen: null` with the typed text in `answer`). Used by
+// the gesture tests and to look at the finger and the typing in a browser.
+export function boardScenario({ device } = {}) {
+  return {
+    format: 'supersuit-simulator/1', id: 'board-demo', title: 'Releasing an album', persona: { name: 'Sam', role: 'musician' },
+    source: { kind: 'session', date: '2026-10-28' }, chapters: [], ...(device ? { device } : {}),
+    turns: [{
+      id: 't1', at: 0, human: { text: 'Get the album ready to release', via: 'typed', choices: [] }, intervention: null,
+      steps: [
+        { label: 'Read the track list', tool: 'Read', ms: 4000, count: 1, at: 4000 },
+        { label: 'Asked about the cover and the date', tool: 'AskUserQuestion', ms: 42000, count: 1, at: 46000, ask: { dismissed: false, questions: [
+          { header: 'Cover', question: 'Which cover should go out with it?', options: [{ label: 'The dancer', description: 'oil, warm' }, { label: 'The cage', description: 'blue, cold' }], answer: 'The cage', chosen: 1 },
+          { header: 'Date', question: 'When should it release?', options: [{ label: 'Today' }, { label: 'Next Friday' }], answer: 'Hold it until the mastering pass comes back, then the Friday after that', chosen: null },
+        ] } },
+        { label: 'Set up the release', tool: 'Bash', ms: 90000, count: 1, at: 136000 },
+      ],
+      replies: [{ text: 'The cage is the cover, and the release waits for mastering.', at: 140000 }], artifacts: [],
+    }],
+    artifacts: [], cuts: [],
+  };
+}
