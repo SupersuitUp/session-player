@@ -1,6 +1,7 @@
 // Proves the package works the way the README says, as installed: packs it, installs the tarball
 // into a fresh folder outside the repo, imports the library and runs the CLI from there. Passing
-// tests prove the parts; this proves the published boundary (every runtime file is in `files`).
+// tests prove the parts; this proves the installed boundary (every runtime file is in `files`), which
+// a host installing a github: pin of this repo depends on as much as an npm install did.
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

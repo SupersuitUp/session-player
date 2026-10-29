@@ -28,9 +28,17 @@ This package holds the **scenario format**, the **converter** that drafts a scen
 
 ## Install
 
+The player is distributed from this GitHub repository, not from npm (since 2026-10-28; the versions already on npm stop at 0.11.0 and get nothing newer). A host pins a commit of `main` with a `github:` dependency, so it moves only when it chooses to:
+
+```json
+"@supersuit/session-player": "github:SupersuitUp/session-player#<full commit sha>"
 ```
-npm install -g @supersuit/session-player
-```
+
+For the CLI on its own: `npm install -g github:SupersuitUp/session-player`.
+
+### Shipping a change
+
+A change lands on `main` (CI runs the tests and the install smoke), and that commit is the release. Each host then moves its `github:` pin to the new sha, reinstalls, and runs its `--player-only` sync. There is no version bump, no tag and no publish step; `package.json` is `"private": true`, so `npm publish` refuses. The CHANGELOG keeps one entry per change under the date it landed.
 
 ## Use
 

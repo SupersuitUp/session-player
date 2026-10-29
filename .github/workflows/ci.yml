@@ -1,0 +1,26 @@
+# Tests every push and pull request to main. This replaced publish.yml on 2026-10-28, when the
+# package stopped going to npm (Gary: "Why do we need session player on npm at all remove it").
+# It keeps the checks that workflow ran before publishing, with nothing published at the end:
+# the hosts pin a commit of this repo with a github: dependency, so a commit on main is a release.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      # React is a dev dependency the player's render tests need; the committed lockfile pins it.
+      - run: npm ci
+      - run: npm test
+      - run: npm run smoke
