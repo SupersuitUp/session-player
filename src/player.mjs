@@ -604,10 +604,12 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
           : h('span', { className: 'ss-cc-back', 'aria-hidden': true }, BACK_GLYPH, 'Code')),
         skin === 'desk' && onBack && h('button', { className: 'ss-back', onClick: onBack, 'aria-label': 'Choose another person' }, '‹'),
         h('div', { className: 'ss-titles' }, h('b', null, sc.title), h('small', null, skin === 'phone' ? DEVICE_NAME : chapter ?? DEVICE_NAME)),
-        // A real phone has no drawn status bar, and a window at phone width or a lidless MacBook
-        // has no menu bar, so the session's time sits in the header as a small pill.
-        // Inside a whole laptop the menu bar shows it and the sheet hides the pill.
-        frame !== 'iphone' && h('span', { className: 'ss-timepill', title: 'Session time' }, statusText(now)),
+        // A window at phone width or a lidless MacBook has no menu bar, so the session's time sits
+        // in the window's header as a small pill; inside a whole laptop the menu bar shows it and
+        // the sheet hides the pill. A real phone (no drawn device) shows it in the counter above
+        // the screen instead: the Claude app's header centres its title, so a pill there was drawn
+        // over the title and its Mac line (SupersuitUp/session-player#2).
+        skin === 'desk' && h('span', { className: 'ss-timepill', title: 'Session time' }, statusText(now)),
         h('span', { className: `ss-cc-spin${busy ? ' ss-cc-spin-on' : ''}`, 'aria-hidden': true }),
         h('span', { className: 'ss-cc-more', role: 'img', 'aria-label': 'More' }, MORE_GLYPH)),
       h('div', { className: 'ss-log-wrap' },
@@ -669,7 +671,9 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
   const counter = h('div', { className: 'ss-counter ss-out', 'aria-live': 'polite' },
     h('span', null, work.ms ? [h('b', { key: 'd' }, duration(work.ms)), ` of work done for ${person}`] : 'No work yet'),
     sc.source?.illustrative && h('span', { className: 'ss-illus' }, 'Illustrative: recast from a real session'),
-    h('span', null, `${work.steps} of ${totals.steps} steps`));
+    h('span', { className: 'ss-countright' },
+      frame === 'none' && h('span', { className: 'ss-timepill', title: 'Session time' }, statusText(now)),
+      `${work.steps} of ${totals.steps} steps`));
   // The device around the conversation. On a phone nothing is drawn: the demo is the phone.
   let device = phone;
   if (frame === 'iphone') {
