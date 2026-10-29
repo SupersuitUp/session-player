@@ -630,4 +630,6 @@ export const CLAUDE_CSS = CC(`
 .ss-sim .ss-devicebar .ss-auto{font-size:12px;color:#7a6d5a}
 .ss-sim .ss-counter.ss-out{background:none;color:#7a6d5a;padding:0 2px;margin:-2px 0 10px;font-size:12px;flex-wrap:wrap}
 .ss-sim .ss-counter.ss-out b{color:inherit;font-weight:700}
+.ss-sim .ss-countright{display:inline-flex;align-items:center;gap:8px}
+.ss-sim .ss-counter.ss-out .ss-timepill{font-size:11px;padding:3px 7px}
 `);

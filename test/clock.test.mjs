@@ -32,9 +32,11 @@ test('a session starts at its recorded startedAt, else nine in the morning on it
   assert.equal(normalizeClock('sideways'), 'session');
 });
 
-test('a real phone draws no device, so the session time sits in the header as a pill', () => {
+test('a real phone draws no device, so the session time sits as a pill in the counter above the screen, never in the header', () => {
   const html = renderToString(h(SimulatorPlayer, { scenario: sc(), viewer: 'phone' }));
   assert.match(html, /class="ss-timepill"[^>]*>9:00</);
+  assert.match(html, /class="ss-counter ss-out"[\s\S]*?class="ss-timepill"[\s\S]*?<\/div>/, 'the pill is in the counter');
+  assert.doesNotMatch(html.match(/<header class="ss-head"[\s\S]*?<\/header>/)[0], /ss-timepill/, 'and not over the centred title (session-player#2)');
   assert.doesNotMatch(html, /class="ss-status-time"|class="ss-clock"/);
   const timed = renderToString(h(SimulatorPlayer, { scenario: sc({ startedAt: '2026-10-10T14:03:00' }), viewer: 'phone' }));
   assert.match(timed, /class="ss-timepill"[^>]*>2:03</, 'source.startedAt reaches the phone');
