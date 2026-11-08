@@ -122,3 +122,14 @@ test('the player draws a message from the other Pluma, and one to it, as their o
   // An ordinary reply is unchanged.
   assert.doesNotMatch(renderToString(h(Reply, { text: 'Done.' })), /ss-peer/);
 });
+
+test('peer bubbles are coloured only from the palette tokens, so no colour outside the CW palette enters', async () => {
+  const sheets = await import('../src/player-css.mjs');
+  const css = Object.values(sheets).filter((v) => typeof v === 'string').join('\n').replace(/\/\*[\s\S]*?\*\//g, '');
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, sel]) => /ss-peer/.test(sel));
+  assert.ok(rules.length >= 10, `expected the peer rules in every skin, found ${rules.length}`);
+  for (const [, sel, body] of rules) {
+    const hex = (body.match(/#[0-9a-f]{3,8}\b/gi) ?? []).filter((c) => c.toLowerCase() !== '#fff');
+    assert.deepEqual(hex, [], `${sel.trim()} uses ${hex.join(', ')}; use a --ss- token`);
+  }
+});
