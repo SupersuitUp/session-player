@@ -15,13 +15,15 @@ const TEXT_FIELDS = (sc) => [
     [t.human, 'text'],
     ...t.steps.flatMap((s) => [[s, 'label'], ...(s.ask?.questions ?? []).flatMap((q) => [[q, 'header'], [q, 'question'], [q, 'answer'], ...q.options.flatMap((o) => [[o, 'label'], [o, 'description']])])]),
     ...t.replies.map((r) => [r, 'text']),
+    // A co-work message names the other Pluma, often by a real person's name.
+    ...t.replies.filter((r) => r.peer).map((r) => [r.peer, 'name']),
   ]),
   ...sc.artifacts.flatMap((a) => [[a, 'title'], [a, 'url'], [a, 'path']]),
   ...(sc.close ? [[sc.close, 'outcome'], ...(sc.close.handled ?? []).map((_, i) => [sc.close.handled, i]), ...(sc.close.edge ? [[sc.close.edge, 'source']] : []), ...(sc.close.freed ?? []).flatMap((f) => [[f, 'task'], [f, 'cadence'], [f, 'source']])] : []),
 ];
 
 const inAsk = (s, obj) => (s.ask?.questions ?? []).some((q) => q === obj || q.options.includes(obj));
-const where = (sc, obj) => sc.turns.find((t) => t.human === obj || t.steps.some((s) => s === obj || inAsk(s, obj)) || t.replies.includes(obj))?.id
+const where = (sc, obj) => sc.turns.find((t) => t.human === obj || t.steps.some((s) => s === obj || inAsk(s, obj)) || t.replies.some((r) => r === obj || r.peer === obj))?.id
   ?? sc.artifacts.find((a) => a === obj)?.id
   ?? (sc.close && (obj === sc.close || obj === sc.close.edge || (sc.close.freed ?? []).includes(obj)) ? 'the close card' : 'the title');
 

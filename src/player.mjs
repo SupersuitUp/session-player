@@ -114,13 +114,18 @@ function Gallery({ images, strip = false }) {
       images[open].caption && h('span', null, images[open].caption)));
 }
 
-function Reply({ text }) {
+// A reply, or in a co-work session a message between the two Plumas: `peer` names the other
+// one and says which way it went. In, it is the other Pluma speaking; out, it is this
+// operator's Pluma speaking to it. Each is its own speaker, drawn as its own bubble.
+export function Reply({ text, peer, person }) {
   const agent = useAgent();
   const [open, setOpen] = useState(false);
   const t = plain(text);
   const long = t.length > 360;
-  return h('div', { className: 'ss-reply' },
-    h('span', { className: 'ss-who' }, agent),
+  const mine = person ? `${person}'s ${agent}` : agent;
+  const who = !peer ? agent : peer.dir === 'in' ? peer.name : `${mine} to ${peer.name}`;
+  return h('div', { className: peer ? `ss-reply ss-peer ss-peer-${peer.dir === 'in' ? 'in' : 'out'}` : 'ss-reply' },
+    h('span', { className: 'ss-who' }, who),
     h('p', null, long && !open ? `${t.slice(0, 320).trimEnd()}…` : t),
     long && h('button', { className: 'ss-more', onClick: () => setOpen(!open) }, open ? 'less' : 'more'));
 }
@@ -623,7 +628,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
               h('div', { className: 'ss-cmd' }, plain(item.command.text)));
           }
           if (item.kind === 'step') return h(Step, { key: item.key, step: item.step, person, live: waiting === item.key, picks: answers[item.key] });
-          if (item.kind === 'reply') return h(Reply, { key: item.key, text: item.reply.text });
+          if (item.kind === 'reply') return h(Reply, { key: item.key, text: item.reply.text, peer: item.reply.peer, person });
           return h('div', { key: item.key, className: 'ss-made' }, h('span', null, 'made'), ' ', item.artifact.title);
         }),
         // Work in flight, the way the app shows it: one blue line under the conversation.

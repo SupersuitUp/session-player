@@ -10,6 +10,9 @@
 
 import { FORMAT } from './scenario.mjs';
 import { deviceFromSession } from './device.mjs';
+import { shellSays, coworkEvents, coworkPeer, partJoiner } from './cowork.mjs';
+
+export { decodeSay } from './cowork.mjs';
 
 const LONG_PASTE = 600;
 // Idle time is not work. A session's clock keeps running while a command hangs, the laptop
@@ -100,6 +103,8 @@ function stepFor(name, input = {}) {
     case 'Bash': return { kind: `bash:${input.description ?? input.command}`, label: input.description || 'ran a command' };
     case 'WebFetch': case 'WebSearch': return { kind: 'web', label: 'read the web' };
     case 'AskUserQuestion': return { kind: 'ask', label: 'asked a question' };
+    // A watch is named by what it watches ("co-work messages from ..."), never the bare tool.
+    case 'Monitor': return { kind: `monitor:${input.description ?? ''}`, label: input.description ? `watched ${input.description}` : 'watched for events' };
     default: return { kind: `tool:${name}`, label: name.replace(/^mcp__[^_]+__/, '').replace(/_/g, ' ') };
   }
 }
@@ -142,6 +147,7 @@ export function convert(lines, opts = {}) {
   const results = new Map();
   const resultText = new Map();
   const resultData = new Map();
+  const resultError = new Set();
   for (const o of lines) {
     if (o.type !== 'user') continue;
     for (const b of blocks(o.message)) {
@@ -149,8 +155,33 @@ export function convert(lines, opts = {}) {
       results.set(b.tool_use_id, Date.parse(o.timestamp));
       resultText.set(b.tool_use_id, typeof b.content === 'string' ? b.content : (b.content ?? []).map((c) => c.text ?? '').join('\n'));
       resultData.set(b.tool_use_id, o.toolUseResult);
+      if (b.is_error) resultError.add(b.tool_use_id);
     }
   }
+
+  // Co-work, outgoing: every `cowork.mjs say` the agent ran, decoded from its shell quoting.
+  // Read in order, because a reply is often staged in a file by one command and sent by a later
+  // one; a send whose text the transcript cannot show stays an ordinary step. A send that
+  // errored did not reach the other Pluma, so it is not drawn as a message either.
+  const outgoing = new Map();
+  const files = new Map();
+  let watched = null;
+  for (const o of lines) {
+    if (o.isSidechain) continue;
+    watched ??= coworkPeer(o);
+    if (o.type !== 'assistant') continue;
+    for (const b of blocks(o.message)) {
+      if (b.type !== 'tool_use') continue;
+      if (b.name === 'Write' && typeof b.input?.file_path === 'string') files.set(b.input.file_path, String(b.input.content ?? ''));
+      if (b.name !== 'Bash') continue;
+      const text = shellSays(b.input?.command, files).find((t) => t != null);
+      if (text != null && text.trim() && !resultError.has(b.id)) outgoing.set(b.id, text.trim());
+    }
+  }
+  // The other Pluma, named as the messages themselves address it ("For: Dana Reed's Pluma."),
+  // else from the watch, else plainly. A recast swaps the name like any other text.
+  const addressed = [...outgoing.values()].map((t) => t.match(/^For:\s+(.+?'s Pluma)\b/)?.[1]).find(Boolean);
+  const peerName = opts.peer ?? addressed ?? (watched ? `${watched}'s Pluma` : 'the other Pluma');
 
   const turns = [];
   const chapters = [];
@@ -168,6 +199,14 @@ export function convert(lines, opts = {}) {
   let start = null;
   let raw = [];
   let sessionId = null;
+  // Co-work, incoming: one message per sender message, its numbered parts joined in order.
+  const seenEvent = new Set();
+  const joiner = partJoiner((text, o) => {
+    const turn = turns[turns.length - 1];
+    if (!turn || !text) return;
+    const ts = Date.parse(o.timestamp);
+    turn.replies.push({ text: clean(text, turn.id, 'peer'), at: ts - start, peer: { name: clean(peerName, turn.id, 'peer'), dir: 'in' } });
+  });
 
   const addArtifact = (turn, a, at) => {
     const key = a.path ?? a.url;
@@ -195,6 +234,17 @@ export function convert(lines, opts = {}) {
       continue;
     }
     if (isInterrupt(o)) { interrupted = true; continue; }
+    // A co-work watch firing. Only `say` is a message; ready, peer-away, peer-left and the
+    // Monitor's own expiry notice are the room's plumbing and are not shown.
+    const events = coworkEvents(o);
+    if (events) {
+      for (const e of events) {
+        if (e.type !== 'say' || typeof e.text !== 'string' || seenEvent.has(e.raw)) continue;
+        seenEvent.add(e.raw);
+        joiner.push(e.text, o);
+      }
+      continue;
+    }
 
     if (isHuman(o)) {
       flush();
@@ -250,6 +300,12 @@ export function convert(lines, opts = {}) {
         cursor = end;
         carry = { ms: 0, idle: 0 };
         if (PLUMBING.has(b.name)) { carry = { ms, idle: idleMs }; continue; }
+        // A co-work send is the message itself, not a step about it; its time goes to the next step.
+        if (outgoing.has(b.id)) {
+          carry = { ms, idle: idleMs };
+          turn.replies.push({ text: clean(outgoing.get(b.id), turn.id, 'peer'), at: end - start, peer: { name: clean(peerName, turn.id, 'peer'), dir: 'out' } });
+          continue;
+        }
         const { kind, label } = stepFor(b.name, b.input);
         const step = { kind, label: clean(label, turn.id, 'step'), tool: b.name, ms, at: end - start };
         if (idleMs > 1000) { step.idleMs = idleMs; cuts.push({ turn: turn.id, what: 'step', reason: 'idle time removed', ms: idleMs }); }
@@ -265,6 +321,7 @@ export function convert(lines, opts = {}) {
       }
     }
   }
+  joiner.flush();
   flush();
   if (turns.length === 0) throw new Error('no human turns in this session: nothing to draft');
 

@@ -32,6 +32,12 @@ export const PLAYER_CSS = `
 .ss-reply{max-width:92%;overflow-wrap:anywhere}
 .ss-reply p{margin:2px 0 0;white-space:pre-wrap}
 .ss-who{font-size:11px;font-weight:700;color:var(--ss-mulberry);letter-spacing:.04em;text-transform:uppercase}
+/* Co-work: a message between the two Plumas is a bubble with its speaker named. The other Pluma
+   speaks from the left in petrol; this operator's Pluma, speaking to it, from the right in sand. */
+.ss-peer{max-width:86%;padding:8px 12px;border-radius:14px;border:1px solid #e3d3ae}
+.ss-peer-in{align-self:flex-start;background:#eef5f6;border-color:#c6dde1;border-bottom-left-radius:4px}
+.ss-peer-in .ss-who{color:var(--ss-petrol)}
+.ss-peer-out{align-self:flex-end;background:#fbf0d6;border-bottom-right-radius:4px}
 .ss-more{border:0;background:none;padding:0;color:var(--ss-petrol);font-size:13px;text-decoration:underline}
 .ss-step{display:flex;align-items:baseline;gap:8px;font-size:13px;color:#4a4238;animation:ss-in .25s ease-out}
 .ss-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--ss-mulberry);transform:translateY(-1px)}
@@ -242,6 +248,10 @@ export const PLAYER_CSS = `
 .ss-term .ss-cmd::before{content:"> ";color:#8f887d}
 .ss-term .ss-who,.ss-term .ss-more,.ss-term .ss-asking,.ss-term .ss-redirect,.ss-term .ss-panel h3 span{color:#d97757}
 .ss-term .ss-reply p{color:#e6e1d9}
+.ss-term .ss-peer{background:#232120;border-color:#3a3632}
+.ss-term .ss-peer-in{border-left:2px solid #69b1b5}
+.ss-term .ss-peer-in .ss-who{color:#8fc7ca}
+.ss-term .ss-peer-out{border-right:2px solid #d97757}
 .ss-term .ss-step{color:#bdb6ab}
 .ss-term .ss-dot{background:#7fb069}
 .ss-term .ss-group .ss-dot{background:#5c5751}
@@ -521,6 +531,9 @@ export const CLAUDE_CSS = CC(`
 @P .ss-reply{max-width:none}
 @P .ss-who{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @P .ss-reply p{margin:0;color:#f9f9f7}
+@P .ss-peer{max-width:86%;background:#1f1f1e;border:1px solid #3a3a38;border-radius:calc(16 * var(--pt));padding:calc(10 * var(--pt)) calc(14 * var(--pt))}
+@P .ss-peer .ss-who{position:static;width:auto;height:auto;overflow:visible;clip:auto;display:block;margin-bottom:calc(4 * var(--pt));font-size:calc(12 * var(--pt));color:#c3c2b7}
+@P .ss-peer-in .ss-who{color:#8fc7ca}
 @P .ss-more{color:#c3c2b7;font-size:calc(15 * var(--pt))}
 @P .ss-cmd-wrap{align-items:flex-end;margin-top:calc(4 * var(--pt))}
 @P .ss-cmd{max-width:82%;background:#262625;color:#f9f9f7;border:0;border-radius:calc(20 * var(--pt));padding:calc(10 * var(--pt)) calc(16 * var(--pt))}

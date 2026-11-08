@@ -32,6 +32,16 @@ export function session(start = '2026-09-14T05:00:00.000Z') {
       lines.push(base('user', { timestamp: at(after), origin: { kind: 'task-notification' }, message: { role: 'user', content: `<task-notification>${body}</task-notification>` } }));
       return api;
     },
+    // A co-work watch firing: the Monitor's events as one task notification, one JSON line per
+    // event, the way Claude Code writes them. `queued: true` writes it the second way a
+    // notification lands, as a queued_command attachment delivered mid-turn.
+    cowork(events, { after = 1, queued = false, from = 'Dana Reed' } = {}) {
+      const body = `<task-notification>\n<task-id>bmon1</task-id>\n<summary>Monitor event: "co-work messages from ${from}"</summary>\n<event>${events.map((e) => (typeof e === 'string' ? e : JSON.stringify(e))).join('\n')}</event>\nIf this event is something the user would act on now, send a PushNotification.\n</task-notification>`;
+      const ts = at(after);
+      if (queued) lines.push(base('attachment', { timestamp: ts, attachment: { type: 'queued_command', prompt: body, commandMode: 'task-notification', origin: { kind: 'task-notification' } } }));
+      else lines.push(base('user', { timestamp: ts, origin: { kind: 'task-notification', producer: 'session-task' }, message: { role: 'user', content: body } }));
+      return api;
+    },
     say(text, after = 1) {
       lines.push(base('assistant', { timestamp: at(after), message: { role: 'assistant', content: [{ type: 'text', text }] } }));
       return api;
