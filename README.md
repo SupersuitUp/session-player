@@ -72,6 +72,8 @@ simulator serve album.json            # watch it at http://127.0.0.1:4460/
 
 `device` (optional) is where the real session ran: `iphone` or `macbook`. The converter sets `macbook` when the person typed into a terminal (or the desktop app) on a Mac, and leaves it out when it cannot tell (Remote Control and SDK sessions); a scenario without it is shown as an iPhone. Because unset can mean either, whoever ran the session should state it: `convert --device`, or `device` in a recast spec (0.7.0), which overrides the source.
 
+Links in recorded text are drawn, not printed as markdown: `[the review page](url)` is a link with its text, and `[ⓘ](url)` is a small info mark after its word, both opening in a new tab with `rel="noopener noreferrer"`. Only http and https links are ever links. A link no viewer can open renders as its text alone (an info mark is dropped): this Mac, a private network, a tailnet (`*.ts.net`), an operator's Helm (`*.helm.supersuit.co`), a reserved example domain, and any prefix in `privateLinks` (optional, a list of http(s) URL prefixes, such as a private repo's `https://github.com/Org/`; settable in a recast spec). The converter never makes such a link, or an info mark's definition page, an artifact.
+
 `intervention` is one of `null`, `redirect`, `correct`, `approve`, `decide`. The converter sets only `redirect`; the rest are set by the person reviewing the draft.
 
 ## The player

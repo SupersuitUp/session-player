@@ -93,6 +93,12 @@ test('deliverables become artifacts: pages, media and documents, never code or f
   assert.deepEqual(sc.turns[0].artifacts, sc.artifacts.map((a) => a.id));
 });
 
+test('a link nobody else can open is never made an artifact: a tailnet, a Helm, this Mac, an info mark', () => {
+  const s = session().human('ship it')
+    .say('Review on [the review page](https://me.helm.supersuit.co/reviews) and https://mac.tail1.ts.net:8460/preview/x, served at https://127.0.0.1:3000/x; the Helm [ⓘ](https://wiki.supersuit.co/concepts/helm) has it, live at https://garysheng.com/art/kingdom-free.');
+  assert.deepEqual(run(s).artifacts.map((a) => [a.kind, a.title]), [['link', 'garysheng.com/art/kingdom-free']]);
+});
+
 test('replies are kept, and home paths in them are hidden', () => {
   const s = session().human('where is it').say('Staged under /Users/someone/Desktop/kingdom-free.');
   assert.deepEqual(run(s).turns[0].replies.map((r) => r.text), ['Staged under ~/Desktop/kingdom-free.']);

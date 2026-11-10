@@ -9,6 +9,7 @@
 // and every edit it makes is written to `cuts`, so nothing is staged silently.
 
 import { FORMAT } from './scenario.mjs';
+import { openableUrl, linkParts } from './links.mjs';
 import { deviceFromSession } from './device.mjs';
 import { shellSays, coworkEvents, coworkPeer, partJoiner } from './cowork.mjs';
 
@@ -284,7 +285,14 @@ export function convert(lines, opts = {}) {
         const text = clean(b.text.trim(), turn.id, 'reply');
         turn.replies.push({ text, at: ts - start });
         cursor = Math.max(cursor, ts);
-        for (const url of text.match(URL_RE) ?? []) addArtifact(turn, { kind: 'link', title: url.replace(/^https:\/\//, '').replace(/[.,;:]+$/, ''), url: url.replace(/[.,;:]+$/, '') }, ts - start);
+        // A link is an artifact only when a viewer could open it (links.mjs), and an info mark's
+        // definition page is a word explained, not something the session made.
+        const infos = new Set(linkParts(text).filter((p) => p.info).map((p) => p.href));
+        for (const raw of text.match(URL_RE) ?? []) {
+          const url = raw.replace(/[.,;:]+$/, '');
+          if (!openableUrl(url) || infos.has(openableUrl(url))) continue;
+          addArtifact(turn, { kind: 'link', title: url.replace(/^https:\/\//, ''), url }, ts - start);
+        }
         for (const [, path] of text.matchAll(PATH_RE)) if (DELIVERABLE.test(path)) addArtifact(turn, { kind: 'file', title: base(path), path }, ts - start);
       } else if (b.type === 'tool_use') {
         // Real tools return in well under a second; the time goes to the agent thinking
