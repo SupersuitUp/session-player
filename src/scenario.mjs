@@ -24,6 +24,8 @@ export function validate(s) {
   if (!isObj(s.source) || !SOURCE_KINDS.includes(s.source.kind)) p.push(`source.kind must be one of ${SOURCE_KINDS.join(', ')}`);
   // When the session started: the devices' clocks start here. Optional, and never invented.
   if (isObj(s.source) && s.source.startedAt != null && !(isStr(s.source.startedAt) && Number.isFinite(Date.parse(s.source.startedAt)))) p.push(`source.startedAt must be a date and time, got ${JSON.stringify(s.source.startedAt)}`);
+  // Link prefixes a viewer cannot open (a private repo): the player draws those links as their text.
+  if (s.privateLinks != null && !(Array.isArray(s.privateLinks) && s.privateLinks.every((x) => isStr(x) && /^https?:\/\/[^/\s]+/.test(x)))) p.push('privateLinks must be a list of http(s) URL prefixes');
   if (s.device != null && !SCENARIO_DEVICES.includes(s.device)) p.push(`device must be one of ${SCENARIO_DEVICES.join(', ')}, got ${JSON.stringify(s.device)}`);
 
   const artifactIds = new Set();

@@ -42,6 +42,11 @@ export const PLAYER_CSS = `
 .ss-peer-in .ss-who{color:var(--ss-petrol)}
 .ss-peer-out{align-self:flex-end;background:var(--ss-cream);border-bottom-right-radius:4px}
 .ss-more{border:0;background:none;padding:0;color:var(--ss-petrol);font-size:13px;text-decoration:underline}
+/* Links in recorded text (links.mjs): a named link is underlined in the text's own colour, so it reads
+   in every skin; an info mark is a small raised mark right after its word, the way the Helm draws it. */
+.ss-sim .ss-link{color:inherit;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+.ss-sim .ss-info{display:inline-block;margin-left:1px;font-size:.78em;line-height:1;vertical-align:.32em;text-decoration:none;color:inherit;opacity:.72}
+.ss-sim .ss-info:hover,.ss-sim .ss-info:focus-visible{opacity:1}
 .ss-step{display:flex;align-items:baseline;gap:8px;font-size:13px;color:#4a4238;animation:ss-in .25s ease-out}
 .ss-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--ss-mulberry);transform:translateY(-1px)}
 .ss-group .ss-dot{background:#c9b48c}

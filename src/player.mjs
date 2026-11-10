@@ -13,13 +13,35 @@ import { PLAYER_CSS, MAISON_CSS, CLAUDE_CSS } from './player-css.mjs';
 import { resolveDevice, normalizeMode, readViewer, watchViewer, autoHint, deviceToast, autoplayToast, choiceToast } from './device.mjs';
 import { normalizeClock, sessionTime, menuBarText, statusText } from './clock.mjs';
 import { tap, answerScript, run, pointerFor, prefersReducedMotion } from './gesture.mjs';
+import { linkParts, linkText, clipParts } from './links.mjs';
 
 // What this player does itself, for a host page that used to do it from outside and should stop
 // once the copy it serves has it: the session clock on every device, the phone's time
 // pill, and the MacBook window's tighter text.
 export const FEATURES = Object.freeze({ sessionClock: true, phoneClock: true, macbookText: true });
 
-const plain = (s) => String(s).replace(/\*\*([^*]+)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^#+\s*/gm, '');
+// A string with its markdown taken out: bold, code, headings and links (each link its text, an
+// info mark gone). For text the player shows as a plain string; `Rich` draws the links instead.
+const plain = (s) => linkText(String(s)).replace(/\*\*([^*]+)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^#+\s*/gm, '');
+// The links in recorded text, drawn (links.mjs). A link opens in a new tab and never reaches
+// the page that framed the player; an info mark is a small mark after its word, named for that
+// word to a screen reader. `privateLinks` is the scenario's own list of prefixes nobody can open.
+const LinkPolicy = createContext([]);
+const stripMd = (s) => String(s).replace(/\*\*([^*]+)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/^#+\s*/gm, '');
+function richParts(parts) {
+  return parts.map((p, i) => {
+    if (!p.href) return p.text;
+    const word = p.info ? (String(parts[i - 1]?.text ?? '').match(/([\p{L}\p{N}'-]+)\W*$/u)?.[1] ?? '') : '';
+    return p.info
+      ? h('a', { key: i, className: 'ss-info', href: p.href, target: '_blank', rel: 'noopener noreferrer', title: word ? `What is ${word}?` : 'What this word means', 'aria-label': word ? `What is ${word}?` : 'What this word means' }, p.text)
+      : h('a', { key: i, className: 'ss-link', href: p.href, target: '_blank', rel: 'noopener noreferrer' }, p.text);
+  });
+}
+function Rich({ text, max }) {
+  const privateLinks = useContext(LinkPolicy);
+  const parts = linkParts(stripMd(text), { privateLinks });
+  return h(Fragment, null, richParts(max ? clipParts(parts, max) : parts));
+}
 const initial = (name = '?') => name.trim().charAt(0).toUpperCase();
 
 // The agent's name in every line the player writes itself. A prop (`agent`) so a host can name
@@ -120,13 +142,12 @@ function Gallery({ images, strip = false }) {
 export function Reply({ text, peer, person }) {
   const agent = useAgent();
   const [open, setOpen] = useState(false);
-  const t = plain(text);
-  const long = t.length > 360;
+  const long = plain(text).length > 360;
   const mine = person ? `${person}'s ${agent}` : agent;
   const who = !peer ? agent : peer.dir === 'in' ? peer.name : `${mine} to ${peer.name}`;
   return h('div', { className: peer ? `ss-reply ss-peer ss-peer-${peer.dir === 'in' ? 'in' : 'out'}` : 'ss-reply' },
     h('span', { className: 'ss-who' }, who),
-    h('p', null, long && !open ? `${t.slice(0, 320).trimEnd()}…` : t),
+    h('p', null, h(Rich, { text, max: long && !open ? 320 : 0 })),
     long && h('button', { className: 'ss-more', onClick: () => setOpen(!open) }, open ? 'less' : 'more'));
 }
 
@@ -196,7 +217,7 @@ export function Board({ ask, person, auto = false, onPick, images, onToast }) {
     ask.questions.length > 1 && h('div', { className: 'ss-tabs' }, ask.questions.map((qq, qi) => h('span', {
       key: qi, className: `ss-tab${qi === idx ? ' ss-tab-now' : ''}${picks[qi] ? ' ss-tab-done' : ''}`,
     }, qq.header || `Question ${qi + 1}`))),
-    h('p', { className: 'ss-q' }, plain(q.question)),
+    h('p', { className: 'ss-q' }, h(Rich, { text: q.question })),
     idx === 0 && h(Gallery, { images, strip: true }),
     h('div', { className: 'ss-opts' },
       q.options.map((o, oi) => row(oi, { kind: 'option', index: oi }, o.label, o.description, o.image)),
@@ -217,7 +238,7 @@ export function Asked({ ask, person, ms, picks = {} }) {
       const mineLabel = mine && (mine.kind === 'option' ? q.options[mine.index]?.label : mine.kind === 'other' ? 'Other' : 'to type something else');
       return h('div', { key: qi, className: 'ss-aq' },
         qi === 0 && h('span', { className: 'ss-qlabel' }, 'Question'),
-        h('p', { className: 'ss-q' }, plain(q.question)),
+        h('p', { className: 'ss-q' }, h(Rich, { text: q.question })),
         h('p', { className: 'ss-a' }, real.index != null && q.options[real.index]?.image && h('img', { className: 'ss-aimg', src: q.options[real.index].image.src, alt: '' }), real.kind === 'dismissed' ? 'Closed it' : plain(real.label)),
         v && !v.same && h('p', { className: 'ss-mine' }, `You picked ${mineLabel}`));
     }),
@@ -403,7 +424,7 @@ export function SimulatorPlayer({ scenario, scenarios, scenarioId, height, autop
   return h(AgentName.Provider, { value: agent || DEFAULT_AGENT }, h('div', { className: theme === 'maison' ? 'ss-sim ss-maison' : 'ss-sim', ref: root, style },
     // The Claude app skin comes last, so it wins over the base sheet and any theme on the screen.
     h('style', null, (theme === 'maison' ? PLAYER_CSS + MAISON_CSS : PLAYER_CSS) + CLAUDE_CSS),
-    sc ? h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, clock: normalizeClock(clock), reducedMotion, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null })
+    sc ? h(LinkPolicy.Provider, { value: Array.isArray(sc.privateLinks) ? sc.privateLinks : [] }, h(Run, { key: sc.id, sc, autoplay, start: startMode, artifacts, timeline, maxSteps, mode, setMode, viewer: viewer ?? seen, clock: normalizeClock(clock), reducedMotion, onBack: list.length > 1 && scenarioId == null ? () => setPick(null) : null }))
       : h(Picker, { scenarios: list, onPick: setPick })));
 }
 
@@ -625,7 +646,7 @@ function Run({ sc, autoplay, start, artifacts: showArtifacts, timeline, maxSteps
             return h('div', { key: item.key, className: 'ss-cmd-wrap' },
               item.command.intervention && h('span', { className: 'ss-redirect' }, `${person} stepped in`),
               item.command.images && h(Gallery, { images: item.command.images, strip: true }),
-              h('div', { className: 'ss-cmd' }, plain(item.command.text)));
+              h('div', { className: 'ss-cmd' }, h(Rich, { text: item.command.text })));
           }
           if (item.kind === 'step') return h(Step, { key: item.key, step: item.step, person, live: waiting === item.key, picks: answers[item.key] });
           if (item.kind === 'reply') return h(Reply, { key: item.key, text: item.reply.text, peer: item.reply.peer, person });

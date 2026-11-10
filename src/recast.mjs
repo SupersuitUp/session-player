@@ -29,7 +29,7 @@ const where = (sc, obj) => sc.turns.find((t) => t.human === obj || t.steps.some(
 
 import { allImages } from './scenario.mjs';
 
-export function recast(source, { id, title, persona, keep, replace = [], forbid = [], images = {}, close, highlight = {}, device }) {
+export function recast(source, { id, title, persona, keep, replace = [], forbid = [], images = {}, close, highlight = {}, device, privateLinks }) {
   const sc = structuredClone(source);
   // Where the real session ran, when the source could not say (0.7.0): a Remote Control or SDK
   // session reads the same from a Mac and from a phone, so the person who ran it states it here.
@@ -37,6 +37,8 @@ export function recast(source, { id, title, persona, keep, replace = [], forbid 
     if (!['iphone', 'macbook'].includes(device)) throw new Error(`device must be iphone or macbook, got ${JSON.stringify(device)}`);
     sc.device = device;
   }
+  // Link prefixes the recast's viewers cannot open, such as a private repo (scenario.mjs).
+  if (privateLinks != null) sc.privateLinks = privateLinks;
   const cuts = [];
   if (keep) {
     const kept = new Set(keep);
